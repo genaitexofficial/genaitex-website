@@ -9,14 +9,14 @@ export const site = {
   description:
     "genaitex is a development studio building fast static websites, custom Shopify storefronts and bespoke web software.",
 
-  // CONFIGURE: the final domain, including the TLD (genaitex.com, .in, .io ...)
+  // The primary domain. genaitex.in should redirect here (set up in Vercel), never serve a copy.
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://genaitex.com",
 
-  // CONFIGURE: where inquiries and "email us" links point
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@genaitex.com",
+  // Where inquiries and "email us" links point
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "genaitexofficial@gmail.com",
 
-  // CONFIGURE: digits only, with country code (e.g. 919876543210). Leave empty to hide WhatsApp.
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "",
+  // Digits only, with country code (91 = India). Set the env var to an empty string to hide WhatsApp.
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "919912377803",
 
   // CONFIGURE: short status line shown above the hero headline. Set to "" to hide.
   availability: "Now booking new projects",

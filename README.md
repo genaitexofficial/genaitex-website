@@ -46,19 +46,22 @@ See `.env.example`.
 | Variable | Purpose |
 |---|---|
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL (sitemap, Open Graph, structured data). Set to your real domain. |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Shown on the site and used as the fallback address in error messages |
-| `NEXT_PUBLIC_WHATSAPP` | Digits with country code. Empty hides WhatsApp links. |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Shown on the site and used as the fallback address in error messages (default `genaitexofficial@gmail.com`) |
+| `NEXT_PUBLIC_WHATSAPP` | Digits with country code (default `919912377803`). Empty hides WhatsApp links. |
 | `RESEND_API_KEY` | Enables contact-form email delivery |
 | `CONTACT_TO_EMAIL` | Inbox that receives inquiries (defaults to `NEXT_PUBLIC_CONTACT_EMAIL`) |
 | `CONTACT_FROM_EMAIL` | Sender, on a domain verified in Resend |
 
 ## Deploy to Vercel and connect the domain
 
-1. Push this repo to GitHub and **Import** it in Vercel (Next.js is auto-detected).
-2. Add the environment variables above under *Project → Settings → Environment Variables*, then redeploy.
-3. *Settings → Domains → Add* your domain (for example `genaitex.com`) and add the DNS records Vercel displays at your registrar. Use the exact values shown there. Also add `www` and redirect it to the apex (or the reverse).
-4. In Resend, add and verify your domain (SPF/DKIM records) so inquiry emails are delivered reliably. Until then `onboarding@resend.dev` only delivers to your own Resend account email.
-5. Submit `https://<your-domain>/sitemap.xml` in Google Search Console.
+The repo is at `genaitexofficial/genaitex-website`. Once it is imported, every push to `main` redeploys automatically.
+
+1. **Import:** at [vercel.com/new](https://vercel.com/new), sign in with GitHub, choose the repo and click **Deploy** (Next.js is auto-detected; no build settings to change).
+2. **Environment variables** (*Project → Settings → Environment Variables*, then redeploy): add `RESEND_API_KEY` and `CONTACT_TO_EMAIL=genaitexofficial@gmail.com`. The public details (email, WhatsApp, domain) already default to the right values in `lib/site.ts`.
+3. **Domains** (*Project → Settings → Domains*): add `genaitex.com` and `www.genaitex.com`, then add `genaitex.in` and set it to **redirect to genaitex.com** so there is only one canonical site.
+4. **DNS at Spaceship** (*Domains → Manage → DNS records*): add the records Vercel shows for each domain, using the exact values on screen. They are typically an `A` record for the root and a `CNAME` for `www` (and the same pair for `genaitex.in`). Remove any conflicting default parking records first. Propagation usually takes minutes, occasionally up to a few hours.
+5. **Resend** (resend.com → Domains): add `genaitex.com`, copy the SPF/DKIM records into Spaceship DNS, and verify. Then set `CONTACT_FROM_EMAIL` to `genaitex <hello@genaitex.com>` in Vercel. Until then, leave it unset: `onboarding@resend.dev` only delivers to the email your Resend account was created with, so sign up to Resend with `genaitexofficial@gmail.com` for testing.
+6. Submit `https://genaitex.com/sitemap.xml` in Google Search Console.
 
 ## How it is built
 
