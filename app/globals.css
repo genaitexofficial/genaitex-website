@@ -101,6 +101,8 @@
 /* ───────────────────────── Base ───────────────────────── */
 :root {
   color-scheme: dark;
+  /* Height of the DNA window pinned at the top of phone screens (see components/dna/director.ts) */
+  --win: clamp(150px, 34svh, 320px);
 }
 
 html {
@@ -233,6 +235,47 @@ body {
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-violet-soft);
+  }
+}
+
+/*
+ * Phones (and tablets) have no room beside the content, so outside a chapter stage the DNA scene is pinned in
+ * a window across the top and content scrolls underneath it: the window's own backdrop (.dna-win-fill)
+ * hides the content, and both fade out at the window's bottom edge. While a chapter stage is on screen the
+ * scene is also revealed across the rows the stage covers (--rt to --rb, in px, written by the director), so
+ * it fills the screen there without ever spilling onto neighbouring content. Mask layers add together.
+ * Unlayered on purpose, so it wins over the pt-* utilities on the page headers.
+ */
+@media (max-width: 1023px) {
+  .dna-win-fill,
+  .dna-win-scene {
+    --edge: 3rem;
+    --window-mask: linear-gradient(to bottom, #000 calc(var(--win) - var(--edge)), transparent var(--win));
+    --soft: 1.75rem;
+    --reveal-mask: linear-gradient(
+      to bottom,
+      transparent var(--rt, 0px),
+      #000 calc(var(--rt, 0px) + var(--soft)),
+      #000 calc(var(--rb, 0px) - var(--soft)),
+      transparent var(--rb, 0px)
+    );
+  }
+  .dna-win-fill {
+    -webkit-mask-image: var(--window-mask);
+    mask-image: var(--window-mask);
+  }
+  .dna-win-scene {
+    -webkit-mask-image: var(--window-mask), var(--reveal-mask);
+    mask-image: var(--window-mask), var(--reveal-mask);
+  }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  /* page headers start below the window */
+  .page-top {
+    padding-top: calc(var(--win) + 1.5rem);
+  }
+  html {
+    scroll-padding-top: calc(var(--win) + 1rem);
   }
 }
 

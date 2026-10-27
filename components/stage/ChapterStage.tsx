@@ -53,7 +53,9 @@ export function ChapterStage({
 
   // While this stage is on the page, the site-wide DNA takes its camera from the chapters.
   useEffect(() => {
-    director.setStage({ progress: scrollYProgress, presence, keys });
+    const element = wrapperRef.current;
+    if (!element) return;
+    director.setStage({ progress: scrollYProgress, presence, keys, element });
     return () => director.setStage(null);
   }, [director, scrollYProgress, presence, keys]);
 
@@ -130,7 +132,7 @@ export function ChapterStage({
       ref={wrapperRef}
       aria-label={label}
       style={{ "--n": chapters.length } as CSSProperties}
-      className="relative motion-safe:h-[calc(var(--n)*100svh)]"
+      className="relative motion-safe:h-[calc(var(--n)*100svh)] motion-safe:max-lg:z-[35]"
     >
       <div className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
         <StageScrim />
@@ -161,7 +163,7 @@ export function ChapterStage({
                   // stacked (reduced motion): ordinary sections
                   "group/ch relative flex flex-col px-5 py-20 sm:px-8",
                   // pinned: every chapter fills the stage and fades in/out by state
-                  "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-20 motion-safe:pt-[calc(40%+3.5rem)]",
+                  "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-20 motion-safe:pt-24",
                   "motion-safe:transition-[opacity,transform] motion-safe:duration-700 motion-safe:ease-out",
                   "motion-safe:data-[state=before]:pointer-events-none motion-safe:data-[state=before]:-translate-y-6 motion-safe:data-[state=before]:opacity-0",
                   "motion-safe:data-[state=after]:pointer-events-none motion-safe:data-[state=after]:translate-y-6 motion-safe:data-[state=after]:opacity-0",
@@ -171,7 +173,7 @@ export function ChapterStage({
                 {/* Text group: a normal block on large screens; on phones its children join the column (via
                     `contents`) so the option chips, a sibling below, can sit between the intro and the buttons. */}
                 <div className="max-lg:contents motion-safe:lg:absolute motion-safe:lg:left-[13rem] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2">
-                  <div className="order-1 max-w-xl">
+                  <div className="order-1 max-w-xl max-lg:motion-safe:[text-shadow:0_1px_14px_rgba(5,6,10,0.9)]">
                     <p className="eyebrow mb-3">
                       <span className="text-cyan">{c.number}</span> · {c.eyebrow}
                     </p>

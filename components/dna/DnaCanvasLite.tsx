@@ -86,7 +86,8 @@ export default function DnaCanvasLite({
     const start = performance.now();
 
     const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      // phones get 1x: the beads are soft gradients, and it cuts the fill cost by more than half
+      dpr = Math.min(window.devicePixelRatio || 1, canvas.clientWidth >= 1024 ? 1.5 : 1);
       w = canvas.clientWidth;
       h = canvas.clientHeight;
       canvas.width = Math.max(1, Math.round(w * dpr));
@@ -104,7 +105,7 @@ export default function DnaCanvasLite({
       const tilt = HELIX_TILT + cam.roll;
       const cosT = Math.cos(tilt);
       const sinT = Math.sin(tilt);
-      const scale = (h / (wide ? 4.6 : 3.4)) * cam.fit * cam.zoom;
+      const scale = (h / 4.6) * cam.fit * cam.zoom;
       const cx = (cam.cx / 100) * w;
       const cy = (cam.cy / 100) * h;
 
@@ -134,7 +135,7 @@ export default function DnaCanvasLite({
       for (let k = 0; k < n; k++) {
         const i = order[k];
         const size = ss[i];
-        if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] > h + size) continue;
+        if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] - size > cam.visible) continue;
         ctx.globalAlpha = Math.max(0.3, Math.min(1, 0.7 + sz[i] * 0.3));
         const set = size > 70 ? large : small;
         ctx.drawImage(set[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);

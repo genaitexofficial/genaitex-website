@@ -16,7 +16,7 @@ export function useMediaQuery(query: string) {
 
 type NavigatorHints = Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
 
-/** Phones that are fast enough, with enough memory, and not on Data Saver get the lite scene. */
+/** Phones that are fast enough, with enough memory, and not on Data Saver get a scene at all. */
 function canRunLite() {
   const n = navigator as NavigatorHints;
   if (n.connection?.saveData) return false;
@@ -64,9 +64,10 @@ function useHardwareGL() {
 export type SceneTier = "full" | "lite" | null;
 
 /**
- * full: screens ≥ 768px with a real GPU (three.js) · lite: capable phones, and wide screens without a GPU
- * (2D canvas, no three.js) · null: reduced motion or weak devices, which keep the CSS backdrop and never
- * download a renderer.
+ * full: any device with a real GPU (three.js, the same scene on phones as on desktop; phones must also pass
+ * the capability checks) · lite: the same helix as a 2D canvas, no three.js, for devices without a GPU
+ * (headless browsers, VMs) and for wide screens that lack one · null: reduced motion or weak phones, which
+ * keep the CSS backdrop and never download a renderer.
  */
 export function useSceneTier(): SceneTier {
   const wide = useMediaQuery("(min-width: 768px)");
@@ -74,8 +75,8 @@ export function useSceneTier(): SceneTier {
   const capable = useCapableDevice();
   const gpu = useHardwareGL();
   if (reduced) return null;
-  if (wide) return gpu ? "full" : "lite";
-  return capable ? "lite" : null;
+  if (!wide && !capable) return null;
+  return gpu ? "full" : "lite";
 }
 
 /**

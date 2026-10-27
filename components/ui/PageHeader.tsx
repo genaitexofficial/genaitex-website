@@ -11,7 +11,7 @@ export function PageHeader({
   description?: React.ReactNode;
 }) {
   return (
-    <header className="relative isolate overflow-hidden pb-16 pt-36 sm:pt-44">
+    <header className="page-top relative isolate overflow-hidden pb-16 pt-36 sm:pt-44">
       <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
       <div
         aria-hidden

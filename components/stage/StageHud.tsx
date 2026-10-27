@@ -15,9 +15,9 @@ const pad = (n: number, width = 2) => String(n).padStart(width, "0");
  * comes from the real scene: the zoom is the camera's zoom, SEQ and PAIR are the targeted rung's position
  * and bases.
  *
- * It is fixed to the viewport in the same box the stage lays the helix out in (on phones the top 40%, on
- * large screens everything, with the reticle where the helix is centred) and fades with the stage, so it
- * only shows while the chapters are in control of the camera.
+ * It is fixed to the viewport in the box the helix is centred in (on phones a region around 34% of the screen
+ * height, on large screens everything, with the reticle where the helix is centred) and fades with the stage,
+ * so it only shows while the chapters are in control of the camera.
  */
 export function StageHud({
   hud,
@@ -44,12 +44,12 @@ export function StageHud({
     <m.div
       aria-hidden
       style={{ opacity: stage }}
-      className="pointer-events-none fixed inset-x-0 top-14 h-[40svh] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:66.7%]"
+      className="pointer-events-none fixed inset-x-0 top-14 h-[calc(68svh-7rem)] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:66.7%]"
     >
       {changes > 0 && <div key={changes} className="absolute inset-0 animate-flash bg-cyan/30" />}
 
       {/* Corner brackets framing the helix */}
-      <div className="absolute left-[var(--cx)] top-1/2 h-[80%] w-[min(90%,34rem)] -translate-x-1/2 -translate-y-1/2 lg:h-[66%] lg:w-[min(46vw,42rem)]">
+      <div className="absolute left-[var(--cx)] top-1/2 h-[62%] w-[min(90%,34rem)] -translate-x-1/2 -translate-y-1/2 lg:h-[66%] lg:w-[min(46vw,42rem)]">
         <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-cyan/60" />
         <span className="absolute right-0 top-0 h-5 w-5 border-r border-t border-cyan/60" />
         <span className="absolute bottom-0 left-0 h-5 w-5 border-b border-l border-cyan/60" />

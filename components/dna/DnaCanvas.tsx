@@ -109,6 +109,13 @@ function Dna({
     const { width, height } = state.size;
     const cam = director.sample(width, height);
     movingRef.current = cam.moving;
+    // Phones only see the top window (or the rows a chapter stage covers): do not shade the rest.
+    if (cam.visible < height - 1) {
+      state.gl.setScissorTest(true);
+      state.gl.setScissor(0, height - cam.visible, width, cam.visible);
+    } else {
+      state.gl.setScissorTest(false);
+    }
     const persp = state.camera as THREE.PerspectiveCamera;
 
     // Optical zoom (no flying inside the strands). The view offset is in pixels, so the zoom stays centred on
