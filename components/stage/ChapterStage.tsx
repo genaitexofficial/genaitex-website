@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { clsx } from "clsx";
@@ -18,6 +18,9 @@ import {
   ScrollHint,
 } from "./StageParts";
 import { useAnchors } from "./anchors";
+import { useHudState } from "./hud";
+import { useMagneticSettle } from "./useMagneticSettle";
+import { StageHud } from "./StageHud";
 import { useMediaQuery } from "./useScene";
 
 /**
@@ -41,15 +44,30 @@ export function ChapterStage({
   const last = chapters.length - 1;
   const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
   const [active, setActive] = useState(0);
+  const [changes, setChanges] = useState(0);
   const pinned = useMediaQuery("(prefers-reduced-motion: no-preference)");
+  const hud = useHudState();
+  useMagneticSettle(wrapperRef, chapters.length);
+  const keys = useMemo(() => chapters.map((c) => c.camera), [chapters]);
   const anchors = useAnchors(calloutSlots.map((s) => [s.line[2], s.line[3]] as [number, number]));
 
   const indexAt = (p: number) => Math.min(last, Math.max(0, Math.round(p * last)));
-  useMotionValueEvent(scrollYProgress, "change", (p) => setActive(indexAt(p)));
+  const shown = useRef(0);
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    const next = indexAt(p);
+    if (next === shown.current) return;
+    shown.current = next;
+    setActive(next);
+    setChanges((n) => n + 1);
+  });
 
   // Pick up the right chapter when the page loads already scrolled (reload, back button, anchor).
   useEffect(() => {
-    const id = requestAnimationFrame(() => setActive(indexAt(scrollYProgress.get())));
+    const id = requestAnimationFrame(() => {
+      // restoring a scrolled page (reload, back button) is not a chapter change, so no glitch
+      shown.current = indexAt(scrollYProgress.get());
+      setActive(shown.current);
+    });
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -116,10 +134,11 @@ export function ChapterStage({
         />
         <div aria-hidden className="bg-grid absolute inset-0 -z-20 opacity-70" />
 
-        <StageScene progress={scrollYProgress} anchors={anchors} watch={wrapperRef} />
+        <StageScene progress={scrollYProgress} anchors={anchors} keys={keys} hud={hud} watch={wrapperRef} />
 
         {pinned && (
           <>
+            <StageHud hud={hud} progress={scrollYProgress} active={active} total={chapters.length} changes={changes} />
             <AnchorLines anchors={anchors} />
             <ChapterRail chapters={chapters} active={active} progress={scrollYProgress} onSelect={scrollToChapter} />
             <ProgressTrack chapters={chapters} active={active} progress={scrollYProgress} onSelect={scrollToChapter} />
@@ -141,7 +160,7 @@ export function ChapterStage({
                 aria-labelledby={`chapter-${c.id}-title`}
                 className={clsx(
                   // stacked (reduced motion): ordinary sections
-                  "relative flex flex-col px-5 py-20 sm:px-8",
+                  "group/ch relative flex flex-col px-5 py-20 sm:px-8",
                   // pinned: every chapter fills the stage and fades in/out by state
                   "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-20 motion-safe:pt-[calc(40%+3.5rem)]",
                   "motion-safe:transition-[opacity,transform] motion-safe:duration-700 motion-safe:ease-out",
@@ -159,7 +178,10 @@ export function ChapterStage({
                     </p>
                     <Heading
                       id={`chapter-${c.id}-title`}
-                      className="text-balance text-3xl font-semibold leading-[1.08] tracking-tight sm:text-4xl xl:text-5xl"
+                      className={clsx(
+                        "text-balance text-3xl font-semibold leading-[1.08] tracking-tight sm:text-4xl xl:text-5xl",
+                        changes > 0 && "group-data-[state=active]/ch:animate-glitch",
+                      )}
                     >
                       {c.title}
                     </Heading>

@@ -2,16 +2,25 @@
 
 import { useEffect, useRef } from "react";
 import type { MotionValue } from "motion/react";
-import { baseColors, buildHelix, HELIX_TILT, helixPose } from "@/lib/helix";
+import {
+  baseColors,
+  buildHelix,
+  cameraAt,
+  type CameraKey,
+  HELIX_TILT,
+  helixAngle,
+} from "@/lib/helix";
 import type { Anchor } from "./anchors";
+import { createHudWriter, reticleCenter, type HudState } from "./hud";
 
 /**
- * The 2D-canvas renderer for the stage: the same DNA double helix drawn from pre-rendered sphere
- * sprites. No three.js or WebGL, so it costs a few KB and little CPU. Used on capable phones and on wide
- * screens without a GPU.
+ * The 2D-canvas renderer for the stage: the same DNA double helix and the same fly-through zoom, drawn
+ * from pre-rendered sphere sprites. No three.js or WebGL, so it costs a few KB and little CPU. Used on
+ * capable phones and on wide screens without a GPU.
  *
  * It only works hard while the helix is moving: full frame rate during scrolling, a slow gentle drift
- * otherwise, which keeps the main thread and battery calm.
+ * otherwise, which keeps the main thread and battery calm. Zoomed in, most beads are off screen and
+ * skipped, so deep zoom is cheaper, not dearer.
  */
 
 const MOVING_MS = 1000 / 30;
@@ -20,8 +29,7 @@ const CAMERA = 6;
 const baseKeys = ["A", "T", "G", "C"] as const;
 
 /** A soft, glossy sphere sprite in the given colour (a highlight in the upper left, a dark rim). */
-function sphereSprite(color: string, glossy: boolean) {
-  const size = 64;
+function sphereSprite(color: string, glossy: boolean, size: number) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const g = c.getContext("2d")!;
@@ -44,10 +52,14 @@ function sphereSprite(color: string, glossy: boolean) {
 export default function StageCanvasLite({
   progress,
   anchors,
+  keys,
+  hud,
   active,
 }: {
   progress: MotionValue<number>;
   anchors: Anchor[];
+  keys: readonly CameraKey[];
+  hud: HudState;
   active: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,19 +71,20 @@ export default function StageCanvasLite({
 
     // Phones get the sparse bead set; wide screens (which only land here without a GPU) can afford the full one.
     const { beads, rungs } = buildHelix(!window.matchMedia("(min-width: 1024px)").matches);
-    const sprites = [
-      sphereSprite("#2b6fe0", true),
-      ...baseKeys.map((k) => sphereSprite(baseColors[k], false)),
-    ];
+    const colorList = ["#2b6fe0", ...baseKeys.map((k) => baseColors[k])];
+    // Two resolutions: small sprites for ordinary beads, large ones so zoomed-in beads stay sharp.
+    const small = colorList.map((c, i) => sphereSprite(c, i === 0, 64));
+    const large = colorList.map((c, i) => sphereSprite(c, i === 0, 192));
     const n = beads.length;
     const sx = new Float32Array(n);
     const sy = new Float32Array(n);
     const sz = new Float32Array(n);
     const ss = new Float32Array(n);
     const order = Uint16Array.from({ length: n }, (_, i) => i);
-    const cosT = Math.cos(HELIX_TILT);
-    const sinT = Math.sin(HELIX_TILT);
+    const rx = new Float32Array(rungs.length);
+    const ry = new Float32Array(rungs.length);
     const easedAnchors = anchors.map((a) => ({ x: a.target.x, y: a.target.y }));
+    const writeHud = createHudWriter(hud);
 
     let w = 0;
     let h = 0;
@@ -91,21 +104,28 @@ export default function StageCanvasLite({
 
     const draw = (now: number) => {
       const wide = w >= 1024; // the canvas fills the stage, with the helix pushed right of the text column
-      const pose = helixPose(progress.get(), (now - start) / 1000);
-      const cosA = Math.cos(pose.angle);
-      const sinA = Math.sin(pose.angle);
-      const scale = wide ? h / 4.6 : h / 3.4;
-      const cx = wide ? w * 0.66 : w / 2;
-      const cy = h / 2;
+      const p = progress.get();
+      const cam = cameraAt(p, keys);
+      const angle = helixAngle(p, (now - start) / 1000);
+      const slide = cam.focus + (p - 0.5) * 0.8;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const tilt = HELIX_TILT + cam.roll;
+      const cosT = Math.cos(tilt);
+      const sinT = Math.sin(tilt);
+      const scale = (wide ? h / 4.6 : h / 3.4) * cam.zoom;
+      const c = reticleCenter(w);
+      const cx = (c.x / 100) * w;
+      const cy = (c.y / 100) * h;
 
       const toScreen = (x: number, y: number, z: number) => {
         const x1 = x * cosA + z * sinA;
         const z1 = -x * sinA + z * cosA;
-        const y1 = y + pose.slide;
+        const y1 = y + slide;
         const x2 = x1 * cosT - y1 * sinT;
         const y2 = x1 * sinT + y1 * cosT;
-        const p = CAMERA / (CAMERA - z1);
-        return { x: cx + x2 * p * scale, y: cy - y2 * p * scale, z: z1, p };
+        const q = CAMERA / (CAMERA - z1);
+        return { x: cx + x2 * q * scale, y: cy - y2 * q * scale, z: z1, p: q };
       };
 
       for (let i = 0; i < n; i++) {
@@ -125,26 +145,29 @@ export default function StageCanvasLite({
         const i = order[k];
         const size = ss[i];
         if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] > h + size) continue;
-        ctx.globalAlpha = Math.max(0.35, Math.min(1, 0.7 + sz[i] * 0.3));
-        ctx.drawImage(sprites[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);
+        ctx.globalAlpha = Math.max(0.3, Math.min(1, 0.7 + sz[i] * 0.3));
+        const set = size > 70 ? large : small;
+        ctx.drawImage(set[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);
       }
       ctx.globalAlpha = 1;
 
-      // Large screens: attach each callout line to the rung nearest its target zone, as the 3D scene does.
+      // Project every rung once: used for the callout lines (large screens) and the targeted base pair.
+      for (let i = 0; i < rungs.length; i++) {
+        const q = toScreen(rungs[i].mid[0], rungs[i].mid[1], rungs[i].mid[2]);
+        rx[i] = (q.x / w) * 100;
+        ry[i] = (q.y / h) * 100;
+      }
       if (wide) {
         anchors.forEach((a, k) => {
           let best = Infinity;
           let bx = a.target.x;
           let by = a.target.y;
-          for (const r of rungs) {
-            const q = toScreen(r.mid[0], r.mid[1], r.mid[2]);
-            const px = (q.x / w) * 100;
-            const py = (q.y / h) * 100;
-            const d = (px - a.target.x) ** 2 + (py - a.target.y) ** 2;
+          for (let i = 0; i < rungs.length; i++) {
+            const d = (rx[i] - a.target.x) ** 2 + (ry[i] - a.target.y) ** 2;
             if (d < best) {
               best = d;
-              bx = px;
-              by = py;
+              bx = rx[i];
+              by = ry[i];
             }
           }
           const e = easedAnchors[k];
@@ -154,6 +177,16 @@ export default function StageCanvasLite({
           a.y.set(e.y);
         });
       }
+      let target = 0;
+      let best = Infinity;
+      for (let i = 0; i < rungs.length; i++) {
+        const d = (rx[i] - c.x) ** 2 + (ry[i] - c.y) ** 2;
+        if (d < best) {
+          best = d;
+          target = i;
+        }
+      }
+      writeHud(cam.zoom, rungs[target], now);
     };
 
     const frame = (now: number) => {
@@ -179,7 +212,7 @@ export default function StageCanvasLite({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [active, progress, anchors]);
+  }, [active, progress, anchors, keys, hud]);
 
   return <canvas ref={canvasRef} aria-hidden className="h-full w-full animate-fade-in" />;
 }

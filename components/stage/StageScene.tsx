@@ -3,7 +3,9 @@
 import dynamic from "next/dynamic";
 import { Component, type RefObject } from "react";
 import type { MotionValue } from "motion/react";
+import type { CameraKey } from "@/lib/helix";
 import type { Anchor } from "./anchors";
+import type { HudState } from "./hud";
 import { useAfterLoad, useSceneActive, useSceneTier } from "./useScene";
 
 // Both renderers are fetched on demand, after the page is already usable.
@@ -29,10 +31,14 @@ class SceneBoundary extends Component<{ children: React.ReactNode }, { failed: b
 export function StageScene({
   progress,
   anchors,
+  keys,
+  hud,
   watch,
 }: {
   progress: MotionValue<number>;
   anchors: Anchor[];
+  keys: readonly CameraKey[];
+  hud: HudState;
   /** The element whose visibility pauses rendering. */
   watch: RefObject<Element | null>;
 }) {
@@ -51,12 +57,14 @@ export function StageScene({
       {show && tier && (
         <SceneBoundary>
           {tier === "full" ? (
-            <StageCanvas progress={progress} anchors={anchors} active={active} />
+            <StageCanvas progress={progress} anchors={anchors} keys={keys} hud={hud} active={active} />
           ) : (
-            <StageCanvasLite progress={progress} anchors={anchors} active={active} />
+            <StageCanvasLite progress={progress} anchors={anchors} keys={keys} hud={hud} active={active} />
           )}
         </SceneBoundary>
       )}
+      {/* Keeps the text column readable when the helix is zoomed in behind it */}
+      <div className="absolute inset-y-0 left-0 hidden w-[58%] bg-[linear-gradient(90deg,rgba(5,9,20,0.9),rgba(5,9,20,0.72)_55%,transparent)] lg:block" />
     </div>
   );
 }

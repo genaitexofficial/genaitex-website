@@ -21,10 +21,58 @@
   --animate-float: float 7s ease-in-out infinite;
   --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
   --animate-fade-in: fade-in 1.2s ease-out both;
+  --animate-glitch: glitch-in 0.45s steps(9, end) both;
+  --animate-flash: flash 0.4s ease-out both;
+  --animate-hud-sweep: hud-sweep 7s linear infinite;
 
   @keyframes marquee {
     to {
       transform: translateX(-50%);
+    }
+  }
+  /* One short burst when a chapter changes: slices of the heading jump sideways with cyan/magenta fringes. */
+  @keyframes glitch-in {
+    0% {
+      transform: translateX(-7px);
+      clip-path: inset(8% 0 58% 0);
+      text-shadow: 3px 0 #22d3ee, -3px 0 #f0abfc;
+    }
+    22% {
+      transform: translateX(6px);
+      clip-path: inset(56% 0 6% 0);
+    }
+    44% {
+      transform: translateX(-3px);
+      clip-path: inset(28% 0 34% 0);
+      text-shadow: 2px 0 #22d3ee, -2px 0 #f0abfc;
+    }
+    66% {
+      transform: translateX(2px);
+      clip-path: inset(0 0 0 0);
+    }
+    100% {
+      transform: none;
+      clip-path: inset(0 0 0 0);
+      text-shadow: none;
+    }
+  }
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    18% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes hud-sweep {
+    from {
+      top: -14%;
+    }
+    to {
+      top: 104%;
     }
   }
   @keyframes fade-in {
@@ -137,6 +185,38 @@ body {
   }
   .glow-card:hover::before {
     opacity: 1;
+  }
+
+  /* Sci-fi HUD textures */
+  .hud-scanlines {
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(125 211 252 / 0.045) 0,
+      rgb(125 211 252 / 0.045) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+    mix-blend-mode: screen;
+  }
+  .hud-sweep {
+    height: 14%;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(34 211 238 / 0.06) 55%,
+      rgb(125 211 252 / 0.3) 99%,
+      transparent
+    );
+  }
+  /* Speed lines radiating from the reticle while the zoom is moving (opacity is driven by zoom speed) */
+  .hud-streaks {
+    background: repeating-conic-gradient(
+      from 0deg at var(--cx) 50%,
+      transparent 0deg 5deg,
+      rgb(125 211 252 / 0.55) 5deg 5.35deg
+    );
+    -webkit-mask-image: radial-gradient(circle at var(--cx) 50%, transparent 14%, #000 72%);
+    mask-image: radial-gradient(circle at var(--cx) 50%, transparent 14%, #000 72%);
   }
 
   .eyebrow {

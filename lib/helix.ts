@@ -76,6 +76,10 @@ export interface Bead {
 export interface Rung {
   /** Midpoint of the rung (where the two bases meet), in helix space. */
   mid: [number, number, number];
+  /** The two bases this rung joins, e.g. ["A", "T"]. */
+  pair: [Base, Base];
+  /** Position along the helix, 0..1. */
+  t: number;
 }
 
 export function mulberry32(seed: number) {
@@ -129,17 +133,47 @@ export function buildHelix(lite = false) {
         });
       }
     }
-    rungs.push({ mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2] });
+    rungs.push({ mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], pair: [left, right], t: i / (P.steps - 1) });
   }
 
   return { beads, rungs };
 }
 
-/** Scroll progress (0..1) and clock time to the helix's rotation about its axis and its slide along it. */
-export function helixPose(progress: number, seconds: number) {
+/** Scroll progress (0..1) and clock time to the helix's rotation about its axis. */
+export function helixAngle(progress: number, seconds: number) {
+  return progress * Math.PI * 4 + seconds * 0.12;
+}
+
+/** Where the camera looks and how far it is zoomed in, at one chapter. */
+export interface CameraKey {
+  /** Optical zoom: 1 = the whole helix in view, 6 = a single base pair filling the screen. */
+  zoom: number;
+  /** Where along the helix axis the camera looks (world units; 0 = the middle). */
+  focus: number;
+  /** A touch of camera roll in radians, for a more handheld, cinematic feel. */
+  roll?: number;
+}
+
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+/**
+ * Interpolates the chapter camera keys at scroll progress `p` (0..1).
+ * Each step holds its view for the first quarter of the swipe, eases through the middle half, then
+ * holds the next view for the last quarter, so every chapter reads clearly before the next fly-through.
+ * Zoom is interpolated in log space, so the dolly feels even rather than rushing at the end.
+ */
+export function cameraAt(p: number, keys: readonly CameraKey[]) {
+  const last = keys.length - 1;
+  const t = clamp01(p) * last;
+  const i = Math.min(Math.floor(t), Math.max(last - 1, 0));
+  const e = easeInOutCubic(clamp01((t - i - 0.25) / 0.5));
+  const a = keys[i];
+  const b = keys[Math.min(i + 1, last)];
   return {
-    angle: progress * Math.PI * 4 + seconds * 0.12,
-    slide: (progress - 0.5) * 2.4,
+    zoom: Math.exp(Math.log(a.zoom) + (Math.log(b.zoom) - Math.log(a.zoom)) * e),
+    focus: a.focus + (b.focus - a.focus) * e,
+    roll: (a.roll ?? 0) + ((b.roll ?? 0) - (a.roll ?? 0)) * e,
   };
 }
 

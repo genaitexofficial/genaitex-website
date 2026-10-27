@@ -28,6 +28,8 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 | Form options (project types, budgets, timelines), `?type=` shortcuts and rules | `lib/validation.ts` |
 | About page copy and tech stack | `app/about/page.tsx` |
 | DNA helix look (size, turns, colours of the four bases) | `lib/helix.ts` |
+| How deep the camera zooms at each chapter (`zoom`, `focus`, `roll`) | the `camera` key of each chapter in `lib/chapters.ts` |
+| HUD wording and layout (`ZOOM`, `SEQ`, `CH`, reticle, scanlines) | `components/stage/StageHud.tsx`, `app/globals.css` |
 | Colours, fonts, glow/grid utilities | `app/globals.css`, `app/layout.tsx` |
 | Logo mark | `components/ui/Logo.tsx`, `app/icon.svg` |
 
@@ -77,6 +79,9 @@ The repo is at `genaitexofficial/genaitex-website`. Once it is imported, every p
   - Capable phones, and desktops without a GPU (headless browsers, VMs, remote desktops: detected by renderer name): a 2D-canvas version of the same helix, a few KB, no three.js. It only works hard while scrolling.
   - Reduced motion, Data Saver or weak devices: no canvas at all.
   - The scene pauses when scrolled off screen or when the tab is hidden.
+- **Zoom per chapter:** each chapter has a camera keyframe (`zoom`, `focus`, `roll` in `lib/chapters.ts`). `cameraAt()` in `lib/helix.ts` blends between them (holds for a quarter of each step, eases through the middle half, zoom blended in log space), and both renderers read it, so they always agree. On Home the helix goes ×1.5 → ×2.4 → ×4 → ×6 (a single base pair) and pulls back to ×1.3 at the end. The three.js scene zooms optically (`camera.zoom`), so perspective stays clean.
+- **Sci-fi HUD** (`components/stage/StageHud.tsx`, decorative and `aria-hidden`): corner brackets, a targeting reticle on the base pair nearest the centre, scanlines, a slow scan sweep, speed streaks while the zoom moves, and a single glitch and flash burst per chapter change (about 0.4s, so it stays well inside the flashing-content limit). Every number is real: `ZOOM` is the camera zoom, `SEQ` and the pair label (for example `A–T`) are the targeted rung's position and bases in the helix data, and `CH` is the chapter. Values flow through motion values (`components/stage/hud.ts`), so there is no React re-render per frame. Hidden under reduced motion.
+- **Swipe settle on touch screens** (`components/stage/useMagneticSettle.ts`): when a swipe ends and scrolling goes idle, the page eases to a chapter, so one swipe is about one chapter (a forward swipe past ~12% of a step lands on the next one). It only runs on coarse pointers with motion allowed, never while a finger is down, and never at the very start or end of the stage, so it can't trap anyone. Mouse, trackpad and keyboard scrolling stay completely free.
 - **Option picker** (`components/stage/OptionPicker.tsx`): accessible tabs (arrow keys, Home/End) showing what's included, who it's for and the tech. Its button opens `/contact?type=static|shopify|custom|ai` with that project type preselected; the contact page stays statically prerendered (`useSearchParams` inside `<Suspense>`).
 - **Deep links:** chapter ids match the service slugs, so `/services#shopify-storefronts` lands on the right chapter (handled in `ChapterStage`, since a pinned stage can't be scrolled to natively).
 - **Other pages:** a scroll-progress hairline under the navbar, a faint DNA motif in page headers, a numbered section rail on About and case studies, and a parallax project mockup.
@@ -89,3 +94,5 @@ The repo is at `genaitexofficial/genaitex-website`. Once it is imported, every p
 ## Testing the 3D scene locally
 
 Headless browsers render WebGL in software, which the site deliberately detects and avoids. To exercise the three.js path in a test, set `window.__FORCE_WEBGL = true` before the page loads (for example with Playwright's `addInitScript`).
+
+To test the swipe settle, emulate a touch device and send real touch events (for example Playwright with `isMobile` and `hasTouch`, then CDP `Input.dispatchTouchEvent`: `touchStart`, a series of `touchMove`, `touchEnd`). After about a second the scroll position should rest on a chapter centre.

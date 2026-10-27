@@ -1,4 +1,4 @@
-import type { Base } from "./helix";
+import type { Base, CameraKey } from "./helix";
 
 /** Icon keys resolved to lucide icons in the stage components. */
 export type IconKey =
@@ -43,6 +43,8 @@ export interface Chapter {
   lead: string;
   /** Longer copy, shown on large screens only. */
   body: string;
+  /** Where the DNA camera is, and how far zoomed in, while this chapter is on screen. */
+  camera: CameraKey;
   callouts: Callout[];
   card: { title: string; body: string; meter?: { label: string; value: string; fill: number } };
   cta: { label: string; href: string };
@@ -62,6 +64,7 @@ export const homeChapters: Chapter[] = [
     title: "Websites & storefronts engineered to convert.",
     lead: "genaitex builds fast static websites, custom Shopify storefronts and bespoke software, from first sketch to launch and beyond.",
     body: "One team designs, builds and ships it all. Choose the starting point that fits your business: each option pairs with the pieces that make it perform.",
+    camera: { zoom: 1.5, focus: 0 },
     callouts: [
       {
         title: "Static Websites",
@@ -112,6 +115,7 @@ export const homeChapters: Chapter[] = [
     title: "Pages that load before you blink.",
     lead: "Pre-rendered pages served from the edge: nothing to patch, almost nothing to go wrong, and fast on any connection.",
     body: "We design and build sites that feel premium, score well on Core Web Vitals and are easy for you to update. Ideal for businesses, founders and creators who need a sharp online presence without the maintenance burden.",
+    camera: { zoom: 2.4, focus: 2.2, roll: 0.06 },
     callouts: [
       { title: "Custom design", detail: "No templates, no page-builder bloat", icon: "palette" },
       { title: "SEO-ready markup", detail: "Structure search engines understand", icon: "search" },
@@ -133,6 +137,7 @@ export const homeChapters: Chapter[] = [
     title: "A store that looks like a flagship and sells like one.",
     lead: "Shopify runs the commerce engine; we build the experience on top, from a tightly customised theme to a fully headless storefront.",
     body: "We shape the buying journey around your products and your brand: product pages, bundles, cart upgrades, checkout extensions and the integrations that keep your store running smoothly.",
+    camera: { zoom: 4, focus: -1.9, roll: -0.08 },
     callouts: [
       { title: "Custom Liquid themes", detail: "Sections you can edit in Shopify", icon: "layers" },
       { title: "Headless storefronts", detail: "Hydrogen or Next.js on the Storefront API", icon: "zap" },
@@ -154,6 +159,7 @@ export const homeChapters: Chapter[] = [
     title: "Software built around how you actually work.",
     lead: "When an off-the-shelf tool does not fit, we build the thing you need: web apps, APIs, integrations and AI features.",
     body: "From an MVP in front of users to production systems: dashboards, customer portals, connections between the tools you already use, and AI assistants grounded in your own content and data.",
+    camera: { zoom: 6, focus: 1.2, roll: 0.1 },
     callouts: [
       { title: "Web apps & dashboards", detail: "From MVP to production", icon: "code" },
       { title: "APIs & integrations", detail: "Connect the tools you already use", icon: "plug" },
@@ -175,6 +181,7 @@ export const homeChapters: Chapter[] = [
     title: "Live on your domain, built to last.",
     lead: "We handle go-live, final checks, analytics and handover, then stay on hand for updates and new features.",
     body: "Your code, your accounts and your content stay yours, with documentation and a walkthrough so you are never locked in.",
+    camera: { zoom: 1.3, focus: 0 },
     callouts: [
       { title: "Pre-launch checks", detail: "Speed, accessibility and SEO review", icon: "gauge" },
       { title: "Analytics & monitoring", detail: "See how it performs from day one", icon: "chart" },
@@ -201,12 +208,14 @@ export const servicesChapters: Chapter[] = [
     ...home("websites"),
     id: "static-websites",
     number: "01",
+    camera: { zoom: 1.8, focus: 1.6 },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
     ...home("storefronts"),
     id: "shopify-storefronts",
     number: "02",
+    camera: { zoom: 3, focus: -2, roll: -0.06 },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
@@ -217,6 +226,7 @@ export const servicesChapters: Chapter[] = [
     title: "Software built around how you actually work.",
     lead: "When an off-the-shelf tool does not fit, we build the thing you need: internal dashboards, customer portals, APIs and integrations.",
     body: "From an MVP in front of users to production systems, built with typed, tested code and reviewed for performance and security.",
+    camera: { zoom: 4.4, focus: 1.1, roll: 0.07 },
     callouts: [
       { title: "Web apps & dashboards", detail: "From MVP to production", icon: "code" },
       { title: "APIs & integrations", detail: "Connect the tools you already use", icon: "plug" },
@@ -235,6 +245,7 @@ export const servicesChapters: Chapter[] = [
     title: "AI where it earns its keep.",
     lead: "Assistants that answer from your own content, search that understands questions, and automation that takes repetitive work off your team.",
     body: "We keep a person in the loop where answers matter, and build in usage limits, logging and sensible data handling from the start.",
+    camera: { zoom: 6.4, focus: -1.4, roll: -0.1 },
     callouts: [
       { title: "Grounded assistants", detail: "Answers drawn from your content and data", icon: "bot" },
       { title: "Document & knowledge search", detail: "Find the right answer fast", icon: "search" },
@@ -253,6 +264,7 @@ export const servicesChapters: Chapter[] = [
     title: "A clear process, no surprises.",
     lead: "Five stages, a live preview link from the first week, and a scope agreed up front.",
     body: "Discover, design, build, launch, support: you always know what is happening and what comes next.",
+    camera: { zoom: 1.4, focus: 0 },
     callouts: [
       { title: "Discover", detail: "Goals, audience, scope and a quote", icon: "search" },
       { title: "Design", detail: "Wireframes and polished designs for key pages", icon: "palette" },
