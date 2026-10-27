@@ -23,7 +23,6 @@
   --animate-fade-in: fade-in 1.2s ease-out both;
   --animate-glitch: glitch-in 0.45s steps(9, end) both;
   --animate-flash: flash 0.4s ease-out both;
-  --animate-hud-sweep: hud-sweep 7s linear infinite;
 
   @keyframes marquee {
     to {
@@ -67,15 +66,6 @@
       opacity: 0;
     }
   }
-  /* The sweep band is 14% of its container tall: -100% to 743% of its own height spans -14% to 104%. */
-  @keyframes hud-sweep {
-    from {
-      transform: translateY(-100%);
-    }
-    to {
-      transform: translateY(743%);
-    }
-  }
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -101,8 +91,9 @@
 /* ───────────────────────── Base ───────────────────────── */
 :root {
   color-scheme: dark;
-  /* Height of the DNA window pinned at the top of phone screens (see components/dna/director.ts) */
-  --win: clamp(150px, 34svh, 320px);
+  /* Phones and tablets: the content starts this far from the left edge, leaving the DNA spine beside it
+     (spinePx in components/dna/director.ts uses the same numbers). */
+  --spine: clamp(5.25rem, 17vw, 10rem);
 }
 
 html {
@@ -207,17 +198,6 @@ body {
     );
     mix-blend-mode: screen;
   }
-  .hud-sweep {
-    top: 0;
-    height: 14%;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(34 211 238 / 0.06) 55%,
-      rgb(125 211 252 / 0.3) 99%,
-      transparent
-    );
-  }
   /* Speed lines radiating from the reticle while the zoom is moving (opacity is driven by zoom speed) */
   .hud-streaks {
     background: repeating-conic-gradient(
@@ -239,43 +219,58 @@ body {
 }
 
 /*
- * Phones (and tablets) have no room beside the content, so outside a chapter stage the DNA scene is pinned in
- * a window across the top and content scrolls underneath it: the window's own backdrop (.dna-win-fill)
- * hides the content, and both fade out at the window's bottom edge. While a chapter stage is on screen the
- * scene is also revealed across the rows the stage covers (--rt to --rb, in px, written by the director), so
- * it fills the screen there without ever spilling onto neighbouring content. Mask layers add together.
- * Unlayered on purpose, so it wins over the pt-* utilities on the page headers.
+ * Phones and tablets have no room beside the content, so the DNA is a spine up the left edge and the content
+ * sits to its right (main and the footer are padded by the spine; chapter stages span the full width over it).
+ * Content blocks (.dna-node) grow out of the spine as they scroll into view and fold back into it as they
+ * leave, in step with the scroll (scroll-driven animations; where unsupported they just appear as before).
+ * TetherLayer draws their lines to the helix. Reduced motion gets the plain layout.
  */
-@media (max-width: 1023px) {
-  .dna-win-fill,
-  .dna-win-scene {
-    --edge: 3rem;
-    --window-mask: linear-gradient(to bottom, #000 calc(var(--win) - var(--edge)), transparent var(--win));
-    --soft: 1.75rem;
-    --reveal-mask: linear-gradient(
-      to bottom,
-      transparent var(--rt, 0px),
-      #000 calc(var(--rt, 0px) + var(--soft)),
-      #000 calc(var(--rb, 0px) - var(--soft)),
-      transparent var(--rb, 0px)
-    );
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  main,
+  footer {
+    padding-left: calc(var(--spine) - 1.25rem);
   }
-  .dna-win-fill {
-    -webkit-mask-image: var(--window-mask);
-    mask-image: var(--window-mask);
+  main > [data-stage] {
+    margin-left: calc(1.25rem - var(--spine));
   }
-  .dna-win-scene {
-    -webkit-mask-image: var(--window-mask), var(--reveal-mask);
-    mask-image: var(--window-mask), var(--reveal-mask);
+  /* the content column is narrower beside the spine: let grid items shrink to it instead of overflowing */
+  main .grid > * {
+    min-width: 0;
+  }
+  section[aria-label="Technologies we work with"],
+  footer {
+    border-width: 0;
+  }
+  .dna-spine-still {
+    width: var(--spine);
+    background:
+      repeating-linear-gradient(to bottom, rgba(103, 232, 249, 0.5) 0 2px, transparent 2px 18px)
+        calc(var(--spine) * 0.3) 0 / 2px 100% no-repeat,
+      linear-gradient(to right, rgba(34, 150, 255, 0.06), transparent);
+  }
+  @supports (animation-timeline: view()) {
+    .dna-node {
+      transform-origin: 0% 25%;
+      animation:
+        dna-bud linear backwards,
+        dna-fold linear forwards;
+      animation-timeline: view(), view();
+      animation-range:
+        entry 0% entry 60%,
+        exit 30% exit 100%;
+    }
   }
 }
-@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
-  /* page headers start below the window */
-  .page-top {
-    padding-top: calc(var(--win) + 1.5rem);
+@keyframes dna-bud {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem) scale(0.9);
   }
-  html {
-    scroll-padding-top: calc(var(--win) + 1rem);
+}
+@keyframes dna-fold {
+  to {
+    opacity: 0.2;
+    transform: translateX(-0.75rem) scale(0.95);
   }
 }
 

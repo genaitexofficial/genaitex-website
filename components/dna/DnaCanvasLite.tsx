@@ -135,7 +135,7 @@ export default function DnaCanvasLite({
       for (let k = 0; k < n; k++) {
         const i = order[k];
         const size = ss[i];
-        if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] - size > cam.visible) continue;
+        if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] > h + size) continue;
         ctx.globalAlpha = Math.max(0.3, Math.min(1, 0.7 + sz[i] * 0.3));
         const set = size > 70 ? large : small;
         ctx.drawImage(set[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);
@@ -148,13 +148,16 @@ export default function DnaCanvasLite({
         rx[i] = (q.x / w) * 100;
         ry[i] = (q.y / h) * 100;
       }
-      if (wide && cam.stage > 0.02) {
+      director.publishRungs(rx, ry, w, h);
+      if (cam.stage > 0.02) {
         anchors.forEach((a, k) => {
+          const aim = wide ? a.target : a.phone;
+          const r = director.stageRatio(h); // stage percentages are of svh, rung percentages of the canvas
           let best = Infinity;
-          let bx = a.target.x;
-          let by = a.target.y;
+          let bx = aim.x;
+          let by = aim.y * r;
           for (let i = 0; i < rungs.length; i++) {
-            const d = (rx[i] - a.target.x) ** 2 + (ry[i] - a.target.y) ** 2;
+            const d = (rx[i] - aim.x) ** 2 + (ry[i] - aim.y * r) ** 2;
             if (d < best) {
               best = d;
               bx = rx[i];
@@ -165,7 +168,7 @@ export default function DnaCanvasLite({
           e.x += (bx - e.x) * 0.2;
           e.y += (by - e.y) * 0.2;
           a.x.set(e.x);
-          a.y.set(e.y);
+          a.y.set(e.y / r);
         });
       }
       let target = 0;

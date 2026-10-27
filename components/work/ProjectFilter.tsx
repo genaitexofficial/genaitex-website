@@ -71,7 +71,9 @@ function FilterGrid({ projects, headingLevel }: GridProps) {
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              <ProjectCard project={p} headingLevel={headingLevel} />
+              <div className="dna-node h-full">
+                <ProjectCard project={p} headingLevel={headingLevel} />
+              </div>
             </m.li>
           ))}
         </AnimatePresence>

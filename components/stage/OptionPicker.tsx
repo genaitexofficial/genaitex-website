@@ -62,7 +62,7 @@ export function OptionPicker({
       <div
         role="tablist"
         aria-label="Project options"
-        className="mt-12 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        className="dna-node mt-12 grid grid-cols-2 gap-3 lg:grid-cols-4"
       >
         {services.map((svc, i) => {
           const on = i === selected;
@@ -112,7 +112,7 @@ export function OptionPicker({
         aria-labelledby={`${id}-tab-${s.slug}`}
         tabIndex={0}
         key={s.slug}
-        className="glass mt-6 animate-fade-in rounded-3xl p-6 sm:p-10"
+        className="glass dna-node mt-6 animate-fade-in rounded-3xl p-6 sm:p-10"
       >
         <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <div>

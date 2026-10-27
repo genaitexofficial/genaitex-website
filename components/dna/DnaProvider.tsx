@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 import { useMotionValue } from "motion/react";
-import { calloutSlots } from "@/components/stage/StageParts";
+import { calloutSlots, phoneSlots } from "@/components/stage/StageParts";
 import { useAnchors, type Anchor } from "./anchors";
 import { createDirector, type Director } from "./director";
 import { useHudState, type HudState } from "./hud";
@@ -20,8 +20,6 @@ export interface Dna {
   cx: MotionValue<number>;
   cy: MotionValue<number>;
   stage: MotionValue<number>;
-  revealTop: MotionValue<number>;
-  revealBottom: MotionValue<number>;
 }
 
 const DnaContext = createContext<Dna | null>(null);
@@ -34,26 +32,17 @@ export function useDna(): Dna {
 
 export function DnaProvider({ children }: { children: React.ReactNode }) {
   const hud = useHudState();
-  const anchors = useAnchors(calloutSlots.map((s) => [s.line[2], s.line[3]] as [number, number]));
+  const anchors = useAnchors(
+    calloutSlots.map((s) => [s.line[2], s.line[3]] as [number, number]),
+    phoneSlots.map((s) => [s.line[2], s.line[3]] as [number, number]),
+  );
   const dim = useMotionValue(0.4);
   const cx = useMotionValue(50);
   const cy = useMotionValue(50);
   const stage = useMotionValue(0);
-  const revealTop = useMotionValue(0);
-  const revealBottom = useMotionValue(0);
   const value = useMemo<Dna>(
-    () => ({
-      director: createDirector({ dim, cx, cy, stage, revealTop, revealBottom }),
-      hud,
-      anchors,
-      dim,
-      cx,
-      cy,
-      stage,
-      revealTop,
-      revealBottom,
-    }),
-    [hud, anchors, dim, cx, cy, stage, revealTop, revealBottom],
+    () => ({ director: createDirector({ dim, cx, cy, stage }), hud, anchors, dim, cx, cy, stage }),
+    [hud, anchors, dim, cx, cy, stage],
   );
   return <DnaContext value={value}>{children}</DnaContext>;
 }

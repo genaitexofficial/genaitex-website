@@ -109,13 +109,6 @@ function Dna({
     const { width, height } = state.size;
     const cam = director.sample(width, height);
     movingRef.current = cam.moving;
-    // Phones only see the top window (or the rows a chapter stage covers): do not shade the rest.
-    if (cam.visible < height - 1) {
-      state.gl.setScissorTest(true);
-      state.gl.setScissor(0, height - cam.visible, width, cam.visible);
-    } else {
-      state.gl.setScissorTest(false);
-    }
     const persp = state.camera as THREE.PerspectiveCamera;
 
     // Optical zoom (no flying inside the strands). The view offset is in pixels, so the zoom stays centred on
@@ -149,14 +142,18 @@ function Dna({
       screen.y[i] = (1 - (world.y * 0.5 + 0.5)) * 100;
     });
 
-    // Callout lines belong to the chapter stage, on large screens
-    if (width >= 1024 && cam.stage > 0.02) {
+    director.publishRungs(screen.x, screen.y, width, height);
+
+    // Callout lines belong to the chapter stage
+    if (cam.stage > 0.02) {
       anchors.forEach((a, k) => {
+        const aim = width >= 1024 ? a.target : a.phone;
+        const r = director.stageRatio(height); // stage percentages are of svh, rung percentages of the canvas
         let best = Infinity;
-        let bx = a.target.x;
-        let by = a.target.y;
+        let bx = aim.x;
+        let by = aim.y * r;
         for (let i = 0; i < rungs.length; i++) {
-          const d = (screen.x[i] - a.target.x) ** 2 + (screen.y[i] - a.target.y) ** 2;
+          const d = (screen.x[i] - aim.x) ** 2 + (screen.y[i] - aim.y * r) ** 2;
           if (d < best) {
             best = d;
             bx = screen.x[i];
@@ -167,7 +164,7 @@ function Dna({
         cur.x += (bx - cur.x) * 0.12;
         cur.y += (by - cur.y) * 0.12;
         a.x.set(cur.x);
-        a.y.set(cur.y);
+        a.y.set(cur.y / r);
       });
     }
 

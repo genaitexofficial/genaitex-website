@@ -42,7 +42,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
   return (
     <>
       <SectionRail items={railItems} />
-      <header className="page-top relative isolate overflow-hidden pb-12 pt-32 sm:pt-40">
+      <header className="relative isolate overflow-hidden pb-12 pt-32 sm:pt-40">
         <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <Link

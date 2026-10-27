@@ -65,6 +65,18 @@ export const calloutSlots = [
   { x: "62%", y: "80%", line: [64, 80, 65, 62] },
 ] as const;
 
+/**
+ * The same four options on phones and tablets: small pills floating around the helix in the upper part of
+ * the screen. `x`/`y` place a pill (percent of the stage); `line` is [pill attachment x, y, then the spot where
+ * the line prefers to meet a base pair].
+ */
+export const phoneSlots = [
+  { x: "4%", y: "10%", line: [26, 16, 30, 25] },
+  { x: "52%", y: "17%", line: [74, 23, 72, 31] },
+  { x: "4%", y: "36%", line: [26, 36, 28, 31] },
+  { x: "52%", y: "41%", line: [74, 41, 72, 36] },
+] as const;
+
 /** Left chapter rail: numbered labels with a progress line. Large screens only. */
 export function ChapterRail({
   chapters,
@@ -116,48 +128,10 @@ export function ChapterRail({
   );
 }
 
-/** Right-hand scroll indicator with chapter numbers. Extra-large screens only. */
-export function ProgressTrack({
-  chapters,
-  active,
-  progress,
-  onSelect,
-}: {
-  chapters: Chapter[];
-  active: number;
-  progress: MotionValue<number>;
-  onSelect: (index: number) => void;
-}) {
-  return (
-    <div className="absolute right-8 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-4 motion-safe:xl:flex">
-      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-subtle [writing-mode:vertical-rl]">
-        Scroll
-      </span>
-      <div aria-hidden className="relative h-24 w-px bg-line-strong">
-        <m.div className="h-full w-px origin-top bg-cyan" style={{ scaleY: progress }} />
-      </div>
-      <ol className="space-y-3 text-center">
-        {chapters.map((c, i) => (
-          <li key={c.id}>
-            <button
-              type="button"
-              onClick={() => onSelect(i)}
-              aria-label={`Go to chapter ${c.number}: ${c.label}`}
-              className={clsx(
-                "font-mono text-xs transition-colors",
-                i === active ? "text-cyan" : "text-subtle hover:text-fg",
-              )}
-            >
-              {c.number}
-            </button>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-/** Bottom-right pager: previous / next, current position, and dots on small screens. */
+/**
+ * Previous / next arrows (no visible counter; the position is announced to screen readers). Bottom centre on
+ * phones, bottom right from tablet width.
+ */
 export function Pager({
   total,
   active,
@@ -167,9 +141,8 @@ export function Pager({
   active: number;
   onSelect: (index: number) => void;
 }) {
-  const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    <div className="absolute bottom-6 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-4 motion-safe:flex md:left-auto md:right-8 md:translate-x-0">
+    <div className="absolute bottom-5 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-3 motion-safe:flex md:left-auto md:right-8 md:translate-x-0">
       <button
         type="button"
         onClick={() => onSelect(active - 1)}
@@ -179,9 +152,8 @@ export function Pager({
       >
         <ChevronLeft className="h-5 w-5" aria-hidden />
       </button>
-      <p className="font-mono text-sm tabular-nums" aria-live="polite">
-        <span className="text-fg">{pad(active + 1)}</span>
-        <span className="text-subtle"> / {pad(total)}</span>
+      <p className="sr-only" aria-live="polite">
+        Chapter {active + 1} of {total}
       </p>
       <button
         type="button"
@@ -253,19 +225,39 @@ function AnchorDot({ anchor }: { anchor: Anchor }) {
   );
 }
 
-/** Connector lines from the option cards to the helix rungs they point at (large screens). */
+/**
+ * Connector lines from the option cards to the helix rungs they point at. Large screens use the desktop
+ * layout; phones and tablets use their own (`phoneSlots`), so each is drawn in its own box.
+ */
 export function AnchorLines({ anchors }: { anchors: Anchor[] }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 hidden motion-safe:lg:block">
+    <>
+      <AnchorSet anchors={anchors} slots={calloutSlots} className="hidden motion-safe:lg:block" />
+      <AnchorSet anchors={anchors} slots={phoneSlots} className="motion-safe:lg:hidden" />
+    </>
+  );
+}
+
+function AnchorSet({
+  anchors,
+  slots,
+  className,
+}: {
+  anchors: Anchor[];
+  slots: readonly { line: readonly number[] }[];
+  className: string;
+}) {
+  return (
+    <div aria-hidden className={clsx("pointer-events-none absolute inset-0", className)}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
         {anchors.map((a, k) => (
           <m.line
             key={k}
-            x1={calloutSlots[k].line[0]}
-            y1={calloutSlots[k].line[1]}
+            x1={slots[k].line[0]}
+            y1={slots[k].line[1]}
             x2={a.x}
             y2={a.y}
-            stroke="rgba(34,211,238,0.45)"
+            stroke="rgba(34,211,238,0.5)"
             strokeWidth="1"
             vectorEffect="non-scaling-stroke"
           />

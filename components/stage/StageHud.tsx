@@ -2,43 +2,28 @@
 
 import { useTransform, type MotionValue } from "motion/react";
 import * as m from "motion/react-m";
-import { clsx } from "clsx";
 import { useDna } from "@/components/dna/DnaProvider";
-import type { HudState } from "@/components/dna/hud";
-
-const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
 /**
- * A sci-fi instrument overlay for the chapter stage: corner brackets and a targeting reticle on the base
- * pair at the centre of view, live readouts and a flash on each chapter change. (The scanlines, scan sweep
- * and speed streaks are part of the page-long backdrop.) Purely decorative (aria-hidden), and every number
- * comes from the real scene: the zoom is the camera's zoom, SEQ and PAIR are the targeted rung's position
- * and bases.
+ * A sci-fi instrument overlay for the chapter stage: a targeting reticle on the base pair at the centre of
+ * view (with corner brackets and a tick ruler on large screens) and a flash on each chapter change. There
+ * are no readouts. (The scanlines and speed streaks are part of the page-long backdrop.) Purely decorative
+ * (aria-hidden).
  *
  * It is fixed to the viewport in the box the helix is centred in (on phones a region around 34% of the screen
  * height, on large screens everything, with the reticle where the helix is centred) and fades with the stage,
  * so it only shows while the chapters are in control of the camera.
  */
 export function StageHud({
-  hud,
   progress,
-  active,
-  total,
   changes,
 }: {
-  hud: HudState;
   progress: MotionValue<number>;
-  active: number;
-  total: number;
   /** How many times the chapter has changed: re-keys the flash so it replays once per change. */
   changes: number;
 }) {
-  const zoom = useTransform(hud.zoom, (z) => z.toFixed(1));
-  const seq = useTransform(hud.seq, (t) => pad(Math.round(t * 339) + 1, 3));
   const { stage } = useDna();
   const rulerY = useTransform(progress, (p) => `${-p * 480}px`);
-
-  const line = "block whitespace-nowrap";
 
   return (
     <m.div
@@ -49,7 +34,7 @@ export function StageHud({
       {changes > 0 && <div key={changes} className="absolute inset-0 animate-flash bg-cyan/30" />}
 
       {/* Corner brackets framing the helix */}
-      <div className="absolute left-[var(--cx)] top-1/2 h-[62%] w-[min(90%,34rem)] -translate-x-1/2 -translate-y-1/2 lg:h-[66%] lg:w-[min(46vw,42rem)]">
+      <div className="absolute left-[var(--cx)] top-1/2 hidden h-[66%] w-[min(46vw,42rem)] -translate-x-1/2 -translate-y-1/2 lg:block">
         <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-cyan/60" />
         <span className="absolute right-0 top-0 h-5 w-5 border-r border-t border-cyan/60" />
         <span className="absolute bottom-0 left-0 h-5 w-5 border-b border-l border-cyan/60" />
@@ -86,28 +71,6 @@ export function StageHud({
           />
           <circle cx="66" cy="66" r="2.2" fill="currentColor" />
         </svg>
-        <p className="absolute left-[calc(100%-18px)] top-[calc(50%-34px)] font-mono text-[10px] tracking-[0.2em] text-cyan">
-          <span className="mb-1 block h-px w-8 bg-cyan/60" />
-          <m.span>{hud.pair}</m.span>
-        </p>
-      </div>
-
-      {/* Readouts: bottom-left of the frame on phones, top-right on large screens */}
-      <div
-        className={clsx(
-          "absolute left-9 top-9 font-mono text-[10px] leading-5 tracking-[0.2em] text-cyan/80 [text-shadow:0_0_8px_#050914,0_0_3px_#050914]",
-          "lg:left-auto lg:right-24 lg:top-24 lg:rounded-md lg:bg-[#050914]/60 lg:px-2.5 lg:py-1.5 lg:text-right",
-        )}
-      >
-        <span className={line}>
-          ZOOM <span className="text-fg">×<m.span>{zoom}</m.span></span>
-        </span>
-        <span className={clsx(line, "hidden lg:block")}>
-          SEQ <span className="text-fg"><m.span>{seq}</m.span></span> / 340
-        </span>
-        <span className={line}>
-          CH <span className="text-fg">{pad(active + 1)}</span> / {pad(total)}
-        </span>
       </div>
     </m.div>
   );

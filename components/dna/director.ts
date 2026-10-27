@@ -1,5 +1,5 @@
 import type { MotionValue } from "motion/react";
-import { ambientAt, cameraAt, type CameraKey } from "@/lib/helix";
+import { ambientAt, cameraAt, HELIX_TILT, type CameraKey } from "@/lib/helix";
 
 /** A pinned chapter stage on the current page: it takes over the camera while it is on screen. */
 export interface StageSlot {
@@ -8,8 +8,6 @@ export interface StageSlot {
   /** 0..1 as the stage wrapper travels from entering the viewport (0) to leaving it (1). */
   presence: MotionValue<number>;
   keys: readonly CameraKey[];
-  /** The tall wrapper; its on-screen rectangle is where the stage is visible, which phones reveal the scene in. */
-  element: HTMLElement;
 }
 
 /** Values the director publishes every frame for the backdrop and HUD to bind to. */
@@ -21,9 +19,6 @@ export interface DirectorOutputs {
   cy: MotionValue<number>;
   /** 0..1: how much the chapter stage is in control (drives the HUD's visibility). */
   stage: MotionValue<number>;
-  /** Phones: the screen rows (px) the chapter stage covers, where the full-screen scene is revealed. */
-  revealTop: MotionValue<number>;
-  revealBottom: MotionValue<number>;
 }
 
 export interface Camera {
@@ -41,10 +36,17 @@ export interface Camera {
   stage: number;
   /** Helix size relative to a full-height desktop view (1 = desktop; narrower phones scale down to fit the width). */
   fit: number;
-  /** CSS px from the top of the canvas that can actually be seen (the whole height on large screens). */
-  visible: number;
   /** True while anything is still changing, so renderers can run at full rate. */
   moving: boolean;
+}
+
+/** Where the renderer last drew every base pair (the rung midpoints), in percent of the canvas. */
+export interface RungPositions {
+  x: Float32Array;
+  y: Float32Array;
+  /** Canvas size in px, to convert the percentages. */
+  w: number;
+  h: number;
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -55,33 +57,36 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** Wide layouts (the helix pushed right of the text column) start here, as in the stage's CSS. */
 const WIDE = 1024;
 const STAGE_CX = 66.7;
-/** On phones the chapter helix is centred this far down the screen, with the text floating below it. */
+/** On phones the chapter helix is centred this far down the screen, with the text card below it. */
 const PHONE_STAGE_CY = 0.34;
-/**
- * Outside the stages, phones pin the helix in a window across the top of the screen (content scrolls
- * underneath). The window is `--win` in globals.css: clamp(150px, 34svh, 320px). The navbar covers its top.
- */
-const NAV_PX = 64;
-const WIN_FRAC = 0.34;
-const WIN_MIN = 150;
-const WIN_MAX = 320;
 /** World units visible top to bottom at the default camera distance, and the helix's share of a phone's width. */
 const VIEW_UNITS = 4.47;
 const PHONE_WIDTH_SHARE = 0.42;
 
 /**
+ * Phones and tablets have no room beside the content, so outside a chapter stage the DNA is a spine running
+ * up the left edge, and the content is offset to its right by this much (`--spine` in globals.css:
+ * clamp(5.25rem, 17vw, 10rem)). Cards are tied to the spine by tether lines (see TetherLayer).
+ */
+export const spinePx = (width: number) => clamp(0.17 * width, 84, 160);
+
+/**
  * The camera brain for the page-long DNA scene. Each frame a renderer asks it for the camera: while a
  * chapter stage is on screen the camera follows the chapter keyframes (bright; beside the text on large
- * screens, full-screen with the text floating below on phones); everywhere else it follows the ambient path
- * (dimmed behind the content on large screens; bright in a pinned window at the top on phones). Between the
- * two it blends smoothly, and the result is eased so jumps (a route change, a restored scroll position) glide.
+ * screens, full-screen on phones); everywhere else it follows the ambient path (dimmed behind the content on
+ * large screens; a slim upright spine at the left edge on phones). Between the two it blends smoothly, and
+ * the result is eased so jumps (a route change, a restored scroll position) glide.
  */
 export function createDirector(out: DirectorOutputs) {
   let stage: StageSlot | null = null;
   let svh = 0;
-  let state: Omit<Camera, "fit" | "moving" | "stage" | "visible"> | null = null;
+  let state: Omit<Camera, "fit" | "moving" | "stage"> | null = null;
   let lastTime = 0;
   let lastStage = 0;
+  let moving = true;
+  const rungs: RungPositions = { x: new Float32Array(0), y: new Float32Array(0), w: 0, h: 0 };
+  /** Where the targeting reticle (the middle of the helix) is, in px of the canvas. */
+  const reticle = { x: 0, y: 0 };
 
   const sample = (width: number, height: number): Camera => {
     const now = performance.now();
@@ -91,18 +96,28 @@ export function createDirector(out: DirectorOutputs) {
     const wide = width >= WIDE;
     const small = svh || window.innerHeight;
     const g = window.scrollY / small;
+    const fit = wide ? 1 : Math.min(1, (PHONE_WIDTH_SHARE * width * VIEW_UNITS) / height);
 
     // Ambient camera (outside the stage)
     const amb = ambientAt(g);
-    const win = Math.min(WIN_MAX, Math.max(WIN_MIN, WIN_FRAC * small));
-    const ambient = {
-      zoom: wide ? amb.zoom : amb.zoom * 0.85,
-      slide: amb.focus,
-      roll: amb.roll,
-      cx: wide ? 50 + amb.side * 20 : 50 + amb.side * 10,
-      cy: wide ? 50 : (((NAV_PX + win) / 2) / height) * 100, // phones: the middle of the visible window
-      dim: wide ? 0.36 : 1,
-    };
+    let ambient;
+    if (wide) {
+      ambient = { zoom: amb.zoom, slide: amb.focus, roll: amb.roll, cx: 50 + amb.side * 20, cy: 50, dim: 0.36 };
+    } else {
+      // The spine: upright, hugging the left edge, sized so it stays inside the strip the content leaves free, with a little breathing in zoom and sway in roll as you scroll. The slide stays small
+      // so the ends of the helix never come into view.
+      const sp = spinePx(width);
+      const unit = (height / 4.5) * fit; // px per world unit at zoom 1
+      const t = clamp01((amb.zoom - 1.3) / 1.8);
+      ambient = {
+        zoom: ((0.6 * sp) / (0.85 * unit)) * (0.94 + 0.12 * t),
+        slide: clamp(amb.focus * 0.45, -1.1, 1.1),
+        roll: -HELIX_TILT + amb.roll * 0.3,
+        cx: ((0.24 * sp) / width) * 100,
+        cy: 50,
+        dim: 1,
+      };
+    }
 
     // Stage camera (chapter keyframes), blended in as the stage arrives and out as it leaves
     let target = ambient;
@@ -136,7 +151,6 @@ export function createDirector(out: DirectorOutputs) {
     const goal = { ...target, angle: g * Math.PI };
 
     // Ease toward the goal (exponential smoothing; the first frame snaps)
-    let moving = false;
     if (!state) {
       state = goal;
       moving = true;
@@ -157,6 +171,7 @@ export function createDirector(out: DirectorOutputs) {
         Math.abs(Math.log(state.zoom / prev.zoom)) > 2e-4 ||
         Math.abs(state.slide - prev.slide) > 2e-4 ||
         Math.abs(state.angle - prev.angle) > 2e-4 ||
+        Math.abs(state.roll - prev.roll) > 2e-4 ||
         Math.abs(state.cx - prev.cx) > 0.01 ||
         Math.abs(state.dim - prev.dim) > 1e-3;
     }
@@ -166,24 +181,10 @@ export function createDirector(out: DirectorOutputs) {
     out.cx.set(state.cx);
     out.cy.set(state.cy);
     out.stage.set(lastStage);
-    // Phones reveal the full-screen scene only where the stage is, so it never covers neighbouring content.
-    let visible = height;
-    if (!wide) {
-      const r = stage?.element.getBoundingClientRect();
-      const top = r ? clamp(r.top, 0, window.innerHeight) : 0;
-      const bottom = r ? Math.max(top, clamp(r.bottom, 0, window.innerHeight)) : 0;
-      out.revealTop.set(top);
-      out.revealBottom.set(bottom);
-      visible = Math.min(height, Math.max(win, bottom));
-    }
 
-    return {
-      ...state,
-      stage: lastStage,
-      fit: wide ? 1 : Math.min(1, (PHONE_WIDTH_SHARE * width * VIEW_UNITS) / height),
-      visible,
-      moving,
-    };
+    reticle.x = (state.cx / 100) * width;
+    reticle.y = (state.cy / 100) * height;
+    return { ...state, stage: lastStage, fit, moving };
   };
 
   return {
@@ -195,6 +196,26 @@ export function createDirector(out: DirectorOutputs) {
     /** The small-viewport height in px (the stage's `100svh`), which never changes as mobile toolbars slide. */
     setSvh(px: number) {
       svh = px;
+    },
+    /**
+     * The chapter stage is `100svh` tall but the canvas is `100lvh`, which differ on phones while the toolbar
+     * is showing. Multiply a stage percentage by this to get the canvas percentage (divide to go back).
+     */
+    stageRatio(canvasHeight: number) {
+      return (svh || window.innerHeight) / canvasHeight;
+    },
+    /** Renderers report where every base pair was drawn, so the tether lines can attach to real rungs. */
+    publishRungs(x: Float32Array, y: Float32Array, w: number, h: number) {
+      rungs.x = x;
+      rungs.y = y;
+      rungs.w = w;
+      rungs.h = h;
+    },
+    rungs,
+    reticle,
+    /** True while the camera is still changing (last sampled frame). */
+    get moving() {
+      return moving;
     },
   };
 }

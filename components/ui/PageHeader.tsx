@@ -11,19 +11,21 @@ export function PageHeader({
   description?: React.ReactNode;
 }) {
   return (
-    <header className="page-top relative isolate overflow-hidden pb-16 pt-36 sm:pt-44">
+    <header className="relative isolate overflow-hidden pb-16 pt-36 sm:pt-44">
       <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
       <div
         aria-hidden
         className="absolute -top-40 left-1/2 -z-10 h-[640px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(139,92,246,0.22),transparent)]"
       />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <p className="eyebrow mb-5">{eyebrow}</p>
-        <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
-          {title}
-        </h1>
+        <div className="dna-node">
+          <p className="eyebrow mb-5">{eyebrow}</p>
+          <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
+            {title}
+          </h1>
+        </div>
         {description && (
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} noTether>
             <p className="mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-muted sm:text-xl">
               {description}
             </p>
