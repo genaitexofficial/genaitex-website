@@ -3,18 +3,21 @@
 import { useTransform, type MotionValue } from "motion/react";
 import * as m from "motion/react-m";
 import { clsx } from "clsx";
-import type { HudState } from "./hud";
+import { useDna } from "@/components/dna/DnaProvider";
+import type { HudState } from "@/components/dna/hud";
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
 /**
- * A sci-fi instrument overlay on the DNA scene: corner brackets and a targeting reticle on the base
- * pair at the centre of view, live readouts, scanlines, a slow scan sweep, and speed streaks while the
- * zoom is moving. Purely decorative (aria-hidden), and every number comes from the real scene: the
- * zoom is the camera's zoom, SEQ and PAIR are the targeted rung's position and bases.
+ * A sci-fi instrument overlay for the chapter stage: corner brackets and a targeting reticle on the base
+ * pair at the centre of view, live readouts and a flash on each chapter change. (The scanlines, scan sweep
+ * and speed streaks are part of the page-long backdrop.) Purely decorative (aria-hidden), and every number
+ * comes from the real scene: the zoom is the camera's zoom, SEQ and PAIR are the targeted rung's position
+ * and bases.
  *
- * Its box matches the scene's box, so on phones it frames the helix at the top and on large screens
- * it covers the whole stage, with the reticle where the helix is centred.
+ * It is fixed to the viewport in the same box the stage lays the helix out in (on phones the top 40%, on
+ * large screens everything, with the reticle where the helix is centred) and fades with the stage, so it
+ * only shows while the chapters are in control of the camera.
  */
 export function StageHud({
   hud,
@@ -32,21 +35,17 @@ export function StageHud({
 }) {
   const zoom = useTransform(hud.zoom, (z) => z.toFixed(1));
   const seq = useTransform(hud.seq, (t) => pad(Math.round(t * 339) + 1, 3));
-  const streaks = useTransform(hud.speed, (s) => Math.min(0.85, s));
+  const { stage } = useDna();
   const rulerY = useTransform(progress, (p) => `${-p * 480}px`);
 
   const line = "block whitespace-nowrap";
 
   return (
-    <div
+    <m.div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-14 h-[40%] [--cx:50%] motion-reduce:hidden lg:inset-0 lg:h-full lg:[--cx:66.7%]"
+      style={{ opacity: stage }}
+      className="pointer-events-none fixed inset-x-0 top-14 h-[40svh] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:66.7%]"
     >
-      <div className="absolute inset-0 overflow-hidden max-lg:[mask-image:linear-gradient(to_bottom,transparent,#000_16%,#000_74%,transparent)]">
-        <div className="hud-scanlines absolute inset-0" />
-        <div className="hud-sweep absolute inset-x-0 animate-hud-sweep" />
-        <m.div className="hud-streaks absolute inset-0" style={{ opacity: streaks }} />
-      </div>
       {changes > 0 && <div key={changes} className="absolute inset-0 animate-flash bg-cyan/30" />}
 
       {/* Corner brackets framing the helix */}
@@ -110,6 +109,6 @@ export function StageHud({
           CH <span className="text-fg">{pad(active + 1)}</span> / {pad(total)}
         </span>
       </div>
-    </div>
+    </m.div>
   );
 }

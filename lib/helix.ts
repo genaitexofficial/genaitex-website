@@ -139,11 +139,6 @@ export function buildHelix(lite = false) {
   return { beads, rungs };
 }
 
-/** Scroll progress (0..1) and clock time to the helix's rotation about its axis. */
-export function helixAngle(progress: number, seconds: number) {
-  return progress * Math.PI * 4 + seconds * 0.12;
-}
-
 /** Where the camera looks and how far it is zoomed in, at one chapter. */
 export interface CameraKey {
   /** Optical zoom: 1 = the whole helix in view, 6 = a single base pair filling the screen. */
@@ -174,6 +169,44 @@ export function cameraAt(p: number, keys: readonly CameraKey[]) {
     zoom: Math.exp(Math.log(a.zoom) + (Math.log(b.zoom) - Math.log(a.zoom)) * e),
     focus: a.focus + (b.focus - a.focus) * e,
     roll: (a.roll ?? 0) + ((b.roll ?? 0) - (a.roll ?? 0)) * e,
+  };
+}
+
+/** A waypoint on the ambient path the camera follows outside the chapter stage. */
+export interface AmbientKey extends CameraKey {
+  /** Which side of the page the helix leans toward: -1 left, 0 centre, 1 right. */
+  side: number;
+}
+
+/**
+ * Outside the chapter stage (the rest of the Home page, every other page) the helix keeps going: the camera
+ * glides along this cycle of waypoints as you scroll, zooming in and out and swaying side to side. Zooms stay
+ * moderate and the scene is dimmed there, so text on top stays readable.
+ */
+const AMBIENT: readonly AmbientKey[] = [
+  { zoom: 1.5, focus: 0, roll: 0.02, side: 1 },
+  { zoom: 2.5, focus: 2, roll: -0.05, side: -1 },
+  { zoom: 1.3, focus: -1.4, roll: 0.06, side: 1 },
+  { zoom: 3.1, focus: 1.2, roll: -0.04, side: -1 },
+  { zoom: 1.8, focus: -2.2, roll: 0.05, side: 1 },
+  { zoom: 2.8, focus: 0.6, roll: -0.06, side: -1 },
+];
+
+/** Viewport heights of scrolling between two ambient waypoints. */
+export const AMBIENT_STEP = 1.3;
+
+/** The ambient camera `g` viewport-heights down the page (same hold-and-ease rhythm as the chapters). */
+export function ambientAt(g: number) {
+  const t = Math.max(0, g) / AMBIENT_STEP;
+  const i = Math.floor(t);
+  const e = easeInOutCubic(clamp01((t - i - 0.25) / 0.5));
+  const a = AMBIENT[i % AMBIENT.length];
+  const b = AMBIENT[(i + 1) % AMBIENT.length];
+  return {
+    zoom: Math.exp(Math.log(a.zoom) + (Math.log(b.zoom) - Math.log(a.zoom)) * e),
+    focus: a.focus + (b.focus - a.focus) * e + Math.sin(g * 0.8) * 0.25,
+    roll: (a.roll ?? 0) + ((b.roll ?? 0) - (a.roll ?? 0)) * e,
+    side: a.side + (b.side - a.side) * e,
   };
 }
 

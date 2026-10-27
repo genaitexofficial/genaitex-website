@@ -3,6 +3,8 @@ import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Providers } from "@/components/layout/Providers";
+import { DnaProvider } from "@/components/dna/DnaProvider";
+import { DnaBackdrop } from "@/components/dna/DnaBackdrop";
 import { CursorGlow } from "@/components/ui/CursorGlow";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { site } from "@/lib/site";
@@ -78,19 +80,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <Providers>
-          <a
-            href="#main"
-            className="sr-only z-[100] rounded-md bg-white px-4 py-2 text-sm font-medium text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
-          >
-            Skip to content
-          </a>
-          <CursorGlow />
-          <Navbar />
-          <ScrollProgress />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          <DnaProvider>
+            <DnaBackdrop />
+            <a
+              href="#main"
+              className="sr-only z-[100] rounded-md bg-white px-4 py-2 text-sm font-medium text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+            >
+              Skip to content
+            </a>
+            <CursorGlow />
+            <Navbar />
+            <ScrollProgress />
+            <main id="main" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </DnaProvider>
         </Providers>
       </body>
     </html>

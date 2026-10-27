@@ -27,7 +27,7 @@ import {
 import { clsx } from "clsx";
 import * as m from "motion/react-m";
 import { useTransform, type MotionValue } from "motion/react";
-import type { Anchor } from "./anchors";
+import type { Anchor } from "@/components/dna/anchors";
 import type { Chapter, IconKey } from "@/lib/chapters";
 
 const icons: Record<IconKey, LucideIcon> = {

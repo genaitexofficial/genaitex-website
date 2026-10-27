@@ -25,9 +25,6 @@ export function useHudState(): HudState {
   return useMemo(() => ({ zoom, seq, pair, speed }), [zoom, seq, pair, speed]);
 }
 
-/** Where the HUD reticle sits, as a percentage of the scene box (the helix is pushed right on large screens). */
-export const reticleCenter = (width: number) => ({ x: width >= 1024 ? 66.7 : 50, y: 50 });
-
 /**
  * Returns a function the renderer calls each frame with the current zoom and the base pair nearest the
  * reticle. It also derives a smoothed "zoom speed" from the change in log-zoom per second.

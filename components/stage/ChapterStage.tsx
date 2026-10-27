@@ -6,7 +6,7 @@ import { useMotionValueEvent, useScroll } from "motion/react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import type { Chapter } from "@/lib/chapters";
-import { StageScene } from "./StageScene";
+import { StageScrim } from "./StageScrim";
 import {
   calloutSlots,
   ChapterIcon,
@@ -17,15 +17,15 @@ import {
   ProgressTrack,
   ScrollHint,
 } from "./StageParts";
-import { useAnchors } from "./anchors";
-import { useHudState } from "./hud";
+import { useDna } from "@/components/dna/DnaProvider";
+import { useMediaQuery } from "@/components/dna/useScene";
 import { useMagneticSettle } from "./useMagneticSettle";
 import { StageHud } from "./StageHud";
-import { useMediaQuery } from "./useScene";
 
 /**
  * A scroll-driven story. The page scrolls natively (no scroll hijacking): a tall wrapper holds a
- * sticky stage, and scroll position picks the active chapter and drives the centrepiece's morph.
+ * sticky stage, and scroll position picks the active chapter. The DNA behind it is the site-wide backdrop
+ * (components/dna): while this stage is on screen it takes its camera from the chapters' keyframes.
  *
  * One DOM serves every mode, chosen by CSS media queries so nothing shifts after hydration:
  *  - motion allowed: pinned stage (large screens: floating option cards; phones: compact chips)
@@ -43,13 +43,19 @@ export function ChapterStage({
   const wrapperRef = useRef<HTMLElement>(null);
   const last = chapters.length - 1;
   const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ["start start", "end end"] });
+  const { scrollYProgress: presence } = useScroll({ target: wrapperRef, offset: ["start end", "end start"] });
   const [active, setActive] = useState(0);
   const [changes, setChanges] = useState(0);
   const pinned = useMediaQuery("(prefers-reduced-motion: no-preference)");
-  const hud = useHudState();
+  const { director, hud, anchors } = useDna();
   useMagneticSettle(wrapperRef, chapters.length);
   const keys = useMemo(() => chapters.map((c) => c.camera), [chapters]);
-  const anchors = useAnchors(calloutSlots.map((s) => [s.line[2], s.line[3]] as [number, number]));
+
+  // While this stage is on the page, the site-wide DNA takes its camera from the chapters.
+  useEffect(() => {
+    director.setStage({ progress: scrollYProgress, presence, keys });
+    return () => director.setStage(null);
+  }, [director, scrollYProgress, presence, keys]);
 
   const indexAt = (p: number) => Math.min(last, Math.max(0, Math.round(p * last)));
   const shown = useRef(0);
@@ -127,14 +133,7 @@ export function ChapterStage({
       className="relative motion-safe:h-[calc(var(--n)*100svh)]"
     >
       <div className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
-        {/* Backdrop: blue-violet haze and a faint grid */}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_60%_70%_at_68%_45%,rgba(34,150,255,0.16),transparent_70%),radial-gradient(ellipse_50%_60%_at_8%_0%,rgba(40,80,255,0.16),transparent_70%)]"
-        />
-        <div aria-hidden className="bg-grid absolute inset-0 -z-20 opacity-70" />
-
-        <StageScene progress={scrollYProgress} anchors={anchors} keys={keys} hud={hud} watch={wrapperRef} />
+        <StageScrim />
 
         {pinned && (
           <>

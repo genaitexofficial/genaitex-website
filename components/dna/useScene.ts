@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type RefObject } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 export function useMediaQuery(query: string) {
   return useSyncExternalStore(
@@ -111,23 +111,14 @@ export function useAfterLoad(enabled: boolean) {
   return enabled && ready;
 }
 
-/** False while the element is off screen or the tab is hidden, so the scene stops rendering. */
-export function useSceneActive(ref: RefObject<Element | null>) {
-  const [inView, setInView] = useState(true);
-  const [tabVisible, setTabVisible] = useState(true);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0 });
-    io.observe(el);
-    const onVisibility = () => setTabVisible(!document.hidden);
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      io.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [ref]);
-
-  return inView && tabVisible;
+/** False while the tab is hidden, so the scene stops rendering. */
+export function useTabVisible() {
+  return useSyncExternalStore(
+    (onChange) => {
+      document.addEventListener("visibilitychange", onChange);
+      return () => document.removeEventListener("visibilitychange", onChange);
+    },
+    () => !document.hidden,
+    () => true,
+  );
 }

@@ -1,24 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { MotionValue } from "motion/react";
-import {
-  baseColors,
-  buildHelix,
-  cameraAt,
-  type CameraKey,
-  HELIX_TILT,
-  helixAngle,
-} from "@/lib/helix";
+import { baseColors, buildHelix, HELIX_TILT } from "@/lib/helix";
 import type { Anchor } from "./anchors";
-import { createHudWriter, reticleCenter, type HudState } from "./hud";
+import type { Director } from "./director";
+import { createHudWriter, type HudState } from "./hud";
 
 /**
- * The 2D-canvas renderer for the stage: the same DNA double helix and the same fly-through zoom, drawn
- * from pre-rendered sphere sprites. No three.js or WebGL, so it costs a few KB and little CPU. Used on
+ * The 2D-canvas renderer for the page-long scene: the same DNA double helix and the same fly-through zoom,
+ * drawn from pre-rendered sphere sprites. No three.js or WebGL, so it costs a few KB and little CPU. Used on
  * capable phones and on wide screens without a GPU.
  *
- * It only works hard while the helix is moving: full frame rate during scrolling, a slow gentle drift
+ * It only works hard while the camera is moving: full frame rate during scrolling, a slow gentle drift
  * otherwise, which keeps the main thread and battery calm. Zoomed in, most beads are off screen and
  * skipped, so deep zoom is cheaper, not dearer.
  */
@@ -49,16 +42,14 @@ function sphereSprite(color: string, glossy: boolean, size: number) {
   return c;
 }
 
-export default function StageCanvasLite({
-  progress,
+export default function DnaCanvasLite({
+  director,
   anchors,
-  keys,
   hud,
   active,
 }: {
-  progress: MotionValue<number>;
+  director: Director;
   anchors: Anchor[];
-  keys: readonly CameraKey[];
   hud: HudState;
   active: boolean;
 }) {
@@ -90,7 +81,7 @@ export default function StageCanvasLite({
     let h = 0;
     let dpr = 1;
     let last = 0;
-    let lastProgress = -1;
+    let moving = true;
     let raf = 0;
     const start = performance.now();
 
@@ -103,20 +94,19 @@ export default function StageCanvasLite({
     };
 
     const draw = (now: number) => {
-      const wide = w >= 1024; // the canvas fills the stage, with the helix pushed right of the text column
-      const p = progress.get();
-      const cam = cameraAt(p, keys);
-      const angle = helixAngle(p, (now - start) / 1000);
-      const slide = cam.focus + (p - 0.5) * 0.8;
+      const wide = w >= 1024; // large screens only: the helix sits right of the text column in a chapter
+      const cam = director.sample(w, h);
+      moving = cam.moving;
+      const angle = cam.angle + ((now - start) / 1000) * 0.12;
+      const slide = cam.slide;
       const cosA = Math.cos(angle);
       const sinA = Math.sin(angle);
       const tilt = HELIX_TILT + cam.roll;
       const cosT = Math.cos(tilt);
       const sinT = Math.sin(tilt);
-      const scale = (wide ? h / 4.6 : h / 3.4) * cam.zoom;
-      const c = reticleCenter(w);
-      const cx = (c.x / 100) * w;
-      const cy = (c.y / 100) * h;
+      const scale = (h / (wide ? 4.6 : 3.4)) * cam.fit * cam.zoom;
+      const cx = (cam.cx / 100) * w;
+      const cy = (cam.cy / 100) * h;
 
       const toScreen = (x: number, y: number, z: number) => {
         const x1 = x * cosA + z * sinA;
@@ -157,7 +147,7 @@ export default function StageCanvasLite({
         rx[i] = (q.x / w) * 100;
         ry[i] = (q.y / h) * 100;
       }
-      if (wide) {
+      if (wide && cam.stage > 0.02) {
         anchors.forEach((a, k) => {
           let best = Infinity;
           let bx = a.target.x;
@@ -180,7 +170,7 @@ export default function StageCanvasLite({
       let target = 0;
       let best = Infinity;
       for (let i = 0; i < rungs.length; i++) {
-        const d = (rx[i] - c.x) ** 2 + (ry[i] - c.y) ** 2;
+        const d = (rx[i] - cam.cx) ** 2 + (ry[i] - cam.cy) ** 2;
         if (d < best) {
           best = d;
           target = i;
@@ -191,11 +181,8 @@ export default function StageCanvasLite({
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      const p = progress.get();
-      const moving = Math.abs(p - lastProgress) > 0.0004;
       if (now - last < (moving ? MOVING_MS : IDLE_MS)) return;
       last = now;
-      lastProgress = p;
       draw(now);
     };
 
@@ -212,7 +199,7 @@ export default function StageCanvasLite({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [active, progress, anchors, keys, hud]);
+  }, [active, director, anchors, hud]);
 
   return <canvas ref={canvasRef} aria-hidden className="h-full w-full animate-fade-in" />;
 }

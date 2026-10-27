@@ -1,36 +1,47 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import type { MotionValue } from "motion/react";
-import {
-  baseColors,
-  buildHelix,
-  cameraAt,
-  type CameraKey,
-  HELIX_FULL,
-  HELIX_TILT,
-  helixAngle,
-  mulberry32,
-} from "@/lib/helix";
+import { baseColors, buildHelix, HELIX_FULL, HELIX_TILT, mulberry32 } from "@/lib/helix";
 import type { Anchor } from "./anchors";
-import { createHudWriter, reticleCenter, type HudState } from "./hud";
+import type { Director } from "./director";
+import { createHudWriter, type HudState } from "./hud";
 
 const baseKeys = ["A", "T", "G", "C"] as const;
 const BEADS_PER_RUNG = HELIX_FULL.beadsPerHalfRung * 2;
-const WIDE_SHIFT = 0.167; // fraction of the width the scene is pushed right, clear of the text column
+// Idle pages re-render at about 16 fps (the helix only drifts); anything moving renders every frame.
+const IDLE_MS = 60;
+
+/** Drives on-demand rendering: every frame while the camera moves, a slow tick while it rests. */
+function Pulse({ movingRef, active }: { movingRef: { current: boolean }; active: boolean }) {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (now - last < (movingRef.current ? 0 : IDLE_MS)) return;
+      last = now;
+      invalidate();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, invalidate, movingRef]);
+  return null;
+}
 
 function Dna({
-  progress,
+  director,
   anchors,
-  keys,
   hud,
+  movingRef,
 }: {
-  progress: MotionValue<number>;
+  director: Director;
   anchors: Anchor[];
-  keys: readonly CameraKey[];
   hud: HudState;
+  movingRef: { current: boolean };
 }) {
   const tilt = useRef<THREE.Group>(null);
   const spin = useRef<THREE.Group>(null);
@@ -96,19 +107,32 @@ function Dna({
     if (!t || !s) return;
 
     const { width, height } = state.size;
-    const p = progress.get();
-    const cam = cameraAt(p, keys);
+    const cam = director.sample(width, height);
+    movingRef.current = cam.moving;
+    const persp = state.camera as THREE.PerspectiveCamera;
 
-    // Optical zoom (no flying inside the strands), with the scene pushed right of the text column.
-    // The view offset is in pixels, so the zoom always centres on the reticle at any magnification.
-    const shift = width >= 1024 ? width * WIDE_SHIFT : 0;
-    state.camera.position.z = Math.max(5.4, 4.6 / (0.8284 * (width / height)));
-    (state.camera as THREE.PerspectiveCamera).zoom = cam.zoom;
-    (state.camera as THREE.PerspectiveCamera).setViewOffset(width, height, -shift, 0, width, height);
+    // Optical zoom (no flying inside the strands). The view offset is in pixels, so the zoom stays centred on
+    // wherever the director puts the helix (right of the text column in a chapter, swaying elsewhere).
+    const z = width >= 1024 ? Math.max(5.4, 4.6 / (0.8284 * (width / height))) : 5.4;
+    persp.position.z = z;
+    persp.zoom = cam.zoom * cam.fit;
+    persp.setViewOffset(
+      width,
+      height,
+      -((cam.cx - 50) / 100) * width,
+      -((cam.cy - 50) / 100) * height,
+      width,
+      height,
+    );
+    const fog = state.scene.fog as THREE.Fog | null;
+    if (fog) {
+      fog.near = z - 0.6;
+      fog.far = z + 2.2;
+    }
 
     t.rotation.z = HELIX_TILT + cam.roll + state.pointer.x * 0.04;
-    s.rotation.y = helixAngle(p, state.clock.elapsedTime);
-    s.position.y = cam.focus + (p - 0.5) * 0.8;
+    s.rotation.y = cam.angle + state.clock.elapsedTime * 0.12;
+    s.position.y = cam.slide;
 
     // Project every rung once, then use the results for both the callout lines and the targeted pair.
     s.updateWorldMatrix(true, false);
@@ -118,31 +142,33 @@ function Dna({
       screen.y[i] = (1 - (world.y * 0.5 + 0.5)) * 100;
     });
 
-    anchors.forEach((a, k) => {
-      let best = Infinity;
-      let bx = a.target.x;
-      let by = a.target.y;
-      for (let i = 0; i < rungs.length; i++) {
-        const d = (screen.x[i] - a.target.x) ** 2 + (screen.y[i] - a.target.y) ** 2;
-        if (d < best) {
-          best = d;
-          bx = screen.x[i];
-          by = screen.y[i];
+    // Callout lines belong to the chapter stage, on large screens
+    if (width >= 1024 && cam.stage > 0.02) {
+      anchors.forEach((a, k) => {
+        let best = Infinity;
+        let bx = a.target.x;
+        let by = a.target.y;
+        for (let i = 0; i < rungs.length; i++) {
+          const d = (screen.x[i] - a.target.x) ** 2 + (screen.y[i] - a.target.y) ** 2;
+          if (d < best) {
+            best = d;
+            bx = screen.x[i];
+            by = screen.y[i];
+          }
         }
-      }
-      const cur = smooth.current[k];
-      cur.x += (bx - cur.x) * 0.12;
-      cur.y += (by - cur.y) * 0.12;
-      a.x.set(cur.x);
-      a.y.set(cur.y);
-    });
+        const cur = smooth.current[k];
+        cur.x += (bx - cur.x) * 0.12;
+        cur.y += (by - cur.y) * 0.12;
+        a.x.set(cur.x);
+        a.y.set(cur.y);
+      });
+    }
 
-    // The "targeted" base pair: whichever rung is nearest the reticle. It glows and feeds the HUD readouts.
-    const c = reticleCenter(width);
+    // The "targeted" base pair: whichever rung is nearest the centre of the helix. It glows and feeds the HUD.
     let target = 0;
     let best = Infinity;
     for (let i = 0; i < rungs.length; i++) {
-      const d = (screen.x[i] - c.x) ** 2 + (screen.y[i] - c.y) ** 2;
+      const d = (screen.x[i] - cam.cx) ** 2 + (screen.y[i] - cam.cy) ** 2;
       if (d < best) {
         best = d;
         target = i;
@@ -214,28 +240,28 @@ function Dna({
   );
 }
 
-export default function StageCanvas({
-  progress,
+export default function DnaCanvas({
+  director,
   anchors,
-  keys,
   hud,
   active,
 }: {
-  progress: MotionValue<number>;
+  director: Director;
   anchors: Anchor[];
-  keys: readonly CameraKey[];
   hud: HudState;
   active: boolean;
 }) {
+  const movingRef = useRef(true);
   return (
     <Canvas
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 5.4], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      frameloop={active ? "always" : "never"}
+      frameloop="demand"
       aria-hidden
     >
-      <Dna progress={progress} anchors={anchors} keys={keys} hud={hud} />
+      <Pulse movingRef={movingRef} active={active} />
+      <Dna director={director} anchors={anchors} hud={hud} movingRef={movingRef} />
     </Canvas>
   );
 }
