@@ -19,7 +19,8 @@ export type IconKey =
   | "file-text"
   | "server"
   | "package"
-  | "zap";
+  | "zap"
+  | "rocket";
 
 export interface Callout {
   title: string;
@@ -184,6 +185,81 @@ export const homeChapters: Chapter[] = [
       title: "You own everything",
       body: "Clean handover, documentation and no lock-in.",
     },
+    cta: { label: "Start a project", href: "/contact" },
+    secondary: { label: "See our work", href: "/work" },
+  },
+];
+
+const home = (id: string) => homeChapters.find((c) => c.id === id)!;
+
+/**
+ * The services page story: the four options in detail, then how we work. Chapter ids match the service
+ * slugs, so links such as /services#shopify-storefronts jump to the right chapter.
+ */
+export const servicesChapters: Chapter[] = [
+  {
+    ...home("websites"),
+    id: "static-websites",
+    number: "01",
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    ...home("storefronts"),
+    id: "shopify-storefronts",
+    number: "02",
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    id: "custom-development",
+    number: "03",
+    label: "Custom Dev",
+    eyebrow: "Custom development",
+    title: "Software built around how you actually work.",
+    lead: "When an off-the-shelf tool does not fit, we build the thing you need: internal dashboards, customer portals, APIs and integrations.",
+    body: "From an MVP in front of users to production systems, built with typed, tested code and reviewed for performance and security.",
+    callouts: [
+      { title: "Web apps & dashboards", detail: "From MVP to production", icon: "code" },
+      { title: "APIs & integrations", detail: "Connect the tools you already use", icon: "plug" },
+      { title: "Auth, payments, webhooks", detail: "The plumbing real products need", icon: "shield" },
+      { title: "Reviews & support", detail: "Performance and security checks, plus ongoing care", icon: "life-buoy" },
+    ],
+    card: { title: "Ideal for", body: "Teams with a specific problem to solve, or an idea that needs an MVP in front of users quickly." },
+    cta: { label: "Discuss a custom project", href: "/contact?type=custom" },
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    id: "ai-automation",
+    number: "04",
+    label: "AI & Automation",
+    eyebrow: "AI & automation",
+    title: "AI where it earns its keep.",
+    lead: "Assistants that answer from your own content, search that understands questions, and automation that takes repetitive work off your team.",
+    body: "We keep a person in the loop where answers matter, and build in usage limits, logging and sensible data handling from the start.",
+    callouts: [
+      { title: "Grounded assistants", detail: "Answers drawn from your content and data", icon: "bot" },
+      { title: "Document & knowledge search", detail: "Find the right answer fast", icon: "search" },
+      { title: "Workflow automation", detail: "Connect your tools, remove manual steps", icon: "workflow" },
+      { title: "Human hand-off", detail: "Review and escalation for what matters", icon: "life-buoy" },
+    ],
+    card: { title: "Ideal for", body: "Businesses with repetitive work, lots of documents, or support questions that keep coming back." },
+    cta: { label: "Discuss AI & automation", href: "/contact?type=ai" },
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    id: "process",
+    number: "05",
+    label: "How we work",
+    eyebrow: "How we work",
+    title: "A clear process, no surprises.",
+    lead: "Five stages, a live preview link from the first week, and a scope agreed up front.",
+    body: "Discover, design, build, launch, support: you always know what is happening and what comes next.",
+    callouts: [
+      { title: "Discover", detail: "Goals, audience, scope and a quote", icon: "search" },
+      { title: "Design", detail: "Wireframes and polished designs for key pages", icon: "palette" },
+      { title: "Build", detail: "Clean, typed, tested code with a live preview", icon: "code" },
+      { title: "Launch & support", detail: "Checks, go-live, handover, ongoing care", icon: "rocket" },
+    ],
+    card: { title: "You own everything", body: "Your code, your accounts and your content, with clean handover and no lock-in." },
     cta: { label: "Start a project", href: "/contact" },
     secondary: { label: "See our work", href: "/work" },
   },

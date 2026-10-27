@@ -1,6 +1,6 @@
 import { ChapterStage } from "@/components/stage/ChapterStage";
 import { TechMarquee } from "@/components/home/TechMarquee";
-import { ServicesGrid } from "@/components/home/ServicesGrid";
+import { OptionPicker } from "@/components/stage/OptionPicker";
 import { FeaturedWork } from "@/components/home/FeaturedWork";
 import { Process } from "@/components/home/Process";
 import { WhyUs } from "@/components/home/WhyUs";
@@ -12,9 +12,7 @@ export default function Home() {
     <>
       <ChapterStage chapters={homeChapters} label="What genaitex builds" />
       <TechMarquee />
-      <div id="options">
-        <ServicesGrid />
-      </div>
+      <OptionPicker />
       <FeaturedWork />
       <Process />
       <WhyUs />

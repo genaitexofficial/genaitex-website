@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Clock, Mail, MessageCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Reveal } from "@/components/ui/Reveal";
+import { Suspense } from "react";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactFormWithPrefill } from "@/components/contact/ContactFormWithPrefill";
 import { site, whatsappLink } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -77,7 +79,9 @@ export default function ContactPage() {
         </Reveal>
 
         <Reveal delay={0.1} className="relative">
-          <ContactForm />
+          <Suspense fallback={<ContactForm />}>
+            <ContactFormWithPrefill />
+          </Suspense>
         </Reveal>
       </section>
     </>

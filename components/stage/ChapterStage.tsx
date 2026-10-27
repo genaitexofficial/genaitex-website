@@ -54,21 +54,52 @@ export function ChapterStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scrollToChapter = (target: number | string) => {
+  const scrollToChapter = (target: number | string, instant = false) => {
     const index =
       typeof target === "number" ? target : chapters.findIndex((c) => c.id === target);
     const i = Math.min(last, Math.max(0, index));
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-    const smooth = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
-    if (smooth) {
+    const smooth = !instant && window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+    const motion = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+    if (motion) {
       const range = wrapper.offsetHeight - window.innerHeight;
       const top = wrapper.getBoundingClientRect().top + window.scrollY + (last ? (i / last) * range : 0);
-      window.scrollTo({ top, behavior: "smooth" });
+      window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
     } else {
       document.getElementById(`chapter-${chapters[i].id}`)?.scrollIntoView();
     }
   };
+
+  // Links like /services#shopify-storefronts target a chapter, which lives inside a pinned stage, so the
+  // browser cannot scroll to it natively. Handle the hash on load, on hash changes, and on same-page clicks.
+  const goToHash = () => {
+    const i = chapters.findIndex((c) => c.id === window.location.hash.slice(1));
+    if (i >= 0) scrollToChapter(i, true);
+  };
+  useEffect(() => {
+    const raf = requestAnimationFrame(goToHash);
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.("a[href*='#']") as HTMLAnchorElement | null;
+      if (!a || a.target === "_blank") return;
+      const url = new URL(a.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname !== window.location.pathname) return;
+      const i = chapters.findIndex((c) => c.id === url.hash.slice(1));
+      if (i < 0) return;
+      e.preventDefault();
+      window.history.pushState(null, "", url.hash);
+      scrollToChapter(i);
+    };
+    window.addEventListener("hashchange", goToHash);
+    document.addEventListener("click", onClick);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("hashchange", goToHash);
+      document.removeEventListener("click", onClick);
+    };
+    // chapters is a module constant; the handlers read refs and location at call time
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section

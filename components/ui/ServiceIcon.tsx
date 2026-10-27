@@ -1,8 +1,8 @@
-import { Code, Globe, Store } from "lucide-react";
+import { Bot, Code, Globe, Store } from "lucide-react";
 import { clsx } from "clsx";
 import type { ServiceIcon as IconName } from "@/lib/services";
 
-const icons = { globe: Globe, store: Store, code: Code } as const;
+const icons = { globe: Globe, store: Store, code: Code, bot: Bot } as const;
 
 export function ServiceIcon({ name, className }: { name: IconName; className?: string }) {
   const Icon = icons[name];

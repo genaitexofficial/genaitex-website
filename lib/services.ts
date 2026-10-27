@@ -1,7 +1,9 @@
-export type ServiceIcon = "globe" | "store" | "code";
+export type ServiceIcon = "globe" | "store" | "code" | "bot";
 
 export interface Service {
   slug: string;
+  /** Value of `/contact?type=…` that preselects this option in the inquiry form. */
+  contactType: "static" | "shopify" | "custom" | "ai";
   icon: ServiceIcon;
   title: string;
   /** One-liner for cards */
@@ -12,11 +14,17 @@ export interface Service {
   idealFor: string;
   includes: string[];
   stack: string[];
+  /**
+   * Typical timeline, shown only when set. Left empty until it is a commitment you are happy to make
+   * (scope-dependent estimates belong in the quote).
+   */
+  timeline?: string;
 }
 
 export const services: Service[] = [
   {
     slug: "static-websites",
+    contactType: "static",
     icon: "globe",
     title: "Static Websites",
     summary:
@@ -36,6 +44,7 @@ export const services: Service[] = [
   },
   {
     slug: "shopify-storefronts",
+    contactType: "shopify",
     icon: "store",
     title: "Custom Shopify Storefronts",
     summary:
@@ -55,22 +64,40 @@ export const services: Service[] = [
   },
   {
     slug: "custom-development",
+    contactType: "custom",
     icon: "code",
     title: "Custom Development",
-    summary:
-      "Web apps, APIs, automations and AI features: anything a developer can build.",
+    summary: "Web apps, dashboards, APIs and integrations built around how you actually work.",
     pitch:
-      "When an off-the-shelf tool does not fit, we build the thing you actually need: internal dashboards, customer portals, integrations between the tools you already use, or AI-powered features embedded in your product.",
+      "When an off-the-shelf tool does not fit, we build the thing you actually need: internal dashboards, customer portals, APIs, and the integrations between the tools you already use.",
     idealFor: "Teams with a specific problem to solve, or an idea that needs an MVP in front of users quickly.",
     includes: [
       "Web applications and dashboards, from MVP to production",
-      "REST and GraphQL APIs, auth, payments and webhooks",
-      "Workflow automation and third-party integrations",
-      "AI features: chat assistants, document search, content tooling",
+      "REST and GraphQL APIs, authentication, payments and webhooks",
+      "Integrations between the tools and services you already use",
       "Performance, security and code-quality reviews",
       "Ongoing support and feature work after launch",
     ],
-    stack: ["TypeScript", "React", "Node.js", "PostgreSQL", "Stripe", "LLM APIs"],
+    stack: ["TypeScript", "React", "Node.js", "PostgreSQL", "Stripe", "GraphQL"],
+  },
+  {
+    slug: "ai-automation",
+    contactType: "ai",
+    icon: "bot",
+    title: "AI & Automation",
+    summary: "AI assistants, smart search and workflow automation grounded in your own content and data.",
+    pitch:
+      "We add AI where it earns its keep: assistants that answer from your own content, search that understands questions, and automation that takes repetitive manual work off your team, with a person kept in the loop where it matters.",
+    idealFor: "Businesses with repetitive work, lots of documents, or support questions that keep coming back.",
+    includes: [
+      "AI assistants and chat grounded in your own content and data",
+      "Document and knowledge-base search",
+      "Content and workflow tooling powered by large language model APIs",
+      "Automation between the tools your team already uses",
+      "Human hand-off and review for answers that matter",
+      "Guardrails: usage limits, logging and sensible data handling",
+    ],
+    stack: ["LLM APIs", "TypeScript", "Node.js", "Vector search", "Webhooks", "Shopify Admin API"],
   },
 ];
 

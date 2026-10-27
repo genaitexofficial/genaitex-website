@@ -4,8 +4,22 @@ export const projectTypes = [
   "Static website",
   "Shopify storefront",
   "Custom development",
+  "AI & automation",
   "Not sure yet",
 ] as const;
+
+export type ProjectType = (typeof projectTypes)[number];
+
+/** `/contact?type=…` values, used by the option picker and the stage's call-to-action buttons. */
+export const typeSlugs: Record<string, ProjectType> = {
+  static: "Static website",
+  shopify: "Shopify storefront",
+  custom: "Custom development",
+  ai: "AI & automation",
+};
+
+export const typeFromSlug = (slug: string | null | undefined): ProjectType | undefined =>
+  slug ? typeSlugs[slug] : undefined;
 
 export const budgets = [
   "Under $1,000",

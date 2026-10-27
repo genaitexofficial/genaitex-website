@@ -15,6 +15,7 @@ import {
   Palette,
   Pencil,
   Plug,
+  Rocket,
   Search,
   Server,
   ShieldCheck,
@@ -48,6 +49,7 @@ const icons: Record<IconKey, LucideIcon> = {
   server: Server,
   package: Package,
   zap: Zap,
+  rocket: Rocket,
 };
 
 export function ChapterIcon({ name, className }: { name: IconKey; className?: string }) {
