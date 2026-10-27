@@ -19,9 +19,11 @@ export function Hero() {
         className="absolute -left-40 top-0 -z-10 h-[800px] w-[800px] bg-[radial-gradient(closest-side,rgba(139,92,246,0.24),transparent)]"
       />
 
-      {/* 3D scene sits dimmed behind the text on tablets, and fills the right side on large screens.
-          Its left edge fades out so particles never run through the copy. */}
-      <div className="absolute inset-y-0 right-0 -z-10 w-full opacity-40 lg:w-[60%] lg:opacity-100 lg:[mask-image:linear-gradient(to_right,transparent_0%,#000_50%)]">
+      {/* 3D scene placement keeps the copy readable at every size:
+          phones: lower part of the hero, with the top faded out so the headline stays clean;
+          tablets: full-bleed and dimmed behind the text;
+          desktop: right side, with its left edge faded so particles never run through the copy. */}
+      <div className="absolute bottom-0 right-0 top-[42%] -z-10 w-full opacity-80 max-md:[mask-image:linear-gradient(to_bottom,transparent_0%,#000_40%)] md:top-0 md:opacity-40 lg:w-[60%] lg:opacity-100 lg:[mask-image:linear-gradient(to_right,transparent_0%,#000_50%)]">
         <HeroScene />
       </div>
 

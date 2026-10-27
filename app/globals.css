@@ -20,10 +20,16 @@
   --animate-marquee: marquee 45s linear infinite;
   --animate-float: float 7s ease-in-out infinite;
   --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+  --animate-fade-in: fade-in 1.2s ease-out both;
 
   @keyframes marquee {
     to {
       transform: translateX(-50%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
   }
   @keyframes float {
