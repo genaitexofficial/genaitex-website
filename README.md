@@ -21,12 +21,17 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 | What | File |
 |---|---|
 | Brand name, tagline, email, WhatsApp, socials, nav, "now booking" pill | `lib/site.ts` (or the `NEXT_PUBLIC_*` env vars) |
-| Services, process steps, "why us" principles, tech marquee | `lib/services.ts` |
+| **Home and Services scroll story**: chapter titles, copy, the four option cards, info cards, buttons | `lib/chapters.ts` (`homeChapters`, `servicesChapters`) |
+| The four options: what's included, who it's for, tech, optional timeline, button wording | `lib/services.ts` |
+| Process steps, "why us" principles, tech marquee | `lib/services.ts` |
 | Portfolio projects and case studies | `lib/projects.ts` |
-| Form options (project types, budgets, timelines) and rules | `lib/validation.ts` |
+| Form options (project types, budgets, timelines), `?type=` shortcuts and rules | `lib/validation.ts` |
 | About page copy and tech stack | `app/about/page.tsx` |
+| DNA helix look (size, turns, colours of the four bases) | `lib/helix.ts` |
 | Colours, fonts, glow/grid utilities | `app/globals.css`, `app/layout.tsx` |
 | Logo mark | `components/ui/Logo.tsx`, `app/icon.svg` |
+
+**Timelines and prices:** nothing on the site states a price or typical timeline. Each option in `lib/services.ts` has an optional `timeline` field; set it only when it is a commitment you are happy to make, and it will appear in the option picker.
 
 ### Replace the sample projects
 
@@ -65,9 +70,22 @@ The repo is at `genaitexofficial/genaitex-website`. Once it is imported, every p
 
 ## How it is built
 
+- **Scroll stage** (`components/stage/`): Home and Services are scroll-driven stories. A tall wrapper holds a sticky stage; scroll position picks the active chapter and drives the DNA helix's twist and slide. The page always scrolls natively (no scroll hijacking). The chapter rail, pager and option cards are real buttons and links, and keyboard focus never enters a hidden chapter.
+- **One DOM, three layouts**, chosen by CSS media queries so nothing shifts after hydration: a pinned desktop stage with floating option cards; a compact phone layout (helix on top, option chips below); and, for `prefers-reduced-motion`, plain stacked sections with no canvas.
+- **The DNA helix** (`lib/helix.ts`): a glossy beaded double helix with dotted A/T/G/C base-pair rungs.
+  - Real GPU: three.js scene, lazy-loaded, with callout lines that attach to actual rungs and follow them as the helix turns.
+  - Capable phones, and desktops without a GPU (headless browsers, VMs, remote desktops: detected by renderer name): a 2D-canvas version of the same helix, a few KB, no three.js. It only works hard while scrolling.
+  - Reduced motion, Data Saver or weak devices: no canvas at all.
+  - The scene pauses when scrolled off screen or when the tab is hidden.
+- **Option picker** (`components/stage/OptionPicker.tsx`): accessible tabs (arrow keys, Home/End) showing what's included, who it's for and the tech. Its button opens `/contact?type=static|shopify|custom|ai` with that project type preselected; the contact page stays statically prerendered (`useSearchParams` inside `<Suspense>`).
+- **Deep links:** chapter ids match the service slugs, so `/services#shopify-storefronts` lands on the right chapter (handled in `ChapterStage`, since a pinned stage can't be scrolled to natively).
+- **Other pages:** a scroll-progress hairline under the navbar, a faint DNA motif in page headers, a numbered section rail on About and case studies, and a parallax project mockup.
 - **Cache Components** is enabled (Next.js 16). Pages are prerendered; the contact API is the only dynamic route.
-- **Motion** loads lazily (`LazyMotion`), and **three.js is only downloaded on screens ≥ 768px** without a reduced-motion preference. Smaller screens get a CSS-only hero backdrop. The scene pauses when scrolled off screen.
-- Validation uses **zod/mini**, shared by the form and the API route.
+- Motion is loaded lazily (`LazyMotion`); validation uses **zod/mini**, shared by the form and the API route.
 - The contact route has a honeypot field, a body-size cap and a best-effort per-IP rate limit (per serverless instance; use a shared store such as Upstash if you need strict limits).
 - Accessibility: skip link, visible focus states, labelled form fields with `aria-invalid`, valid heading order, reduced-motion support everywhere.
 - Sample data uses `.example` hostnames in the browser mockups. Nothing links to a fake live site.
+
+## Testing the 3D scene locally
+
+Headless browsers render WebGL in software, which the site deliberately detects and avoids. To exercise the three.js path in a test, set `window.__FORCE_WEBGL = true` before the page loads (for example with Playwright's `addInitScript`).

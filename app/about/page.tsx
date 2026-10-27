@@ -5,7 +5,7 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhyUs } from "@/components/home/WhyUs";
 import { CTA } from "@/components/home/CTA";
-import { services } from "@/lib/services";
+import { SectionRail } from "@/components/ui/SectionRail";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -22,6 +22,12 @@ const stackGroups = [
   { label: "Delivery", items: ["Vercel", "Cloudflare", "GitHub Actions", "Lighthouse CI"] },
 ];
 
+const railItems = [
+  { id: "story", label: "Our story" },
+  { id: "principles", label: "Principles" },
+  { id: "toolbox", label: "Toolbox" },
+];
+
 export default function AboutPage() {
   return (
     <>
@@ -35,7 +41,9 @@ export default function AboutPage() {
         description={`${site.name} designs and builds websites, storefronts and software for businesses that care how their brand shows up online.`}
       />
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-12 sm:px-8 lg:grid-cols-2 lg:gap-20">
+      <SectionRail items={railItems} />
+
+      <section id="story" className="mx-auto grid max-w-7xl gap-12 px-5 pb-12 sm:px-8 lg:grid-cols-2 lg:gap-20">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">What we do</h2>
           <div className="mt-6 space-y-5 text-pretty text-lg leading-relaxed text-muted">
@@ -45,7 +53,7 @@ export default function AboutPage() {
               chance.
             </p>
             <p>
-              That craft covers {services.map((s) => s.title.toLowerCase()).join(", ").replace(/, ([^,]*)$/, ", and $1")}.
+              That craft covers static websites, custom Shopify storefronts, custom development, and AI & automation.
               Different problems, but the same approach: understand the goal, design it properly,
               and build it to last.
             </p>
@@ -69,9 +77,11 @@ export default function AboutPage() {
         </Reveal>
       </section>
 
-      <WhyUs />
+      <div id="principles">
+        <WhyUs />
+      </div>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+      <section id="toolbox" className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
         <SectionHeading
           eyebrow="Toolbox"
           title={

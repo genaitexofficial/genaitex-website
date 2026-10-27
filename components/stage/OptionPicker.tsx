@@ -155,7 +155,7 @@ export function OptionPicker({
 
         <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-line pt-8">
           <Button href={`/contact?type=${s.contactType}`} size="lg">
-            Start with {s.title.toLowerCase()}
+            {s.startLabel}
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden />
           </Button>
           <Link

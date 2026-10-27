@@ -2,6 +2,8 @@ export type ServiceIcon = "globe" | "store" | "code" | "bot";
 
 export interface Service {
   slug: string;
+  /** Call-to-action wording, e.g. "Start a Shopify storefront". */
+  startLabel: string;
   /** Value of `/contact?type=…` that preselects this option in the inquiry form. */
   contactType: "static" | "shopify" | "custom" | "ai";
   icon: ServiceIcon;
@@ -25,6 +27,7 @@ export const services: Service[] = [
   {
     slug: "static-websites",
     contactType: "static",
+    startLabel: "Start a static website",
     icon: "globe",
     title: "Static Websites",
     summary:
@@ -45,6 +48,7 @@ export const services: Service[] = [
   {
     slug: "shopify-storefronts",
     contactType: "shopify",
+    startLabel: "Start a Shopify storefront",
     icon: "store",
     title: "Custom Shopify Storefronts",
     summary:
@@ -65,6 +69,7 @@ export const services: Service[] = [
   {
     slug: "custom-development",
     contactType: "custom",
+    startLabel: "Start a custom project",
     icon: "code",
     title: "Custom Development",
     summary: "Web apps, dashboards, APIs and integrations built around how you actually work.",
@@ -83,6 +88,7 @@ export const services: Service[] = [
   {
     slug: "ai-automation",
     contactType: "ai",
+    startLabel: "Start with AI & automation",
     icon: "bot",
     title: "AI & Automation",
     summary: "AI assistants, smart search and workflow automation grounded in your own content and data.",

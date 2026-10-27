@@ -33,18 +33,48 @@ function useCapableDevice() {
   );
 }
 
+/**
+ * True when WebGL is backed by a real GPU. Software renderers (SwiftShader, llvmpipe: headless browsers,
+ * VMs, some remote desktops) cannot keep up with the 3D scene, so those visitors get the 2D renderer.
+ */
+function hasHardwareGL() {
+  if ((window as { __FORCE_WEBGL?: boolean }).__FORCE_WEBGL) return true;
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = (canvas.getContext("webgl2") || canvas.getContext("webgl")) as WebGLRenderingContext | null;
+    if (!gl) return false;
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return !/swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer);
+  } catch {
+    return false;
+  }
+}
+
+let gpuCache: boolean | undefined;
+function useHardwareGL() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => (gpuCache ??= hasHardwareGL()),
+    () => false,
+  );
+}
+
 export type SceneTier = "full" | "lite" | null;
 
 /**
- * full: screens ≥ 768px · lite: capable phones · null: reduced motion or weak devices,
- * which keep the CSS backdrop and never download a renderer.
+ * full: screens ≥ 768px with a real GPU (three.js) · lite: capable phones, and wide screens without a GPU
+ * (2D canvas, no three.js) · null: reduced motion or weak devices, which keep the CSS backdrop and never
+ * download a renderer.
  */
 export function useSceneTier(): SceneTier {
   const wide = useMediaQuery("(min-width: 768px)");
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   const capable = useCapableDevice();
+  const gpu = useHardwareGL();
   if (reduced) return null;
-  if (wide) return "full";
+  if (wide) return gpu ? "full" : "lite";
   return capable ? "lite" : null;
 }
 

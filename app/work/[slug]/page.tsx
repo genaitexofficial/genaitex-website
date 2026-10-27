@@ -7,7 +7,15 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { BrowserMockup } from "@/components/work/BrowserMockup";
 import { hostFor } from "@/components/work/ProjectCard";
 import { CTA } from "@/components/home/CTA";
+import { Parallax } from "@/components/ui/Parallax";
+import { SectionRail } from "@/components/ui/SectionRail";
 import { categoryLabels, getNextProject, getProject, projects } from "@/lib/projects";
+
+const railItems = [
+  { id: "overview", label: "Overview" },
+  { id: "built", label: "What we built" },
+  { id: "next", label: "Next project" },
+];
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -33,6 +41,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
 
   return (
     <>
+      <SectionRail items={railItems} />
       <header className="relative isolate overflow-hidden pb-12 pt-32 sm:pt-40">
         <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -92,16 +101,18 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
       </header>
 
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <Reveal>
-          <BrowserMockup
-            variant={project.mock}
-            accent={project.accent}
-            host={hostFor(project)}
-            className="mx-auto max-w-5xl"
-          />
-        </Reveal>
+        <Parallax distance={36}>
+          <Reveal>
+            <BrowserMockup
+              variant={project.mock}
+              accent={project.accent}
+              host={hostFor(project)}
+              className="mx-auto max-w-5xl"
+            />
+          </Reveal>
+        </Parallax>
 
-        <div className="mx-auto mt-24 grid max-w-5xl gap-16 lg:grid-cols-2">
+        <div id="overview" className="mx-auto mt-24 grid max-w-5xl gap-16 lg:grid-cols-2">
           <Reveal>
             <h2 className="eyebrow mb-4">The challenge</h2>
             <p className="text-pretty text-lg leading-relaxed text-muted">{project.challenge}</p>
@@ -112,7 +123,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
           </Reveal>
         </div>
 
-        <div className="mx-auto mt-20 grid max-w-5xl gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div id="built" className="mx-auto mt-20 grid max-w-5xl gap-6 lg:grid-cols-[1.4fr_1fr]">
           <Reveal className="h-full">
             <GlowCard className="h-full p-8 sm:p-10">
               <h2 className="eyebrow mb-6">What we built</h2>
@@ -143,23 +154,25 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
           </Reveal>
         </div>
 
-        <Reveal className="mx-auto mt-24 max-w-5xl">
-          <Link
-            href={`/work/${next.slug}`}
-            className="group flex items-center justify-between gap-6 rounded-3xl border border-line p-8 transition-colors hover:border-line-strong sm:p-10"
-          >
-            <span>
-              <span className="eyebrow !text-subtle">Next project</span>
-              <span className="mt-2 block text-3xl font-semibold tracking-tight sm:text-4xl">
-                {next.title}
+        <div id="next" className="mx-auto mt-24 max-w-5xl">
+          <Reveal>
+            <Link
+              href={`/work/${next.slug}`}
+              className="group flex items-center justify-between gap-6 rounded-3xl border border-line p-8 transition-colors hover:border-line-strong sm:p-10"
+            >
+              <span>
+                <span className="eyebrow !text-subtle">Next project</span>
+                <span className="mt-2 block text-3xl font-semibold tracking-tight sm:text-4xl">
+                  {next.title}
+                </span>
               </span>
-            </span>
-            <ArrowRight
-              className="h-8 w-8 shrink-0 text-subtle transition-all group-hover:translate-x-1 group-hover:text-cyan"
-              aria-hidden
-            />
-          </Link>
-        </Reveal>
+              <ArrowRight
+                className="h-8 w-8 shrink-0 text-subtle transition-all group-hover:translate-x-1 group-hover:text-cyan"
+                aria-hidden
+              />
+            </Link>
+          </Reveal>
+        </div>
 
       </div>
 

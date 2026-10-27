@@ -53,7 +53,7 @@ export function StageScene({
           {tier === "full" ? (
             <StageCanvas progress={progress} anchors={anchors} active={active} />
           ) : (
-            <StageCanvasLite progress={progress} active={active} />
+            <StageCanvasLite progress={progress} anchors={anchors} active={active} />
           )}
         </SceneBoundary>
       )}

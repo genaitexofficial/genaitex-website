@@ -39,17 +39,17 @@ export const HELIX_FULL: HelixParams = {
   rungRadius: 0.03,
 };
 
-/** The same helix with about half the beads, for phones drawing with the 2D canvas. */
+/** The same helix with under half the beads (about 360), for the 2D canvas renderer. */
 export const HELIX_LITE: HelixParams = {
-  steps: 170,
+  steps: 120,
   radius: 0.85,
-  pitch: 0.085,
-  turn: 0.3,
+  pitch: 0.12,
+  turn: 0.425,
   offsetB: 2.4,
-  rungEvery: 3,
-  beadsPerHalfRung: 3,
-  backboneRadius: 0.12,
-  rungRadius: 0.045,
+  rungEvery: 4,
+  beadsPerHalfRung: 2,
+  backboneRadius: 0.14,
+  rungRadius: 0.06,
 };
 
 /** Colour slot of a bead: 0 = backbone, 1..4 = the four bases (A, T, G, C). */

@@ -113,7 +113,7 @@ function Dna({ progress, anchors }: { progress: MotionValue<number>; anchors: An
       <group ref={tilt}>
         <group ref={spin}>
           <instancedMesh ref={backbone} args={[undefined, undefined, backboneData.count]}>
-            <sphereGeometry args={[1, 20, 14]} />
+            <sphereGeometry args={[1, 14, 10]} />
             <meshStandardMaterial
               color="#2b6fe0"
               emissive="#0b3fa8"
@@ -123,7 +123,7 @@ function Dna({ progress, anchors }: { progress: MotionValue<number>; anchors: An
             />
           </instancedMesh>
           <instancedMesh ref={rungBeads} args={[undefined, undefined, rungData.count]}>
-            <sphereGeometry args={[1, 8, 6]} />
+            <sphereGeometry args={[1, 6, 4]} />
             <meshBasicMaterial toneMapped={false} />
           </instancedMesh>
         </group>

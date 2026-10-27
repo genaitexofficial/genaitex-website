@@ -80,7 +80,7 @@ export function ChapterRail({
   return (
     <nav
       aria-label="Chapters"
-      className="absolute left-8 top-1/2 hidden -translate-y-1/2 motion-safe:lg:block"
+      className="absolute left-8 top-1/2 z-20 hidden -translate-y-1/2 motion-safe:lg:block"
     >
       <div className="relative pl-6">
         <div aria-hidden className="absolute bottom-1 left-0 top-1 w-px bg-line">
@@ -129,7 +129,7 @@ export function ProgressTrack({
   onSelect: (index: number) => void;
 }) {
   return (
-    <div className="absolute right-8 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-4 motion-safe:xl:flex">
+    <div className="absolute right-8 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-4 motion-safe:xl:flex">
       <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-subtle [writing-mode:vertical-rl]">
         Scroll
       </span>
@@ -169,7 +169,7 @@ export function Pager({
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 items-center gap-4 motion-safe:flex md:left-auto md:right-8 md:translate-x-0">
+    <div className="absolute bottom-6 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-4 motion-safe:flex md:left-auto md:right-8 md:translate-x-0">
       <button
         type="button"
         onClick={() => onSelect(active - 1)}
@@ -218,8 +218,8 @@ export function ScrollHint({ visible }: { visible: boolean }) {
 /** Right-hand info card (the screenshot's "Genetic Code" card). */
 export function InfoCard({ card }: { card: Chapter["card"] }) {
   return (
-    <aside className="glass hidden w-64 rounded-3xl bg-[#050914]/80 p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block">
-      <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-fg">{card.title}</h3>
+    <aside aria-label={card.title} className="glass hidden w-64 rounded-3xl bg-[#050914]/80 p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block">
+      <p className="font-mono text-xs uppercase tracking-[0.18em] text-fg">{card.title}</p>
       <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">{card.body}</p>
       {card.meter && (
         <div className="mt-5">

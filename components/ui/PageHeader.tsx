@@ -1,3 +1,4 @@
+import { HelixMotif } from "./HelixMotif";
 import { Reveal } from "./Reveal";
 
 /** Hero block for inner pages. Renders the page's single <h1>. */
@@ -17,6 +18,7 @@ export function PageHeader({
         aria-hidden
         className="absolute -top-40 left-1/2 -z-10 h-[640px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(139,92,246,0.22),transparent)]"
       />
+      <HelixMotif className="absolute right-[4%] top-8 -z-10 hidden h-[560px] w-[190px] rotate-[24deg] opacity-60 md:block lg:right-[10%]" />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <p className="eyebrow mb-5">{eyebrow}</p>
         <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
