@@ -270,6 +270,12 @@ html {
   }
 }
 
+/* Prices are in the page in both currencies; the one for <html data-currency> is shown (rupees by default) */
+:root:not([data-currency="usd"]) [data-cur="usd"],
+:root[data-currency="usd"] [data-cur="inr"] {
+  display: none;
+}
+
 /* Background lives on <html> only, so the fixed cursor glow (z-index -10) can show through <body>. */
 body {
   color: var(--color-fg);

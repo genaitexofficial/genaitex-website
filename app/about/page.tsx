@@ -10,7 +10,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
-  description: `Meet ${site.name}: a development studio building fast websites, Shopify storefronts and custom software.`,
+  description: `Meet ${site.name}: a studio building websites and applications, AI and automation, custom UI designs, CRM setups, AI product ads and marketing.`,
   alternates: { canonical: "/about" },
 };
 
@@ -53,7 +53,7 @@ export default function AboutPage() {
               chance.
             </p>
             <p>
-              That craft covers static websites, custom Shopify storefronts, custom development, and AI & automation.
+              That craft covers websites and applications, AI, automation and integrations, custom UI designs, CRM setup, AI product advertisements and marketing.
               Different problems, but the same approach: understand the goal, design it properly,
               and build it to last.
             </p>

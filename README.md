@@ -1,6 +1,6 @@
 # genaitex
 
-Website and portfolio for **genaitex**, a development studio building static websites, custom Shopify storefronts and bespoke web software.
+Website and portfolio for **genaitex**, a studio building websites and applications, AI and automation, custom UI designs, CRM setups, AI product advertisements and marketing.
 
 Next.js (App Router) · TypeScript · Tailwind CSS v4 · Motion · three.js (hero) · Resend (contact emails)
 
@@ -21,8 +21,9 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 | What | File |
 |---|---|
 | Brand name, tagline, email, WhatsApp, socials, nav, "now booking" pill | `lib/site.ts` (or the `NEXT_PUBLIC_*` env vars) |
-| **Home and Services scroll story**: chapter titles, copy, the four option cards, info cards, buttons | `lib/chapters.ts` (`homeChapters`, `servicesChapters`) |
-| The four options: what's included, who it's for, tech, optional timeline, button wording | `lib/services.ts` |
+| **Home and Services scroll story**: chapter titles, copy, the four option cards per chapter (some with prices), info cards, buttons | `lib/chapters.ts` (`homeChapters`, `servicesChapters`) |
+| The six services: what's included, who it's for, tech, price list, optional timeline, button wording | `lib/services.ts` |
+| Prices (in rupees), the rupee-to-dollar rate and the dollar rounding | `websitePricing` in `lib/services.ts`; `INR_PER_USD` and `usd()` in `lib/pricing.ts` |
 | Process steps, "why us" principles, tech marquee | `lib/services.ts` |
 | Portfolio projects and case studies | `lib/projects.ts` |
 | Form options (project types, budgets, timelines), `?type=` shortcuts and rules | `lib/validation.ts` |
@@ -37,7 +38,7 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 | Colours, fonts, glow/grid utilities | `app/globals.css`, `app/layout.tsx` |
 | Logo mark | `components/ui/Logo.tsx`, `app/icon.svg` |
 
-**Timelines and prices:** nothing on the site states a price or typical timeline. Each option in `lib/services.ts` has an optional `timeline` field; set it only when it is a commitment you are happy to make, and it will appear in the option picker.
+**Prices and timelines:** the site states "From" prices for Websites & Applications (Static website ₹2,000; Custom Ecommerce 5 pages ₹10,000; 10 pages ₹20,000) and "Custom quote" for the other services. Amounts are written once, in rupees (`websitePricing` in `lib/services.ts`, shown on the Services and Home stages and in the option picker) and shown in rupees or dollars: both are in the page (`components/currency/Price.tsx`) and CSS shows the one matching `<html data-currency>`, which an inline script sets before first paint (the visitor's saved choice from the navbar ₹ / $ switch, else rupees for visitors in India by time zone or language, dollars for everyone else). Dollar amounts are a fixed approximate conversion (`INR_PER_USD`, about ₹85 = $1, rounded to the nearest $5) and are labelled approximate; to quote exact dollars, change `usd()`. The contact form's budget ranges follow the currency (`budgetsInr` / `budgetsUsd` in `lib/validation.ts`). Each option in `lib/services.ts` also has an optional `timeline` field; set it only when it is a commitment you are happy to make, and it will appear in the option picker.
 
 ### Replace the sample projects
 
@@ -104,8 +105,8 @@ The repo is at `genaitexofficial/genaitex-website`. Once it is imported, every p
 - **Zoom per chapter:** each chapter has a camera keyframe (`zoom`, `focus`, `roll` in `lib/chapters.ts`). `cameraAt()` in `lib/helix.ts` blends between them (holds for a quarter of each step, eases through the middle half, zoom blended in log space), and both renderers get the result from the director, so they always agree. On Home the helix goes ×1.5 → ×2.4 → ×4 → ×6 (a single base pair) and pulls back to ×1.3 at the end. The three.js scene zooms optically (`camera.zoom`), so perspective stays clean.
 - **Chapter overlay** (decorative and `aria-hidden`, `components/stage/StageHud.tsx`): a targeting reticle on the base pair nearest the centre (plus corner brackets and a tick ruler on large screens) and a soft glow that swells and fades once per chapter change (about 0.8s, a gentle pulse, well inside the flashing-content limit); it fades in and out with the stage. There are no page counters or zoom readouts; the pager has previous/next arrows and announces the position to screen readers. The page-long backdrop adds faint scanlines (no blend mode) and speed streaks while the zoom moves. Every number is real: `ZOOM` is the camera zoom, `SEQ` and the pair label (for example `A–T`) are the targeted rung's position and bases in the helix data, and `CH` is the chapter. Values flow through motion values (`components/stage/hud.ts`), so there is no React re-render per frame. Hidden under reduced motion.
 - **Swipe settle on touch screens** (`components/stage/useMagneticSettle.ts`): when a swipe ends and scrolling goes idle, the page eases to a chapter, so one swipe is about one chapter (a forward swipe past ~12% of a step lands on the next one). It only runs on coarse pointers with motion allowed, never while a finger is down, and never at the very start or end of the stage, so it can't trap anyone. Mouse, trackpad and keyboard scrolling stay completely free.
-- **Option picker** (`components/stage/OptionPicker.tsx`): accessible tabs (arrow keys, Home/End) showing what's included, who it's for and the tech. Its button opens `/contact?type=static|shopify|custom|ai` with that project type preselected; the contact page stays statically prerendered (`useSearchParams` inside `<Suspense>`).
-- **Deep links:** chapter ids match the service slugs, so `/services#shopify-storefronts` lands on the right chapter (handled in `ChapterStage`, since a pinned stage can't be scrolled to natively).
+- **Option picker** (`components/stage/OptionPicker.tsx`): accessible tabs (arrow keys, Home/End) showing what's included, who it's for and the tech. Its button opens `/contact?type=web|ai|design|crm|ads|marketing` with that service preselected (older `static|shopify|custom` links still work), and each price row opens `/contact?type=web&plan=static|ecom-5|ecom-10`, which also starts the message with the chosen package; the contact page stays statically prerendered (`useSearchParams` inside `<Suspense>`).
+- **Deep links:** chapter ids match the service slugs, so `/services#crm-setup` lands on the right chapter (old ids such as `#shopify-storefronts` are mapped by `chapterAliases`) (handled in `ChapterStage`, since a pinned stage can't be scrolled to natively).
 - **Other pages:** a scroll-progress hairline under the navbar, a numbered section rail on About and case studies, and a parallax project mockup. Their DNA is the page-long backdrop, so every page has the effect with no per-page setup.
 - **Cache Components** is enabled (Next.js 16). Pages are prerendered; the contact API is the only dynamic route.
 - Motion is loaded lazily (`LazyMotion`); validation uses **zod/mini**, shared by the form and the API route.

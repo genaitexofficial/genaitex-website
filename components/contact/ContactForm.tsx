@@ -5,8 +5,10 @@ import * as z from "zod/mini";
 import { CheckCircle2, LoaderCircle, Send } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
+import { useCurrency } from "@/components/currency/CurrencyToggle";
 import {
-  budgets,
+  budgetsInr,
+  budgetsUsd,
   contactSchema,
   projectTypes,
   timelines,
@@ -19,12 +21,23 @@ type FieldErrors = Partial<Record<ContactField, string>>;
 const fieldBase =
   "w-full rounded-xl border border-line bg-wash/[0.03] px-4 py-3.5 text-fg placeholder:text-subtle transition-colors hover:border-line-strong focus:border-violet focus:bg-wash/[0.05] focus:outline-none aria-[invalid=true]:border-rose-400/70";
 
-export function ContactForm({ initialType = "" }: { initialType?: string }) {
+export function ContactForm({
+  initialType = "",
+  initialMessage = "",
+}: {
+  initialType?: string;
+  /** Starts the message (editable), e.g. with the package chosen on the services page. */
+  initialMessage?: string;
+}) {
   const uid = useId();
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [serverError, setServerError] = useState("");
   const [projectType, setProjectType] = useState<string>(initialType);
+  // Budget ranges are in the currency the visitor is looking at; the chosen range is remembered as a position
+  // in the list, so switching currency keeps the equivalent range selected.
+  const budgets: readonly string[] = useCurrency() === "usd" ? budgetsUsd : budgetsInr;
+  const [budgetIx, setBudgetIx] = useState(-1);
 
   const id = (name: string) => `${uid}-${name}`;
 
@@ -191,7 +204,8 @@ export function ContactForm({ initialType = "" }: { initialType?: string }) {
           <select
             id={id("budget")}
             name="budget"
-            defaultValue=""
+            value={budgetIx < 0 ? "" : budgets[budgetIx]}
+            onChange={(e) => setBudgetIx(budgets.indexOf(e.target.value))}
             className={fieldBase}
             {...aria("budget")}
           >
@@ -238,6 +252,7 @@ export function ContactForm({ initialType = "" }: { initialType?: string }) {
           id={id("message")}
           name="message"
           rows={6}
+          defaultValue={initialMessage}
           placeholder="What are you building, who is it for, and what does success look like?"
           className={clsx(fieldBase, "resize-y")}
           {...aria("message")}

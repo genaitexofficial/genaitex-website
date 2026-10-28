@@ -5,9 +5,9 @@
  */
 export const site = {
   name: "genaitex",
-  tagline: "Websites & storefronts engineered to convert.",
+  tagline: "Websites, AI & growth, engineered to convert.",
   description:
-    "genaitex is a development studio building fast static websites, custom Shopify storefronts and bespoke web software.",
+    "genaitex is a studio building websites and applications, AI and automation, custom UI designs, CRM setups, AI product advertisements and marketing.",
 
   // The primary domain. genaitex.in should redirect here (set up in Vercel), never serve a copy.
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://genaitex.com",

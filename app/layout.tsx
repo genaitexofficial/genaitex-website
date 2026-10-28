@@ -6,6 +6,7 @@ import { Providers } from "@/components/layout/Providers";
 import { DnaProvider } from "@/components/dna/DnaProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { themeScript } from "@/components/theme/store";
+import { currencyScript } from "@/components/currency/store";
 import { DnaBackdrop } from "@/components/dna/DnaBackdrop";
 import { CursorGlow } from "@/components/ui/CursorGlow";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
@@ -60,9 +61,13 @@ const jsonLd = {
   description: site.description,
   email: site.email,
   serviceType: [
-    "Static website development",
-    "Custom Shopify storefront development",
-    "Custom web development",
+    "Website and web application development",
+    "Ecommerce website development",
+    "AI, automation and integrations",
+    "Custom UI design",
+    "CRM setup",
+    "AI product advertisements",
+    "Digital marketing",
   ],
   areaServed: "Worldwide",
 };
@@ -77,6 +82,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         {/* Sets the desktop theme before first paint, so there is never a flash of the wrong one */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Likewise for the currency prices are shown in (rupees for visitors in India, else dollars) */}
+        <script dangerouslySetInnerHTML={{ __html: currencyScript }} />
         <script
           type="application/ld+json"
           // Escape "<" so the JSON can never close the script tag early.

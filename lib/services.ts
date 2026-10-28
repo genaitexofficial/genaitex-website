@@ -1,11 +1,15 @@
-export type ServiceIcon = "globe" | "store" | "code" | "bot";
+import type { PriceTier } from "./pricing";
+
+export type ServiceIcon = "globe" | "bot" | "palette" | "users" | "sparkles" | "megaphone";
+
+/** Values of `/contact?type=…`; each preselects that service in the inquiry form. */
+export type ContactType = "web" | "ai" | "design" | "crm" | "ads" | "marketing";
 
 export interface Service {
   slug: string;
-  /** Call-to-action wording, e.g. "Start a Shopify storefront". */
+  /** Call-to-action wording, e.g. "Start a website or app". */
   startLabel: string;
-  /** Value of `/contact?type=…` that preselects this option in the inquiry form. */
-  contactType: "static" | "shopify" | "custom" | "ai";
+  contactType: ContactType;
   icon: ServiceIcon;
   title: string;
   /** One-liner for cards */
@@ -16,6 +20,8 @@ export interface Service {
   idealFor: string;
   includes: string[];
   stack: string[];
+  /** Priced options (rupees; shown in rupees or dollars). Services without any are quoted per project. */
+  pricing?: PriceTier[];
   /**
    * Typical timeline, shown only when set. Left empty until it is a commitment you are happy to make
    * (scope-dependent estimates belong in the quote).
@@ -23,87 +29,140 @@ export interface Service {
   timeline?: string;
 }
 
+/**
+ * Prices (rupees) are the studio's "from" prices; the final amount is confirmed in the quote. Everything else
+ * below is descriptive copy: edit it freely, but keep it to what the studio actually delivers (no invented
+ * numbers or guaranteed results).
+ */
+export const websitePricing: PriceTier[] = [
+  { id: "static", label: "Static website", detail: "Marketing sites, landing pages and portfolios", inr: 2000 },
+  { id: "ecom-5", label: "Custom Ecommerce website", detail: "5 pages", inr: 10000 },
+  { id: "ecom-10", label: "Custom Ecommerce website", detail: "10 pages", inr: 20000 },
+  { id: "app", label: "Web apps & dashboards", detail: "Built around how your team works" },
+];
+
 export const services: Service[] = [
   {
-    slug: "static-websites",
-    contactType: "static",
-    startLabel: "Start a static website",
+    slug: "websites-applications",
+    contactType: "web",
+    startLabel: "Start a website or app",
     icon: "globe",
-    title: "Static Websites",
-    summary:
-      "Marketing sites, landing pages and portfolios built to load instantly and rank well.",
+    title: "Websites & Applications",
+    summary: "Fast static websites, custom ecommerce stores and web apps, designed and built end to end.",
     pitch:
-      "Pre-rendered pages served from the edge: no waiting on servers, nothing to patch, almost nothing to go wrong. We design and build sites that feel premium, score well on Core Web Vitals and are easy for you to update.",
-    idealFor: "Businesses, founders and creators who need a sharp online presence without the maintenance burden.",
+      "From a sharp marketing site to a custom online store or a full web application, we design and build it end to end: fast, accessible and easy for you to run. Ecommerce can be a tightly customised Shopify build or a fully custom storefront, and apps are built around how your team actually works.",
+    idealFor:
+      "Businesses, brands and teams that need a premium website, an online store that converts, or software that fits the way they work.",
     includes: [
       "Custom design: no templates, no page-builder bloat",
-      "Mobile-first, accessible, SEO-ready markup",
-      "Fast by default: optimised images, fonts and scripts",
-      "Optional headless CMS so you can edit content yourself",
-      "Contact forms, analytics and booking integrations",
-      "Deployment, domain and email DNS set up for you",
+      "Static websites: pre-rendered, fast on any connection and SEO-ready",
+      "Custom ecommerce on Shopify (themes or headless) or a fully custom storefront",
+      "Product pages, cart, checkout extensions and payment integrations",
+      "Web apps, dashboards and customer portals, from MVP to production",
+      "Domain, hosting, analytics and deployment set up for you",
     ],
-    stack: ["Next.js", "Astro", "Tailwind CSS", "TypeScript", "Sanity", "Vercel"],
+    stack: ["Next.js", "Shopify", "Hydrogen", "Tailwind CSS", "TypeScript", "Node.js", "PostgreSQL", "Stripe"],
+    pricing: websitePricing,
   },
   {
-    slug: "shopify-storefronts",
-    contactType: "shopify",
-    startLabel: "Start a Shopify storefront",
-    icon: "store",
-    title: "Custom Shopify Storefronts",
-    summary:
-      "Theme builds and headless storefronts that turn browsers into buyers.",
-    pitch:
-      "Shopify handles the commerce engine; we build the experience on top. From a tightly customised Liquid theme to a fully headless storefront on the Storefront API, we shape the buying journey around your products and your brand.",
-    idealFor: "Brands that have outgrown their theme, or are launching a store that needs to look and convert like a flagship.",
-    includes: [
-      "Custom Liquid themes and section-level theme customisation",
-      "Headless storefronts with Hydrogen or Next.js and the Storefront API",
-      "Product pages, bundles, variants, quick-add and cart upgrades",
-      "Checkout and app extensions, plus third-party integrations",
-      "Store migrations from other platforms",
-      "Speed and conversion audits with a prioritised fix list",
-    ],
-    stack: ["Shopify", "Liquid", "Hydrogen", "Storefront API", "Next.js", "GraphQL"],
-  },
-  {
-    slug: "custom-development",
-    contactType: "custom",
-    startLabel: "Start a custom project",
-    icon: "code",
-    title: "Custom Development",
-    summary: "Web apps, dashboards, APIs and integrations built around how you actually work.",
-    pitch:
-      "When an off-the-shelf tool does not fit, we build the thing you actually need: internal dashboards, customer portals, APIs, and the integrations between the tools you already use.",
-    idealFor: "Teams with a specific problem to solve, or an idea that needs an MVP in front of users quickly.",
-    includes: [
-      "Web applications and dashboards, from MVP to production",
-      "REST and GraphQL APIs, authentication, payments and webhooks",
-      "Integrations between the tools and services you already use",
-      "Performance, security and code-quality reviews",
-      "Ongoing support and feature work after launch",
-    ],
-    stack: ["TypeScript", "React", "Node.js", "PostgreSQL", "Stripe", "GraphQL"],
-  },
-  {
-    slug: "ai-automation",
+    slug: "ai-automation-integrations",
     contactType: "ai",
     startLabel: "Start with AI & automation",
     icon: "bot",
-    title: "AI & Automation",
-    summary: "AI assistants, smart search and workflow automation grounded in your own content and data.",
+    title: "AI, Automation & Integrations",
+    summary: "AI assistants, smart search, workflow automation and integrations between the tools you already use.",
     pitch:
-      "We add AI where it earns its keep: assistants that answer from your own content, search that understands questions, and automation that takes repetitive manual work off your team, with a person kept in the loop where it matters.",
+      "We add AI where it earns its keep: assistants that answer from your own content, search that understands questions, and automation and integrations that take repetitive manual work off your team, with a person kept in the loop where it matters.",
     idealFor: "Businesses with repetitive work, lots of documents, or support questions that keep coming back.",
     includes: [
       "AI assistants and chat grounded in your own content and data",
       "Document and knowledge-base search",
-      "Content and workflow tooling powered by large language model APIs",
-      "Automation between the tools your team already uses",
+      "Workflow automation between the tools your team already uses",
+      "API and webhook integrations: store, CRM, email, payments and spreadsheets",
       "Human hand-off and review for answers that matter",
       "Guardrails: usage limits, logging and sensible data handling",
     ],
-    stack: ["LLM APIs", "TypeScript", "Node.js", "Vector search", "Webhooks", "Shopify Admin API"],
+    stack: ["LLM APIs", "TypeScript", "Node.js", "Vector search", "Webhooks", "REST & GraphQL"],
+  },
+  {
+    slug: "custom-ui-design",
+    contactType: "design",
+    startLabel: "Start a design project",
+    icon: "palette",
+    title: "Custom UI Designs",
+    summary: "Interfaces designed around your users and your brand: websites, web apps and dashboards.",
+    pitch:
+      "Good interface design is where a product starts to feel premium and easy to use. We design clear, distinctive interfaces for websites, web apps and dashboards: layouts, components, states and a visual language that stays consistent from the first screen to the last, ready to be built.",
+    idealFor: "Founders and teams who need a standout interface before they build, or a tired product that deserves a redesign.",
+    includes: [
+      "Goals, audience and competitor review to shape the design",
+      "Wireframes and high-fidelity designs for the key screens",
+      "Responsive layouts for phone, tablet and desktop",
+      "A design system: colours, type, components and states",
+      "Clickable prototypes to review before anything is built",
+      "Developer-ready handoff, or we build it for you",
+    ],
+    stack: ["Figma", "Design systems", "Prototyping", "Accessibility (WCAG)", "Tailwind CSS", "React"],
+  },
+  {
+    slug: "crm-setup",
+    contactType: "crm",
+    startLabel: "Start a CRM setup",
+    icon: "users",
+    title: "CRM Setup",
+    summary: "A CRM set up around how you sell: pipelines, forms, automation and reports.",
+    pitch:
+      "A CRM only helps if it matches how your team actually works. We choose and set up the right tool with you, build your pipeline and fields, connect your website forms and other tools, automate follow-ups, and train your team to use it.",
+    idealFor: "Small and growing teams whose leads live in inboxes and spreadsheets.",
+    includes: [
+      "Choosing the right CRM for your team and budget",
+      "Pipelines, stages, fields and user roles set up for how you sell",
+      "Website forms and lead capture connected straight into the CRM",
+      "Email and task automation for follow-ups",
+      "Importing and tidying your existing contacts",
+      "Dashboards and reports, plus a walkthrough for your team",
+    ],
+    stack: ["HubSpot", "Zoho CRM", "Pipedrive", "Webhooks", "Google Workspace"],
+  },
+  {
+    slug: "ai-product-ads",
+    contactType: "ads",
+    startLabel: "Start an ad project",
+    icon: "sparkles",
+    title: "AI Product Advertisements",
+    summary: "Product images, short videos and ad creatives made with AI, reviewed by a person and ready to run.",
+    pitch:
+      "Show your products in their best light without a studio shoot for every idea. We use AI to create product visuals, lifestyle scenes, short video ads and creative variations for your store and ad channels, starting from your real product photos so the product stays accurate, and a person reviews every asset for quality and brand fit before it reaches you.",
+    idealFor: "Ecommerce and product brands that need fresh ad creative often, on a practical budget.",
+    includes: [
+      "Product images and lifestyle scenes in your brand's look",
+      "Short video ads for social media and your store",
+      "Several creative variations to test against each other",
+      "Sizes and formats for your ad channels and product pages",
+      "Built from your real product photos, so the product is shown accurately",
+      "Every asset reviewed for quality and brand fit before delivery",
+    ],
+    stack: ["Image generation", "Video generation", "Retouching", "Social ad formats"],
+  },
+  {
+    slug: "marketing",
+    contactType: "marketing",
+    startLabel: "Start with marketing",
+    icon: "megaphone",
+    title: "Marketing",
+    summary: "Search, social, email and paid ads to bring the right people to your site.",
+    pitch:
+      "A great site needs visitors who are ready to act. We plan and run the marketing around it: search visibility, content, social media, email and paid campaigns, tracked so you can see what is working. We are straight about what is realistic and never promise rankings or results.",
+    idealFor: "Businesses that have, or are about to launch, a website or store and want steady enquiries and orders.",
+    includes: [
+      "A marketing plan built around your goals, audience and budget",
+      "SEO: technical fixes, on-page work and content",
+      "Social media content and posting",
+      "Email campaigns and automations",
+      "Paid ads on search and social, with conversion tracking",
+      "Analytics and a clear report on what is working",
+    ],
+    stack: ["SEO", "Google Analytics", "Search Console", "Meta Ads", "Google Ads", "Email marketing"],
   },
 ];
 

@@ -20,7 +20,13 @@ export type IconKey =
   | "server"
   | "package"
   | "zap"
-  | "rocket";
+  | "rocket"
+  | "users"
+  | "megaphone"
+  | "sparkles"
+  | "mail"
+  | "image"
+  | "video";
 
 export interface Callout {
   title: string;
@@ -31,6 +37,8 @@ export interface Callout {
   pairs?: string;
   /** Chapter id this card scrolls to when clicked (chapter 1 only). */
   jumpTo?: string;
+  /** A price line under the title: "From ₹…" in the visitor's currency, or "Custom quote" when `inr` is left out. */
+  price?: { inr?: number };
 }
 
 export interface Chapter {
@@ -53,50 +61,50 @@ export interface Chapter {
 
 /**
  * The home page story: five chapters told over a DNA double helix (genaitex's "genetics": the building blocks and what each one pairs with).
- * No invented numbers: the only figure is a performance *target*, labelled as one.
+ * No invented numbers: the only figures are a performance *target*, labelled as one, and the studio's "from" prices.
  */
 export const homeChapters: Chapter[] = [
   {
     id: "studio",
     number: "01",
     label: "Studio",
-    eyebrow: "The building blocks of the web",
-    title: "Websites & storefronts engineered to convert.",
-    lead: "genaitex builds fast static websites, custom Shopify storefronts and bespoke software, from first sketch to launch and beyond.",
+    eyebrow: "The building blocks of growth",
+    title: "Websites, AI & growth, engineered to convert.",
+    lead: "genaitex builds websites and applications, AI and automation, custom interfaces, CRM setups, AI product ads and marketing: everything a business needs to launch and grow.",
     body: "One team designs, builds and ships it all. Choose the starting point that fits your business: each option pairs with the pieces that make it perform.",
     camera: { zoom: 1.5, focus: 0 },
     callouts: [
       {
-        title: "Static Websites",
+        title: "Websites & Applications",
         base: "A",
-        detail: "Pre-rendered pages that load instantly",
+        detail: "Static sites, ecommerce and web apps",
         pairs: "SEO & speed",
         icon: "globe",
         jumpTo: "websites",
       },
       {
-        title: "Shopify Storefronts",
+        title: "AI, Automation & Integrations",
         base: "T",
-        detail: "Themes and headless stores that sell",
-        pairs: "Checkout & payments",
-        icon: "store",
-        jumpTo: "storefronts",
-      },
-      {
-        title: "Custom Development",
-        base: "G",
-        detail: "Web apps, dashboards and APIs",
-        pairs: "APIs & integrations",
-        icon: "code",
-        jumpTo: "custom",
-      },
-      {
-        title: "AI & Automation",
-        base: "C",
         detail: "Assistants, search and workflows",
-        pairs: "Your data & workflows",
+        pairs: "Your data & tools",
         icon: "bot",
-        jumpTo: "custom",
+        jumpTo: "ai",
+      },
+      {
+        title: "UI Designs & CRM",
+        base: "G",
+        detail: "Interfaces and sales systems",
+        pairs: "Your customers",
+        icon: "palette",
+        jumpTo: "growth",
+      },
+      {
+        title: "AI Ads & Marketing",
+        base: "C",
+        detail: "Creative and campaigns that get seen",
+        pairs: "Your audience",
+        icon: "megaphone",
+        jumpTo: "growth",
       },
     ],
     card: {
@@ -110,68 +118,68 @@ export const homeChapters: Chapter[] = [
   {
     id: "websites",
     number: "02",
-    label: "Websites",
-    eyebrow: "Static websites",
-    title: "Pages that load before you blink.",
-    lead: "Pre-rendered pages served from the edge: nothing to patch, almost nothing to go wrong, and fast on any connection.",
-    body: "We design and build sites that feel premium, score well on Core Web Vitals and are easy for you to update. Ideal for businesses, founders and creators who need a sharp online presence without the maintenance burden.",
+    label: "Websites & Apps",
+    eyebrow: "Websites & Applications",
+    title: "Sites, stores and apps built to perform.",
+    lead: "From a fast static website to a custom online store or a full web app: designed and built end to end, and easy for you to run.",
+    body: "Static websites are pre-rendered and served from the edge, ecommerce can be a custom Shopify build or a fully custom storefront, and apps are built around how your team works. Prices are starting points; the final amount is confirmed in your quote.",
     camera: { zoom: 2.4, focus: 2.2, roll: 0.06 },
     callouts: [
-      { title: "Custom design", detail: "No templates, no page-builder bloat", icon: "palette" },
-      { title: "SEO-ready markup", detail: "Structure search engines understand", icon: "search" },
-      { title: "Optional CMS", detail: "Edit your content without a developer", icon: "pencil" },
-      { title: "Domain & hosting", detail: "Deployment and DNS set up for you", icon: "server" },
+      { title: "Static website", detail: "Marketing sites, landing pages, portfolios", icon: "globe", price: { inr: 2000 } },
+      { title: "Ecommerce, 5 pages", detail: "A custom store built around your products", icon: "store", price: { inr: 10000 } },
+      { title: "Ecommerce, 10 pages", detail: "More pages, the same custom build", icon: "package", price: { inr: 20000 } },
+      { title: "Web apps & dashboards", detail: "Built around how your team works", icon: "code", price: {} },
     ],
     card: {
       title: "Ideal for",
-      body: "Marketing sites, landing pages, portfolios and local businesses.",
+      body: "Businesses, brands and teams that need a premium site, a store that converts, or software that fits.",
     },
-    cta: { label: "Get a quote for a website", href: "/contact?type=static" },
-    secondary: { label: "See what's included", href: "/services#static-websites" },
+    cta: { label: "Get a quote for a website", href: "/contact?type=web" },
+    secondary: { label: "See what's included", href: "/services#websites-applications" },
   },
   {
-    id: "storefronts",
+    id: "ai",
     number: "03",
-    label: "Storefronts",
-    eyebrow: "Shopify storefronts",
-    title: "A store that looks like a flagship and sells like one.",
-    lead: "Shopify runs the commerce engine; we build the experience on top, from a tightly customised theme to a fully headless storefront.",
-    body: "We shape the buying journey around your products and your brand: product pages, bundles, cart upgrades, checkout extensions and the integrations that keep your store running smoothly.",
+    label: "AI & Automation",
+    eyebrow: "AI, automation & integrations",
+    title: "AI where it earns its keep.",
+    lead: "Assistants that answer from your own content, search that understands questions, and automation that takes repetitive work off your team.",
+    body: "We connect the tools you already use, keep a person in the loop where answers matter, and build in usage limits, logging and sensible data handling from the start.",
     camera: { zoom: 4, focus: -1.9, roll: -0.08 },
     callouts: [
-      { title: "Custom Liquid themes", detail: "Sections you can edit in Shopify", icon: "layers" },
-      { title: "Headless storefronts", detail: "Hydrogen or Next.js on the Storefront API", icon: "zap" },
-      { title: "Checkout & apps", detail: "Upsells, bundles and extensions", icon: "package" },
-      { title: "Store migrations", detail: "Move from another platform safely", icon: "store" },
+      { title: "Grounded assistants", detail: "Answers drawn from your content and data", icon: "bot" },
+      { title: "Document & knowledge search", detail: "Find the right answer fast", icon: "search" },
+      { title: "Workflow automation", detail: "Connect your tools, remove manual steps", icon: "workflow" },
+      { title: "Integrations", detail: "Your store, CRM, email and payments, connected", icon: "plug" },
     ],
     card: {
       title: "Ideal for",
-      body: "Brands that have outgrown their theme, or are launching a store that needs to convert.",
+      body: "Businesses with repetitive work, lots of documents, or support questions that keep coming back.",
     },
-    cta: { label: "Get a quote for a storefront", href: "/contact?type=shopify" },
-    secondary: { label: "See what's included", href: "/services#shopify-storefronts" },
+    cta: { label: "Discuss AI & automation", href: "/contact?type=ai" },
+    secondary: { label: "See what's included", href: "/services#ai-automation-integrations" },
   },
   {
-    id: "custom",
+    id: "growth",
     number: "04",
-    label: "Custom & AI",
-    eyebrow: "Custom development & AI",
-    title: "Software built around how you actually work.",
-    lead: "When an off-the-shelf tool does not fit, we build the thing you need: web apps, APIs, integrations and AI features.",
-    body: "From an MVP in front of users to production systems: dashboards, customer portals, connections between the tools you already use, and AI assistants grounded in your own content and data.",
+    label: "Design & growth",
+    eyebrow: "Design, CRM & growth",
+    title: "Design that stands out. Marketing that gets seen.",
+    lead: "Custom UI designs, CRM setup, AI product advertisements and marketing: the pieces that turn a good build into steady customers.",
+    body: "Interfaces designed around your users, a CRM that matches how you sell, AI-made product creatives reviewed by a person, and marketing you can see working.",
     camera: { zoom: 6, focus: 1.2, roll: 0.1 },
     callouts: [
-      { title: "Web apps & dashboards", detail: "From MVP to production", icon: "code" },
-      { title: "APIs & integrations", detail: "Connect the tools you already use", icon: "plug" },
-      { title: "AI assistants & search", detail: "Grounded in your own content", icon: "bot" },
-      { title: "Workflow automation", detail: "Remove repetitive manual work", icon: "workflow" },
+      { title: "Custom UI designs", detail: "Interfaces built around your users", icon: "palette" },
+      { title: "CRM setup", detail: "Pipelines, forms and follow-ups", icon: "users" },
+      { title: "AI product ads", detail: "Images and video ads from your products", icon: "sparkles" },
+      { title: "Marketing", detail: "Search, social, email and paid ads", icon: "megaphone" },
     ],
     card: {
       title: "Ideal for",
-      body: "Teams with a specific problem to solve, or an idea that needs an MVP.",
+      body: "Businesses that want a standout interface and steady enquiries or orders.",
     },
-    cta: { label: "Discuss a custom project", href: "/contact?type=custom" },
-    secondary: { label: "Explore AI & automation", href: "/contact?type=ai" },
+    cta: { label: "Discuss a project", href: "/contact" },
+    secondary: { label: "See all services", href: "/services" },
   },
   {
     id: "launch",
@@ -197,68 +205,114 @@ export const homeChapters: Chapter[] = [
   },
 ];
 
+/** Chapter ids from before the services were reorganised: old /services#… links land on the new chapter. */
+export const chapterAliases: Record<string, string> = {
+  "static-websites": "websites-applications",
+  "shopify-storefronts": "websites-applications",
+  "custom-development": "websites-applications",
+  "ai-automation": "ai-automation-integrations",
+};
+
 const home = (id: string) => homeChapters.find((c) => c.id === id)!;
 
 /**
- * The services page story: the four options in detail, then how we work. Chapter ids match the service
- * slugs, so links such as /services#shopify-storefronts jump to the right chapter.
+ * The services page story: the six services in detail, then how we work. Chapter ids match the service
+ * slugs, so links such as /services#crm-setup jump to the right chapter.
  */
 export const servicesChapters: Chapter[] = [
   {
     ...home("websites"),
-    id: "static-websites",
+    id: "websites-applications",
     number: "01",
     camera: { zoom: 1.8, focus: 1.6 },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
-    ...home("storefronts"),
-    id: "shopify-storefronts",
+    ...home("ai"),
+    id: "ai-automation-integrations",
     number: "02",
     camera: { zoom: 3, focus: -2, roll: -0.06 },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
-    id: "custom-development",
+    id: "custom-ui-design",
     number: "03",
-    label: "Custom Dev",
-    eyebrow: "Custom development",
-    title: "Software built around how you actually work.",
-    lead: "When an off-the-shelf tool does not fit, we build the thing you need: internal dashboards, customer portals, APIs and integrations.",
-    body: "From an MVP in front of users to production systems, built with typed, tested code and reviewed for performance and security.",
+    label: "UI Design",
+    eyebrow: "Custom UI designs",
+    title: "Interfaces that feel as good as they look.",
+    lead: "Clear, distinctive interfaces for websites, web apps and dashboards, designed around your users and your brand.",
+    body: "From wireframes to a full design system and clickable prototypes, so you see and refine everything before a line of code is written.",
     camera: { zoom: 4.4, focus: 1.1, roll: 0.07 },
     callouts: [
-      { title: "Web apps & dashboards", detail: "From MVP to production", icon: "code" },
-      { title: "APIs & integrations", detail: "Connect the tools you already use", icon: "plug" },
-      { title: "Auth, payments, webhooks", detail: "The plumbing real products need", icon: "shield" },
-      { title: "Reviews & support", detail: "Performance and security checks, plus ongoing care", icon: "life-buoy" },
+      { title: "Research & wireframes", detail: "Goals, audience and structure first", icon: "pencil" },
+      { title: "High-fidelity screens", detail: "Polished, responsive designs", icon: "palette" },
+      { title: "Design system", detail: "Colours, type and components that stay consistent", icon: "layers" },
+      { title: "Prototype & handoff", detail: "Clickable, and ready for developers", icon: "rocket" },
     ],
-    card: { title: "Ideal for", body: "Teams with a specific problem to solve, or an idea that needs an MVP in front of users quickly." },
-    cta: { label: "Discuss a custom project", href: "/contact?type=custom" },
+    card: { title: "Ideal for", body: "Founders and teams who need a standout interface before they build, or a product that deserves a redesign." },
+    cta: { label: "Start a design project", href: "/contact?type=design" },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
-    id: "ai-automation",
+    id: "crm-setup",
     number: "04",
-    label: "AI & Automation",
-    eyebrow: "AI & automation",
-    title: "AI where it earns its keep.",
-    lead: "Assistants that answer from your own content, search that understands questions, and automation that takes repetitive work off your team.",
-    body: "We keep a person in the loop where answers matter, and build in usage limits, logging and sensible data handling from the start.",
+    label: "CRM Setup",
+    eyebrow: "CRM setup",
+    title: "A CRM that fits how you sell.",
+    lead: "We choose and set up the right CRM with you, connect your website and tools, and train your team to use it.",
+    body: "Pipelines, fields and roles built around your sales process, lead capture straight from your website, automated follow-ups, and reports you will actually read.",
     camera: { zoom: 6.4, focus: -1.4, roll: -0.1 },
     callouts: [
-      { title: "Grounded assistants", detail: "Answers drawn from your content and data", icon: "bot" },
-      { title: "Document & knowledge search", detail: "Find the right answer fast", icon: "search" },
-      { title: "Workflow automation", detail: "Connect your tools, remove manual steps", icon: "workflow" },
-      { title: "Human hand-off", detail: "Review and escalation for what matters", icon: "life-buoy" },
+      { title: "Pipeline & fields", detail: "Stages and roles shaped to your process", icon: "workflow" },
+      { title: "Lead capture", detail: "Website forms flow straight in", icon: "plug" },
+      { title: "Follow-up automation", detail: "Emails and tasks that run themselves", icon: "zap" },
+      { title: "Reports & training", detail: "Dashboards, plus a walkthrough for your team", icon: "chart" },
     ],
-    card: { title: "Ideal for", body: "Businesses with repetitive work, lots of documents, or support questions that keep coming back." },
-    cta: { label: "Discuss AI & automation", href: "/contact?type=ai" },
+    card: { title: "Ideal for", body: "Small and growing teams whose leads live in inboxes and spreadsheets." },
+    cta: { label: "Start a CRM setup", href: "/contact?type=crm" },
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    id: "ai-product-ads",
+    number: "05",
+    label: "AI Product Ads",
+    eyebrow: "AI product advertisements",
+    title: "Product ads without a studio shoot.",
+    lead: "Product visuals, lifestyle scenes and short video ads made with AI from your real product photos, and checked by a person before they reach you.",
+    body: "Fresh creative for your store and ad channels, in several variations to test, in the sizes and formats each channel needs.",
+    camera: { zoom: 3.2, focus: 0.6, roll: 0.05 },
+    callouts: [
+      { title: "Product visuals", detail: "Your products in your brand's look", icon: "image" },
+      { title: "Short video ads", detail: "For social media and your store", icon: "video" },
+      { title: "Creative variations", detail: "Several versions to test", icon: "layers" },
+      { title: "Reviewed by a person", detail: "Quality and brand fit, checked", icon: "shield" },
+    ],
+    card: { title: "Ideal for", body: "Ecommerce and product brands that need fresh ad creative often, on a practical budget." },
+    cta: { label: "Start an ad project", href: "/contact?type=ads" },
+    secondary: { label: "Choose your starting point", href: "#start" },
+  },
+  {
+    id: "marketing",
+    number: "06",
+    label: "Marketing",
+    eyebrow: "Marketing",
+    title: "Reach the people ready to buy.",
+    lead: "Search, content, social, email and paid ads, planned around your goals and tracked so you can see what is working.",
+    body: "We are straight about what is realistic: no promised rankings, just steady work and clear reporting.",
+    camera: { zoom: 2.4, focus: -0.8, roll: -0.04 },
+    callouts: [
+      { title: "SEO", detail: "Technical fixes, on-page work and content", icon: "search" },
+      { title: "Social & content", detail: "Posts and content that fit your brand", icon: "megaphone" },
+      { title: "Email & automation", detail: "Campaigns and follow-up flows", icon: "mail" },
+      { title: "Ads & analytics", detail: "Paid campaigns with conversion tracking", icon: "chart" },
+    ],
+    card: { title: "Ideal for", body: "Businesses with a website or store that want steady enquiries and orders." },
+    cta: { label: "Start with marketing", href: "/contact?type=marketing" },
     secondary: { label: "Choose your starting point", href: "#start" },
   },
   {
     id: "process",
-    number: "05",
+    number: "07",
     label: "How we work",
     eyebrow: "How we work",
     title: "A clear process, no surprises.",

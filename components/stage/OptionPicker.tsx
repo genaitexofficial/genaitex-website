@@ -7,19 +7,18 @@ import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
+import { Price } from "@/components/currency/Price";
 import { services } from "@/lib/services";
 
-/** The four options carry the same A / T / G / C base letters as the stage's cards. */
-const letters = ["A", "T", "G", "C"];
-
 /**
- * "Choose your starting point": pick one of the four options to see what's included, who it is for and
- * the tech behind it, then jump into the contact form with that option already selected.
+ * "Choose your starting point": pick one of the six services to see what's included, who it is for, the tech
+ * behind it and (where there is a price list) what it costs, then jump into the contact form with that
+ * service already selected.
  */
 export function OptionPicker({
   id = "options",
   heading = "Choose your starting point",
-  description = "Every project begins with one of four building blocks. Pick the closest fit to see exactly what is included, then tell us about it.",
+  description = "Every project begins with one of six building blocks. Pick the closest fit to see exactly what is included, then tell us about it.",
 }: {
   id?: string;
   heading?: React.ReactNode;
@@ -62,7 +61,7 @@ export function OptionPicker({
       <div
         role="tablist"
         aria-label="Project options"
-        className="dna-node mt-12 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        className="dna-node mt-12 grid grid-cols-2 gap-3 lg:grid-cols-3"
       >
         {services.map((svc, i) => {
           const on = i === selected;
@@ -92,11 +91,11 @@ export function OptionPicker({
                 <span
                   aria-hidden
                   className={clsx(
-                    "grid h-7 w-7 place-items-center rounded-full border font-mono text-xs transition-colors",
+                    "grid h-7 w-9 place-items-center rounded-full border font-mono text-xs transition-colors",
                     on ? "border-cyan/70 text-cyan" : "border-line-strong text-subtle",
                   )}
                 >
-                  {letters[i]}
+                  {String(i + 1).padStart(2, "0")}
                 </span>
               </span>
               <span className="text-base font-semibold tracking-tight sm:text-lg">{svc.title}</span>
@@ -153,6 +152,34 @@ export function OptionPicker({
           </div>
         </div>
 
+        {s.pricing && (
+          <div className="mt-10 border-t border-line pt-8">
+            <h4 className="eyebrow mb-5">Pricing</h4>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {s.pricing.map((tier) => (
+                <li key={tier.id} className="rounded-2xl border border-line bg-wash/[0.03] p-5">
+                  <p className="font-medium text-fg">{tier.label}</p>
+                  {tier.detail && <p className="mt-1 text-sm text-muted">{tier.detail}</p>}
+                  <p className="mt-4 font-mono text-lg tracking-tight text-cyan">
+                    <Price inr={tier.inr} />
+                  </p>
+                  <Link
+                    href={`/contact?type=${s.contactType}&plan=${tier.id}`}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm text-fg underline decoration-wash/20 underline-offset-4 transition-colors hover:decoration-cyan"
+                  >
+                    {tier.inr === undefined ? "Get a quote" : "Choose this"}
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-subtle">
+              Prices are starting points; the final amount is confirmed in your quote. Dollar amounts are approximate
+              conversions from rupees.
+            </p>
+          </div>
+        )}
+
         <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-line pt-8">
           <Button href={`/contact?type=${s.contactType}`} size="lg">
             {s.startLabel}
@@ -164,6 +191,11 @@ export function OptionPicker({
           >
             Full details
           </Link>
+          {!s.pricing && (
+            <p className="w-full text-sm text-subtle sm:ml-2 sm:w-auto">
+              Priced per project: tell us what you need and we reply with a quote.
+            </p>
+          )}
         </div>
       </div>
     </section>

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
-import type { Chapter } from "@/lib/chapters";
+import { Price } from "@/components/currency/Price";
+import { chapterAliases, type Chapter } from "@/lib/chapters";
 import { StageScrim } from "./StageScrim";
 import {
   calloutSlots,
@@ -154,6 +155,9 @@ const ChapterItem = memo(function ChapterItem({
                   )}
                   <span className="min-w-0">
                     <span className="block font-medium text-fg">{co.title}</span>
+                    {co.price && (
+                      <Price inr={co.price.inr} className="mt-0.5 block font-mono text-[11px] tracking-wide text-cyan" />
+                    )}
                     <span className="hidden text-xs leading-snug text-muted lg:mt-1 lg:block motion-reduce:mt-1 motion-reduce:block">
                       {co.detail}
                     </span>
@@ -253,7 +257,8 @@ export function ChapterStage({
   // Links like /services#shopify-storefronts target a chapter, which lives inside a pinned stage, so the
   // browser cannot scroll to it natively. Handle the hash on load, on hash changes, and on same-page clicks.
   const goToHash = () => {
-    const i = chapters.findIndex((c) => c.id === window.location.hash.slice(1));
+    const hash = window.location.hash.slice(1);
+    const i = chapters.findIndex((c) => c.id === (chapterAliases[hash] ?? hash));
     if (i >= 0) scrollToChapter(i, true);
   };
   useEffect(() => {
@@ -263,7 +268,8 @@ export function ChapterStage({
       if (!a || a.target === "_blank") return;
       const url = new URL(a.href, window.location.href);
       if (url.origin !== window.location.origin || url.pathname !== window.location.pathname) return;
-      const i = chapters.findIndex((c) => c.id === url.hash.slice(1));
+      const hash = url.hash.slice(1);
+      const i = chapters.findIndex((c) => c.id === (chapterAliases[hash] ?? hash));
       if (i < 0) return;
       e.preventDefault();
       window.history.pushState(null, "", url.hash);

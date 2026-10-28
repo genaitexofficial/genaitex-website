@@ -41,7 +41,7 @@ export default function OpengraphImage() {
             {site.tagline}
           </div>
           <div style={{ display: "flex", marginTop: 32, fontSize: 30, color: "#a9adb4" }}>
-            Static websites · Shopify storefronts · Custom development
+            Websites & apps · AI & automation · UI design · CRM · Marketing
           </div>
         </div>
       </div>

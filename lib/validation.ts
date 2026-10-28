@@ -1,10 +1,12 @@
 import * as z from "zod/mini";
 
 export const projectTypes = [
-  "Static website",
-  "Shopify storefront",
-  "Custom development",
-  "AI & automation",
+  "Websites & Applications",
+  "AI, Automation & Integrations",
+  "Custom UI Designs",
+  "CRM Setup",
+  "AI Product Advertisements",
+  "Marketing",
   "Not sure yet",
 ] as const;
 
@@ -12,23 +14,41 @@ export type ProjectType = (typeof projectTypes)[number];
 
 /** `/contact?type=…` values, used by the option picker and the stage's call-to-action buttons. */
 export const typeSlugs: Record<string, ProjectType> = {
-  static: "Static website",
-  shopify: "Shopify storefront",
-  custom: "Custom development",
-  ai: "AI & automation",
+  web: "Websites & Applications",
+  ai: "AI, Automation & Integrations",
+  design: "Custom UI Designs",
+  crm: "CRM Setup",
+  ads: "AI Product Advertisements",
+  marketing: "Marketing",
+  // links from before the services were reorganised keep working
+  static: "Websites & Applications",
+  shopify: "Websites & Applications",
+  custom: "Websites & Applications",
 };
 
 export const typeFromSlug = (slug: string | null | undefined): ProjectType | undefined =>
   slug ? typeSlugs[slug] : undefined;
 
-export const budgets = [
-  "Under $1,000",
-  "$1,000 – $3,000",
-  "$3,000 – $8,000",
-  "$8,000 – $20,000",
-  "$20,000+",
+/** Budget ranges, in the currency the visitor is looking at (the schema accepts either list). */
+export const budgetsInr = [
+  "Under ₹10,000",
+  "₹10,000 – ₹25,000",
+  "₹25,000 – ₹75,000",
+  "₹75,000 – ₹2,00,000",
+  "₹2,00,000+",
   "Not sure yet",
 ] as const;
+
+export const budgetsUsd = [
+  "Under $120",
+  "$120 – $300",
+  "$300 – $900",
+  "$900 – $2,400",
+  "$2,400+",
+  "Not sure yet",
+] as const;
+
+export const budgets = [...budgetsInr, ...budgetsUsd] as const;
 
 export const timelines = [
   "As soon as possible",
