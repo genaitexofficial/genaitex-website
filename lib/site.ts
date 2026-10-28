@@ -1,3 +1,5 @@
+import { hasLiveInsights } from "./insights";
+
 /**
  * Single source of truth for brand details.
  * Everything marked CONFIGURE can be overridden with an env var (see .env.example)
@@ -49,12 +51,14 @@ export const site = {
     bing: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "",
   },
 
+  // "Insights" joins the navigation once an article is published (lib/insights.ts)
   nav: [
     { label: "Services", href: "/services" },
     { label: "Work", href: "/work" },
     { label: "About", href: "/about" },
+    ...(hasLiveInsights ? [{ label: "Insights", href: "/insights" }] : []),
     { label: "Contact", href: "/contact" },
-  ],
+  ] as readonly { label: string; href: string }[],
 } as const;
 
 export function whatsappLink(message = "Hi genaitex, I'd like to discuss a project.") {

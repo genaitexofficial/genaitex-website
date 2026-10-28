@@ -25,6 +25,8 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 | The six services: what's included, who it's for, tech, price list, optional timeline, button wording | `lib/services.ts` |
 | Prices (in rupees), the rupee-to-dollar rate and the dollar rounding | `websitePricing` in `lib/services.ts`; `INR_PER_USD` and `usd()` in `lib/pricing.ts` |
 | Process steps, "why us" principles, tech marquee | `lib/services.ts` |
+| **SEO**: the nine service pages (copy, FAQs, related links), the search title and description of the home page, the structured data | `lib/seoPages.ts`, `lib/site.ts` (`seoTitle`, `seoDescription`, `location`, `socials`), `lib/jsonld.ts` |
+| **Insights** articles (drafts until you publish them) | `lib/insights.ts` |
 | Portfolio projects and case studies | `lib/projects.ts` |
 | Form options (project types, budgets, timelines), `?type=` shortcuts and rules | `lib/validation.ts` |
 | About page copy and tech stack | `app/about/page.tsx` |
@@ -63,7 +65,14 @@ See `.env.example`.
 | `RESEND_API_KEY` | Enables contact-form email delivery |
 | `CONTACT_TO_EMAIL` | Inbox that receives inquiries (defaults to `NEXT_PUBLIC_CONTACT_EMAIL`) |
 | `CONTACT_FROM_EMAIL` | Sender, on a domain verified in Resend |
+| `NEXT_PUBLIC_CITY`, `NEXT_PUBLIC_REGION`, `NEXT_PUBLIC_COUNTRY` | Where the studio is based (city and region; country such as `IN`). Published in the structured data only when set. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION` | The `content` value of the Search Console / Bing Webmaster "HTML tag" verification (see `SEO.md`) |
+| `SHOW_DRAFT_INSIGHTS` | Set to `1` when building to include the draft Insights articles (preview only) |
 | `NEXT_PUBLIC_DESKTOP_THEMES` | Set to `off` to drop the off-white/silver/ash Day and Night themes and the navbar button, and keep the original dark-blue look on desktop too (default: on) |
+
+## SEO
+
+Every page has its own title, description, canonical URL and share card (`pageMetadata` in `lib/seo.ts`); structured data (Organization, WebSite, ProfessionalService, Breadcrumbs, Service + FAQ on service pages, Article on insights) comes from `lib/jsonld.ts`; the nine service pages live under `/services/<slug>` (`lib/seoPages.ts`); `/insights` shows articles from `lib/insights.ts` once one is published (they all ship as drafts; see the file's header). `npm run seo:check` (with the site built and running, `BASE=http://localhost:3000`) checks all of it page by page. **`SEO.md` explains what is built in and the to-do list for the parts only you can do** (Search Console, Google Business Profile, real projects and reviews, redirects).
 
 ## Deploy to Vercel and connect the domain
 

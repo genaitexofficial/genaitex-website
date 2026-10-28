@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { projects } from "@/lib/projects";
 import { seoPages } from "@/lib/seoPages";
+import { hasLiveInsights, visibleArticles } from "@/lib/insights";
 import { site } from "@/lib/site";
 
 /**
@@ -24,5 +25,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  return [...pages, ...servicePages, ...caseStudies];
+  const insights = hasLiveInsights
+    ? [
+        { url: `${site.url}/insights`, priority: 0.7 },
+        ...visibleArticles().map((a) => ({
+          url: `${site.url}/insights/${a.slug}`,
+          lastModified: new Date(a.updated ?? a.published),
+          priority: 0.7,
+        })),
+      ]
+    : [];
+
+  return [...pages, ...servicePages, ...insights, ...caseStudies];
 }

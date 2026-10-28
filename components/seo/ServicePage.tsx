@@ -149,7 +149,7 @@ export function ServicePage({ page }: { page: SeoPage }) {
       {/* FAQs */}
       <section className="mx-auto max-w-4xl px-5 py-24 sm:px-8">
         <SectionHeading eyebrow="Questions" title={`${page.name}: common questions`} />
-        <div className="mt-12 divide-y divide-line rounded-3xl border border-line">
+        <div className="dna-node mt-12 divide-y divide-line rounded-3xl border border-line">
           {page.faqs.map((f) => (
             <details key={f.q} className="group px-6 py-5 sm:px-8">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-medium tracking-tight [&::-webkit-details-marker]:hidden">
@@ -174,7 +174,7 @@ export function ServicePage({ page }: { page: SeoPage }) {
               <li key={p.slug}>
                 <Link
                   href={`/services/${p.slug}`}
-                  className="group flex h-full flex-col rounded-3xl border border-line p-7 transition-colors hover:border-line-strong"
+                  className="dna-node group flex h-full flex-col rounded-3xl border border-line p-7 transition-colors hover:border-line-strong"
                 >
                   <span className="text-lg font-semibold tracking-tight">{p.name}</span>
                   <span className="mt-2 flex-1 text-pretty text-sm leading-relaxed text-muted">{p.description}</span>

@@ -22,6 +22,7 @@ export function pageMetadata({
   publishedTime,
   modifiedTime,
   ownImage = false,
+  feed,
 }: {
   title: string;
   description: string;
@@ -32,6 +33,8 @@ export function pageMetadata({
   modifiedTime?: string;
   /** True when the page's route has its own opengraph-image file (service pages, case studies, articles). */
   ownImage?: boolean;
+  /** An RSS feed to advertise (<link rel="alternate">). */
+  feed?: string;
 }): Metadata {
   const full = `${title} · ${site.name}`;
   // A page that sets its own share data loses the site-wide share image unless it names one, so name it here
@@ -39,7 +42,7 @@ export function pageMetadata({
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: { canonical: path, ...(feed && { types: { "application/rss+xml": feed } }) },
     openGraph: {
       type,
       siteName: site.name,
