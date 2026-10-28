@@ -5,7 +5,6 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhyUs } from "@/components/home/WhyUs";
 import { CTA } from "@/components/home/CTA";
-import { SectionRail } from "@/components/ui/SectionRail";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -22,12 +21,6 @@ const stackGroups = [
   { label: "Delivery", items: ["Vercel", "Cloudflare", "GitHub Actions", "Lighthouse CI"] },
 ];
 
-const railItems = [
-  { id: "story", label: "Our story" },
-  { id: "principles", label: "Principles" },
-  { id: "toolbox", label: "Toolbox" },
-];
-
 export default function AboutPage() {
   return (
     <>
@@ -40,8 +33,6 @@ export default function AboutPage() {
         }
         description={`${site.name} designs and builds websites, storefronts and software for businesses that care how their brand shows up online.`}
       />
-
-      <SectionRail items={railItems} />
 
       <section id="story" className="mx-auto grid max-w-7xl gap-12 px-5 pb-12 sm:px-8 lg:grid-cols-2 lg:gap-20">
         <Reveal>

@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import * as m from "motion/react-m";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useMotionValue, useTransform, type MotionValue } from "motion/react";
 import type { Anchor } from "@/components/dna/anchors";
 import type { Chapter, IconKey } from "@/lib/chapters";
@@ -89,57 +89,6 @@ export const phoneSlots = [
   { x: "4%", y: "36%", line: [26, 36, 28, 31] },
   { x: "52%", y: "41%", line: [74, 41, 72, 36] },
 ] as const;
-
-/** Left chapter rail: numbered labels with a progress line. Large screens only. */
-export function ChapterRail({
-  chapters,
-  active,
-  progress,
-  onSelect,
-}: {
-  chapters: Chapter[];
-  active: number;
-  progress: MotionValue<number>;
-  onSelect: (index: number) => void;
-}) {
-  return (
-    <nav
-      aria-label="Chapters"
-      className="absolute left-8 top-1/2 z-20 hidden -translate-y-1/2 motion-safe:lg:block"
-    >
-      <div className="relative pl-6">
-        <div aria-hidden className="absolute bottom-1 left-0 top-1 w-px bg-line">
-          <m.div className="h-full w-px origin-top bg-cyan" style={{ scaleY: progress }} />
-        </div>
-        <ol className="space-y-7">
-          {chapters.map((c, i) => (
-            <li key={c.id} className="relative">
-              <span
-                aria-hidden
-                className={clsx(
-                  "absolute -left-[1.72rem] top-1.5 h-2 w-2 rounded-full transition-all duration-300",
-                  i === active ? "dot-glow scale-125" : "bg-line-strong",
-                )}
-              />
-              <button
-                type="button"
-                onClick={() => onSelect(i)}
-                aria-current={i === active ? "step" : undefined}
-                className={clsx(
-                  "group block text-left transition-colors",
-                  i === active ? "text-fg" : "text-subtle hover:text-fg",
-                )}
-              >
-                <span className="block font-mono text-[11px] tracking-widest text-cyan/80">{c.number}</span>
-                <span className="block text-xs uppercase tracking-[0.18em]">{c.label}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </nav>
-  );
-}
 
 /**
  * Previous / next arrows (no visible counter; the position is announced to screen readers). Bottom centre on
@@ -200,23 +149,24 @@ export function ScrollHint({ visible }: { visible: boolean }) {
   );
 }
 
-/** Right-hand info card (the screenshot's "Genetic Code" card). */
+/** Right-hand info card (the screenshot's "Genetic Code" card): the fifth card colour, bold like the option cards. */
 export function InfoCard({ card }: { card: Chapter["card"] }) {
   return (
-    <aside aria-label={card.title} className="glass hidden w-64 rounded-3xl bg-panel/80 p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block">
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-fg">{card.title}</p>
+    <aside
+      aria-label={card.title}
+      style={{ "--c": "var(--slot-5)", "--t": "var(--slot-text-5)" } as CSSProperties}
+      className="slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block"
+    >
+      <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-[rgb(var(--t))]">{card.title}</p>
       <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">{card.body}</p>
       {card.meter && (
         <div className="mt-5">
-          <div className="h-1 w-full overflow-hidden rounded-full bg-line-strong">
-            <div
-              className="bar-fill h-full rounded-full"
-              style={{ width: `${card.meter.fill * 100}%` }}
-            />
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgb(var(--c)/0.18)]">
+            <div className="h-full rounded-full bg-[rgb(var(--c))]" style={{ width: `${card.meter.fill * 100}%` }} />
           </div>
           <p className="mt-2 flex justify-between font-mono text-[11px] uppercase tracking-widest text-subtle">
             <span>{card.meter.label}</span>
-            <span className="text-cyan">{card.meter.value}</span>
+            <span className="font-medium text-[rgb(var(--t))]">{card.meter.value}</span>
           </p>
         </div>
       )}
@@ -234,31 +184,38 @@ interface BoxSize {
  * Both the dot and the line are moved with transforms only (never `left/top` or SVG attributes), so following a
  * turning rung costs the compositor a matrix per frame and nothing is laid out or repainted.
  */
-function AnchorDot({ anchor, size }: { anchor: Anchor; size: BoxSize }) {
+const slotColour = (k: number) => ({ "--c": `var(--slot-${k + 1})` }) as CSSProperties;
+
+function AnchorDot({ anchor, size, k }: { anchor: Anchor; size: BoxSize; k: number }) {
   const x = useTransform([anchor.x, size.w], ([ax, w]: number[]) => (ax / 100) * w);
   const y = useTransform([anchor.y, size.h], ([ay, h]: number[]) => (ay / 100) * h);
   return (
     <m.span
       aria-hidden
-      style={{ x, y }}
-      className="absolute left-0 top-0 -ml-[5px] -mt-[5px] h-2.5 w-2.5 rounded-full dot-glow"
+      style={{ x, y, ...slotColour(k) }}
+      className="absolute left-0 top-0 -ml-[6px] -mt-[6px] h-3 w-3 rounded-full slot-dot"
     />
   );
 }
 
-/** A 1px line from a fixed point to the anchor: a rotated, stretched div, so it too is compositor-only. */
-function AnchorLine({ anchor, from, size }: { anchor: Anchor; from: readonly number[]; size: BoxSize }) {
-  const x = useTransform(size.w, (w) => (from[0] / 100) * w);
-  const y = useTransform(size.h, (h) => (from[1] / 100) * h);
+/**
+ * A line from a fixed point on the card to the anchor: a rotated, stretched div, so it is compositor-only. Its
+ * start is a plain percentage position (it never moves); only the angle and length follow the DNA.
+ */
+function AnchorLine({ anchor, from, size, k }: { anchor: Anchor; from: readonly number[]; size: BoxSize; k: number }) {
   const dx = useTransform([anchor.x, size.w], ([ax, w]: number[]) => ((ax - from[0]) / 100) * w);
   const dy = useTransform([anchor.y, size.h], ([ay, h]: number[]) => ((ay - from[1]) / 100) * h);
   const angle = useTransform([dx, dy], ([vx, vy]: number[]) => (Math.atan2(vy, vx) * 180) / Math.PI);
   const length = useTransform([dx, dy], ([vx, vy]: number[]) => Math.hypot(vx, vy));
   return (
-    <m.div aria-hidden style={{ x, y, rotate: angle, transformOrigin: "0 0" }} className="absolute left-0 top-0">
+    <m.div
+      aria-hidden
+      style={{ left: `${from[0]}%`, top: `${from[1]}%`, rotate: angle, transformOrigin: "0 0", ...slotColour(k) }}
+      className="absolute"
+    >
       <m.div
-        style={{ scaleX: length, transformOrigin: "0 0", backgroundColor: "rgb(var(--accent) / 0.5)" }}
-        className="h-px w-px"
+        style={{ scaleX: length, transformOrigin: "0 0", backgroundColor: "rgb(var(--c) / 0.85)" }}
+        className="h-[1.5px] w-px"
       />
     </m.div>
   );
@@ -306,10 +263,10 @@ function AnchorSet({
   return (
     <div ref={box} aria-hidden className={clsx("pointer-events-none absolute inset-0", className)}>
       {anchors.map((a, k) => (
-        <AnchorLine key={`line-${k}`} anchor={a} from={slots[k].line} size={size} />
+        <AnchorLine key={`line-${k}`} anchor={a} from={slots[k].line} size={size} k={k} />
       ))}
       {anchors.map((a, k) => (
-        <AnchorDot key={`dot-${k}`} anchor={a} size={size} />
+        <AnchorDot key={`dot-${k}`} anchor={a} size={size} k={k} />
       ))}
     </div>
   );

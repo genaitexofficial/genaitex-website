@@ -78,6 +78,19 @@
   color-scheme: dark;
   /* Everything below is themed: these are the original dark-blue values (phones and tablets). */
   --accent: 34 211 238; /* rgb triplet of the accent, for translucent uses */
+  /* The cards tied to the DNA: one colour per card position (the same on every scroll). --slot-N is the bright
+     colour (borders, bars, glow, dots); --slot-text-N is the shade for coloured text (deeper in Day). */
+  --slot-1: 251 146 60;
+  --slot-2: 244 114 182;
+  --slot-3: 52 211 153;
+  --slot-4: 56 189 248;
+  --slot-5: 167 139 250;
+  --slot-text-1: 251 146 60;
+  --slot-text-2: 244 114 182;
+  --slot-text-3: 52 211 153;
+  --slot-text-4: 56 189 248;
+  --slot-text-5: 167 139 250;
+  --card-solid: rgb(7 11 22 / 0.96);
   --haze-a: rgb(34 150 255 / 0.14);
   --haze-b: rgb(40 80 255 / 0.14);
   --orb-a: rgb(34 150 255 / 0.34);
@@ -144,6 +157,7 @@
     --color-panel: #101113;
     --color-wash: #ffffff;
     --accent: 230 233 238;
+    --card-solid: rgb(22 23 27 / 0.96);
     --haze-a: rgb(210 214 222 / 0.07);
     --haze-b: rgb(160 166 176 / 0.06);
     --orb-a: rgb(222 226 234 / 0.16);
@@ -201,6 +215,12 @@
     --color-panel: #fbfaf7;
     --color-wash: #1b1c1f;
     --accent: 43 45 49;
+    --card-solid: rgb(255 255 255 / 0.97);
+    --slot-text-1: 194 65 12;
+    --slot-text-2: 190 24 93;
+    --slot-text-3: 4 120 87;
+    --slot-text-4: 3 105 161;
+    --slot-text-5: 109 40 217;
     --haze-a: rgb(255 255 255 / 0.75);
     --haze-b: rgb(188 192 200 / 0.35);
     --orb-a: rgb(255 255 255 / 0.9);
@@ -363,6 +383,29 @@ body {
     .glow-card {
       background: linear-gradient(180deg, var(--card-wash-a), var(--card-wash-b)), var(--card-phone);
     }
+  }
+
+  /* The cards tied to the DNA carry the key business messages, so they are near-solid (the helix never shows
+     through the text) and bold: a colour edge and bar, a glow, and a dot and line to the DNA in the same colour.
+     Set --c (the colour) and --t (the text shade) on the card, e.g. from --slot-1 / --slot-text-1. */
+  .slot-card {
+    background: var(--card-solid);
+    border: 1px solid rgb(var(--c) / 0.6);
+    box-shadow:
+      inset 4px 0 0 rgb(var(--c)),
+      0 18px 38px -16px rgb(var(--c) / 0.65),
+      0 2px 8px -2px rgb(0 0 0 / 0.2);
+  }
+  .slot-chip {
+    background: rgb(var(--c) / 0.16);
+    color: rgb(var(--t));
+    border: 1px solid rgb(var(--c) / 0.7);
+  }
+  .slot-dot {
+    background: rgb(var(--c));
+    box-shadow:
+      0 0 0 3px rgb(var(--c) / 0.3),
+      0 0 14px 3px rgb(var(--c) / 0.6);
   }
 
   /* Sci-fi HUD textures */

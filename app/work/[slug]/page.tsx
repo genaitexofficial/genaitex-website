@@ -8,14 +8,7 @@ import { BrowserMockup } from "@/components/work/BrowserMockup";
 import { hostFor } from "@/components/work/ProjectCard";
 import { CTA } from "@/components/home/CTA";
 import { Parallax } from "@/components/ui/Parallax";
-import { SectionRail } from "@/components/ui/SectionRail";
 import { categoryLabels, getNextProject, getProject, projects } from "@/lib/projects";
-
-const railItems = [
-  { id: "overview", label: "Overview" },
-  { id: "built", label: "What we built" },
-  { id: "next", label: "Next project" },
-];
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -41,7 +34,6 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
 
   return (
     <>
-      <SectionRail items={railItems} />
       <header className="relative isolate overflow-hidden pb-12 pt-32 sm:pt-40">
         <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
         <div className="mx-auto max-w-7xl px-5 sm:px-8">

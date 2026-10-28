@@ -13,7 +13,6 @@ import {
   phoneSlots,
   ChapterIcon,
   AnchorLines,
-  ChapterRail,
   InfoCard,
   Pager,
   ScrollHint,
@@ -54,7 +53,7 @@ const ChapterItem = memo(function ChapterItem({
           "motion-safe:transition-[opacity,transform] motion-safe:duration-[450ms] motion-safe:ease-out",
           "motion-safe:data-[state=before]:pointer-events-none motion-safe:data-[state=before]:-translate-y-6 motion-safe:data-[state=before]:opacity-0",
           "motion-safe:data-[state=after]:pointer-events-none motion-safe:data-[state=after]:translate-y-6 motion-safe:data-[state=after]:opacity-0",
-          "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16 lg:motion-safe:pl-[13rem]",
+          "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16",
         )}
       >
         {/* Text group: a normal block on large screens; on phones its children join the column (via
@@ -62,7 +61,7 @@ const ChapterItem = memo(function ChapterItem({
         <div
           data-dna-reticle
           className={clsx(
-            "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[13rem] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
+            "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
             // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
             "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
           )}
@@ -124,7 +123,16 @@ const ChapterItem = memo(function ChapterItem({
             return (
               <li
                 key={co.title}
-                style={{ "--x": slot.x, "--y": slot.y, "--px": phone.x, "--py": phone.y } as CSSProperties}
+                style={
+                  {
+                    "--x": slot.x,
+                    "--y": slot.y,
+                    "--px": phone.x,
+                    "--py": phone.y,
+                    "--c": `var(--slot-${k + 1})`,
+                    "--t": `var(--slot-text-${k + 1})`,
+                  } as CSSProperties
+                }
                 className={clsx(
                   "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem]",
                   "motion-safe:lg:absolute motion-safe:lg:left-[var(--x)] motion-safe:lg:top-[var(--y)] motion-safe:lg:w-60",
@@ -135,34 +143,33 @@ const ChapterItem = memo(function ChapterItem({
                     ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) }
                     : {})}
                   className={clsx(
-                    "glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-colors max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight lg:bg-panel/75",
+                    "slot-card flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight",
                     "lg:items-start lg:rounded-2xl lg:p-4 motion-reduce:items-start motion-reduce:rounded-2xl motion-reduce:p-4",
-                    co.jumpTo && "hover:border-cyan/50 hover:bg-wash/[0.07]",
+                    co.jumpTo && "hover:-translate-y-0.5",
                   )}
                 >
-                  {co.base ? (
-                    <span
-                      aria-hidden
-                      className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-cyan/60 font-mono text-xs text-cyan lg:mt-0.5 lg:h-7 lg:w-7 lg:text-sm motion-reduce:mt-0.5 motion-reduce:h-7 motion-reduce:w-7"
-                    >
-                      {co.base}
-                    </span>
-                  ) : (
-                    <ChapterIcon
-                      name={co.icon}
-                      className="h-4 w-4 shrink-0 text-cyan lg:mt-0.5 lg:h-6 lg:w-6 motion-reduce:mt-0.5 motion-reduce:h-6 motion-reduce:w-6"
-                    />
-                  )}
+                  <span
+                    aria-hidden
+                    className={clsx(
+                      "slot-chip grid h-6 w-6 shrink-0 place-items-center lg:mt-0.5 lg:h-8 lg:w-8 motion-reduce:mt-0.5 motion-reduce:h-8 motion-reduce:w-8",
+                      co.base ? "rounded-full font-mono text-xs lg:text-sm" : "rounded-lg",
+                    )}
+                  >
+                    {co.base ?? <ChapterIcon name={co.icon} className="h-3.5 w-3.5 lg:h-[18px] lg:w-[18px]" />}
+                  </span>
                   <span className="min-w-0">
                     <span className="block font-medium text-fg">{co.title}</span>
                     {co.price && (
-                      <Price inr={co.price.inr} className="mt-0.5 block font-mono text-[11px] tracking-wide text-cyan" />
+                      <Price
+                        inr={co.price.inr}
+                        className="mt-0.5 block font-mono text-[11px] font-medium tracking-wide text-[rgb(var(--t))]"
+                      />
                     )}
                     <span className="hidden text-xs leading-snug text-muted lg:mt-1 lg:block motion-reduce:mt-1 motion-reduce:block">
                       {co.detail}
                     </span>
                     {co.pairs && (
-                      <span className="hidden font-mono text-[10px] uppercase tracking-wider text-cyan/80 lg:mt-2 lg:block motion-reduce:mt-2 motion-reduce:block">
+                      <span className="hidden font-mono text-[10px] uppercase tracking-wider text-[rgb(var(--t))] lg:mt-2 lg:block motion-reduce:mt-2 motion-reduce:block">
                         Pairs with {co.pairs}
                       </span>
                     )}
@@ -301,7 +308,6 @@ export function ChapterStage({
           <>
             <StageHud progress={scrollYProgress} changes={changes} />
             <AnchorLines anchors={anchors} />
-            <ChapterRail chapters={chapters} active={active} progress={scrollYProgress} onSelect={scrollToChapter} />
             <ScrollHint visible={active === 0} />
             <Pager total={chapters.length} active={active} onSelect={scrollToChapter} />
           </>
