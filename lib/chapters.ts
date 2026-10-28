@@ -55,13 +55,16 @@ export interface Chapter {
   camera: CameraKey;
   callouts: Callout[];
   card: { title: string; body: string; meter?: { label: string; value: string; fill: number } };
+  /** A short strip of facts under the text (large screens and the stacked layout; phones leave it out). */
+  proof?: { value: string; label: string }[];
   cta: { label: string; href: string };
   secondary?: { label: string; href: string };
 }
 
 /**
  * The home page story: five chapters told over a DNA double helix (genaitex's "genetics": the building blocks and what each one pairs with).
- * No invented numbers: the only figures are a performance *target*, labelled as one, and the studio's "from" prices.
+ * No invented numbers: the only figures are the studio's 5 years in the field, a performance *target*, labelled as
+ * one, and the "from" prices.
  */
 export const homeChapters: Chapter[] = [
   {
@@ -69,9 +72,14 @@ export const homeChapters: Chapter[] = [
     number: "01",
     label: "Studio",
     eyebrow: "The building blocks of growth",
-    title: "Websites, AI & growth, engineered to convert.",
-    lead: "genaitex builds websites and applications, AI and automation, custom interfaces, CRM setups, AI product ads and marketing: everything a business needs to launch and grow.",
-    body: "One team designs, builds and ships it all. Choose the starting point that fits your business: each option pairs with the pieces that make it perform.",
+    title: "Websites, AI & growth, built by people who've done it for 5 years.",
+    lead: "genaitex is a studio for websites and apps, AI and automation, interfaces, CRM and AI-made ads: everything a business needs to launch and grow, under one roof.",
+    body: "We fix what quietly holds businesses back: a slow site that loses visitors, hours lost to manual work, leads that slip through the cracks, ads that get scrolled past.",
+    proof: [
+      { value: "5 years", label: "in websites, AI & growth" },
+      { value: "One team", label: "design, code, AI & marketing, no hand-offs" },
+      { value: "95+", label: "Lighthouse target on every launch" },
+    ],
     camera: { zoom: 1.5, focus: 0 },
     callouts: [
       {

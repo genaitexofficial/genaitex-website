@@ -36,6 +36,8 @@ import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useMotionValue, useTransform, type MotionValue } from "motion/react";
 import type { Anchor } from "@/components/dna/anchors";
 import type { Chapter, IconKey } from "@/lib/chapters";
+import { Price } from "@/components/currency/Price";
+import { useGlassFlat } from "./glassBlur";
 
 const icons: Record<IconKey, LucideIcon> = {
   globe: Globe,
@@ -79,9 +81,9 @@ export const calloutSlots = [
 ] as const;
 
 /**
- * How a stage presents its four options on large screens: `float` = cards floating around the DNA, with lines to
- * it (the Services page); `list` = just the headings, stacked in the middle of the DNA (the Home page). Phones
- * and tablets always get the floating pills.
+ * How a chapter presents its four options on large screens: `float` = cards floating around the DNA, with lines to
+ * it (every chapter of Services, and Home scrolls 2-5); `list` = just the headings, as a glass stack in the middle
+ * of the DNA (Home scroll 1). Phones and tablets always get the floating pills.
  */
 export type StageLayout = "float" | "list";
 
@@ -156,6 +158,71 @@ export function ScrollHint({ visible }: { visible: boolean }) {
       <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">Scroll to explore</span>
       <span className="h-px w-16 bg-line-strong" />
     </div>
+  );
+}
+
+/**
+ * Home scroll 1 on large screens: the four options as big blocks of Liquid Glass in the site's own finishes (pearl,
+ * silver, ash, gunmetal), with just their headings (and prices), stacked in the middle of the DNA. It lives on the stage, not inside the chapter, so no
+ * ancestor fades with opacity: a faded ancestor would cut the glass off from the DNA behind it (the blur would
+ * show nothing). Each block fades itself instead. The blur is dropped for an opaque frosted fill on a device that
+ * cannot keep up (see glassBlur.ts).
+ */
+export function StageStack({
+  chapter,
+  on,
+  onJump,
+}: {
+  chapter: Chapter;
+  on: boolean;
+  onJump: (target: number | string) => void;
+}) {
+  const flat = useGlassFlat();
+  return (
+    <ul
+      aria-label={`${chapter.eyebrow}: list`}
+      inert={!on}
+      data-glass={flat ? "flat" : "blur"}
+      style={{ "--cx": `${stageCx.list}%` } as CSSProperties}
+      className="group/stack hidden motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5"
+      data-stack={on ? "on" : "off"}
+    >
+      {chapter.callouts.map((co, k) => {
+        const Item = co.jumpTo ? "button" : "div";
+        return (
+          <li
+            key={co.title}
+            style={
+              {
+                "--c": `var(--stack-${k + 1})`,
+                "--glass-tint": `var(--stack-tint-${k + 1})`,
+                "--glass-ink": `var(--stack-ink-${k + 1})`,
+                "--glass-shine": `var(--stack-shine-${k + 1})`,
+              } as CSSProperties
+            }
+          >
+            <Item
+              {...(co.jumpTo ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) } : {})}
+              className={clsx(
+                "liquid-glass flex min-h-[4.5rem] w-full items-center justify-between gap-4 rounded-[1.75rem] px-6 py-3 text-left xl:min-h-[5.25rem] xl:px-7",
+                "transition-[opacity,translate] duration-[450ms] ease-out group-data-[stack=off]/stack:translate-y-6 group-data-[stack=off]/stack:opacity-0",
+                co.jumpTo && "hover:-translate-y-0.5",
+              )}
+            >
+              <span className="min-w-0 text-balance text-3xl font-semibold leading-[1.05] tracking-tight xl:text-[2.5rem]">
+                {co.title}
+              </span>
+              {co.price && (
+                <Price
+                  inr={co.price.inr}
+                  className="shrink-0 rounded-full bg-[rgb(var(--glass-ink)/0.1)] px-3 py-1 font-mono text-sm font-semibold tracking-wide shadow-[inset_0_0_0_1px_rgb(var(--glass-ink)/0.2)]"
+                />
+              )}
+            </Item>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -239,10 +306,15 @@ function AnchorLine({ anchor, from, size, k }: { anchor: Anchor; from: readonly 
  * Connector lines from the option cards to the helix rungs they point at. Large screens use the desktop
  * layout; phones and tablets use their own (`phoneSlots`), so each is drawn in its own box.
  */
-export function AnchorLines({ anchors, layout = "float" }: { anchors: Anchor[]; layout?: StageLayout }) {
+export function AnchorLines({ anchors, listShown = false }: { anchors: Anchor[]; listShown?: boolean }) {
   return (
     <>
-      {layout === "float" && <AnchorSet anchors={anchors} slots={calloutSlots} className="hidden motion-safe:lg:block" />}
+      {/* on large screens the lines serve the floating cards, so they fade away while the glass stack is showing */}
+      <AnchorSet
+        anchors={anchors}
+        slots={calloutSlots}
+        className={clsx("hidden motion-safe:lg:block transition-opacity duration-500", listShown && "motion-safe:lg:opacity-0")}
+      />
       <AnchorSet anchors={anchors} slots={phoneSlots} className="motion-safe:lg:hidden" />
     </>
   );

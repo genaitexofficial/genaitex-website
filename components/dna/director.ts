@@ -16,8 +16,11 @@ export interface StageSlot {
   /** 0..1 as the stage wrapper travels from entering the viewport (0) to leaving it (1). */
   presence: MotionValue<number>;
   keys: readonly CameraKey[];
-  /** Where the helix is centred on large screens while this stage is in control (percent of the width). */
-  cx?: number;
+  /**
+   * Where the helix is centred on large screens while this stage is in control (percent of the width): one value
+   * for the whole stage, or one per chapter (the DNA glides to the active chapter's).
+   */
+  cx?: number | readonly number[];
 }
 
 /** Values the director publishes every frame for the backdrop and HUD to bind to. */
@@ -66,6 +69,14 @@ export interface RungPositions {
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 const smooth01 = (x: number) => x * x * (3 - 2 * x);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** The stage's helix centre at progress `p`: a single value, or the active chapter's (chosen as the stage picks it). */
+function stageCx(stage: StageSlot, p: number): number {
+  const cx = stage.cx;
+  if (cx === undefined) return STAGE_CX;
+  if (typeof cx === "number") return cx;
+  return cx[Math.min(cx.length - 1, Math.max(0, Math.round(p * (cx.length - 1))))];
+}
 
 /** Wide layouts (the helix pushed right of the text column) start here, as in the stage's CSS. */
 const WIDE = 1024;
@@ -190,7 +201,7 @@ export function createDirector(out: DirectorOutputs) {
         zoom: cam.zoom,
         slide: cam.focus + (p - 0.5) * 0.8,
         roll: cam.roll,
-        cx: wide ? (stage.cx ?? STAGE_CX) : 50,
+        cx: wide ? stageCx(stage, p) : 50,
         cy: wide ? 50 : ((PHONE_STAGE_CY * small) / height) * 100,
         dim: 1,
       };

@@ -26,7 +26,7 @@ export function StageHud({
   changes: number;
   /** Where the helix is centred on large screens (percent of the width). */
   cx?: number;
-  /** Show the targeting reticle on the base pair at the centre (off where text sits in the middle of the DNA). */
+  /** Show the targeting reticle on the base pair at the centre (faded out on large screens where the glass stack sits over it). */
   reticle?: boolean;
 }) {
   const { stage } = useDna();
@@ -46,7 +46,7 @@ export function StageHud({
       )}
 
       {/* Corner brackets framing the helix */}
-      <div className="absolute left-[var(--cx)] top-1/2 hidden h-[66%] w-[min(46vw,42rem)] -translate-x-1/2 -translate-y-1/2 lg:block">
+      <div className="absolute left-[var(--cx)] top-1/2 hidden h-[66%] w-[min(46vw,42rem)] -translate-x-1/2 -translate-y-1/2 transition-[left] duration-500 ease-out lg:block">
         <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-cyan/60" />
         <span className="absolute right-0 top-0 h-5 w-5 border-r border-t border-cyan/60" />
         <span className="absolute bottom-0 left-0 h-5 w-5 border-b border-l border-cyan/60" />
@@ -62,7 +62,9 @@ export function StageHud({
       </div>
 
       {/* Targeting reticle on the base pair at the centre of view */}
-      <div className={`absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2 ${reticle ? "" : "lg:hidden"}`}>
+      <div
+        className={`absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left,opacity] duration-500 ease-out ${reticle ? "" : "lg:opacity-0"}`}
+      >
         <svg width="132" height="132" viewBox="0 0 132 132" fill="none" className="text-cyan">
           <circle cx="66" cy="66" r="24" stroke="currentColor" strokeOpacity="0.8" strokeWidth="1" />
           <circle

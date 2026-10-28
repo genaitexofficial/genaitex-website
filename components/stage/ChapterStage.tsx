@@ -17,6 +17,7 @@ import {
   InfoCard,
   Pager,
   ScrollHint,
+  StageStack,
   type StageLayout,
 } from "./StageParts";
 import { useDna } from "@/components/dna/DnaProvider";
@@ -91,6 +92,16 @@ const ChapterItem = memo(function ChapterItem({
             <p className="mt-3 hidden max-w-md text-pretty text-sm leading-relaxed text-subtle lg:block motion-safe:max-xl:hidden">
               {c.body}
             </p>
+            {c.proof && (
+              <dl className="mt-6 hidden max-w-md grid-cols-3 gap-4 border-t border-line pt-4 lg:grid motion-reduce:mt-6 motion-reduce:grid">
+                {c.proof.map((p) => (
+                  <div key={p.value}>
+                    <dt className="text-xl font-semibold tracking-tight text-fg xl:text-2xl">{p.value}</dt>
+                    <dd className="mt-1 text-pretty text-xs leading-snug text-muted">{p.label}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
 
           <div className="order-3 mt-5 flex flex-wrap items-center gap-3 lg:mt-8">
@@ -116,7 +127,7 @@ const ChapterItem = memo(function ChapterItem({
           </div>
         </div>
 
-        {/* Option cards: chips on phones, floating cards on large screens (hidden where the headings list takes
+        {/* Option cards: chips on phones, floating cards on large screens (hidden where the glass stack takes
             over), a grid when stacked */}
         <ul
           className={clsx(
@@ -190,46 +201,13 @@ const ChapterItem = memo(function ChapterItem({
           })}
         </ul>
 
-        {/* The Home list: the four options as big coloured blocks with their headings, stacked in the middle of the
-            DNA (large screens, motion on). Dark text on the bright colours is readable in Day and Night. */}
-        {list && (
-          <ul
-            aria-label={`${c.eyebrow}: list`}
-            className="hidden motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5"
-            style={{ "--cx": `${stageCx.list}%` } as CSSProperties}
-          >
-            {c.callouts.map((co, k) => {
-              const Item = co.jumpTo ? "button" : "div";
-              return (
-                <li key={co.title} style={{ "--c": `var(--slot-${k + 1})` } as CSSProperties}>
-                  <Item
-                    {...(co.jumpTo ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) } : {})}
-                    style={{ backgroundImage: "linear-gradient(180deg, rgb(255 255 255 / 0.24), transparent 60%)" }}
-                    className={clsx(
-                      "flex min-h-[4.5rem] w-full items-center justify-between gap-4 rounded-2xl bg-[rgb(var(--c))] px-6 py-3 text-left text-[#15161a] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),0_16px_30px_-14px_rgb(var(--c)/0.75)] xl:min-h-[5.25rem] xl:px-7",
-                      co.jumpTo && "transition-transform hover:-translate-y-0.5",
-                    )}
-                  >
-                    <span className="min-w-0 text-balance text-3xl font-semibold leading-[1.05] tracking-tight xl:text-[2.5rem]">
-                      {co.title}
-                    </span>
-                    {co.price && (
-                      <Price
-                        inr={co.price.inr}
-                        className="shrink-0 rounded-full bg-[#15161a]/10 px-3 py-1 font-mono text-sm font-semibold tracking-wide"
-                      />
-                    )}
-                  </Item>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
         <InfoCard card={c.card} layout={layout} />
       </li>
   );
 });
+
+/** Home scroll 1 can be the glass stack (`stackFirst`); every other scroll shows the floating cards. */
+const layoutOf = (stackFirst: boolean, i: number): StageLayout => (stackFirst && i === 0 ? "list" : "float");
 
 /**
  * A scroll-driven story. The page scrolls natively (no scroll hijacking): a tall wrapper holds a
@@ -244,13 +222,13 @@ export function ChapterStage({
   chapters,
   label,
   firstHeading = "h1",
-  layout = "float",
+  stackFirst = false,
 }: {
   chapters: Chapter[];
   label: string;
   firstHeading?: "h1" | "h2";
-  /** How the options sit on large screens: cards floating around the DNA (default), or just headings stacked in its middle. */
-  layout?: StageLayout;
+  /** On large screens, show the first chapter's four options as a glass stack in the middle of the DNA (the other chapters keep their floating cards). */
+  stackFirst?: boolean;
 }) {
   const wrapperRef = useRef<HTMLElement>(null);
   const last = chapters.length - 1;
@@ -262,13 +240,15 @@ export function ChapterStage({
   const { director, anchors } = useDna();
   useMagneticSettle(wrapperRef, chapters.length);
   const keys = useMemo(() => chapters.map((c) => c.camera), [chapters]);
+  const cxs = useMemo(() => chapters.map((_, i) => stageCx[layoutOf(stackFirst, i)]), [chapters, stackFirst]);
 
-  // While this stage is on the page, the site-wide DNA takes its camera from the chapters.
+  // While this stage is on the page, the site-wide DNA takes its camera (and its centre, per chapter) from the chapters.
   useEffect(() => {
-    director.setStage({ progress: scrollYProgress, presence, keys, cx: stageCx[layout] });
+    director.setStage({ progress: scrollYProgress, presence, keys, cx: cxs });
     return () => director.setStage(null);
-  }, [director, scrollYProgress, presence, keys, layout]);
+  }, [director, scrollYProgress, presence, keys, cxs]);
 
+  const listShown = stackFirst && active === 0;
   const indexAt = (p: number) => Math.min(last, Math.max(0, Math.round(p * last)));
   const shown = useRef(0);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
@@ -351,12 +331,12 @@ export function ChapterStage({
       className="relative motion-safe:h-[calc(var(--n)*100svh)]"
     >
       <div className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
-        <StageScrim layout={layout} />
+        <StageScrim stack={stackFirst} listShown={listShown} />
 
         {pinned && (
           <>
-            <StageHud progress={scrollYProgress} changes={changes} cx={stageCx[layout]} reticle={layout === "float"} />
-            <AnchorLines anchors={anchors} layout={layout} />
+            <StageHud progress={scrollYProgress} changes={changes} cx={cxs[active]} reticle={!listShown} />
+            <AnchorLines anchors={anchors} listShown={listShown} />
             <ScrollHint visible={active === 0} />
             <Pager total={chapters.length} active={active} onSelect={scrollToChapter} />
           </>
@@ -372,12 +352,14 @@ export function ChapterStage({
                 state={state}
                 pinned={pinned}
                 heading={i === 0 ? firstHeading : "h2"}
-                layout={layout}
+                layout={layoutOf(stackFirst, i)}
                 onJump={scrollToChapter}
               />
             );
           })}
         </ol>
+
+        {stackFirst && <StageStack chapter={chapters[0]} on={listShown} onJump={scrollToChapter} />}
       </div>
     </section>
   );
