@@ -43,7 +43,7 @@ export function Navbar() {
       className={clsx(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled || open
-          ? "border-b border-line bg-ink/70 backdrop-blur-xl"
+          ? "border-b border-line bg-ink/90"
           : "border-b border-transparent",
       )}
     >

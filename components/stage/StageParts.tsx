@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import * as m from "motion/react-m";
-import { useTransform, type MotionValue } from "motion/react";
+import { useEffect, useMemo, useRef } from "react";
+import { useMotionValue, useTransform, type MotionValue } from "motion/react";
 import type { Anchor } from "@/components/dna/anchors";
 import type { Chapter, IconKey } from "@/lib/chapters";
 
@@ -211,17 +212,43 @@ export function InfoCard({ card }: { card: Chapter["card"] }) {
   );
 }
 
-const pct = (v: number) => `${v}%`;
+/** The size in px of the box the callout lines are drawn in (they are laid out in percent of it). */
+interface BoxSize {
+  w: MotionValue<number>;
+  h: MotionValue<number>;
+}
 
-function AnchorDot({ anchor }: { anchor: Anchor }) {
-  const left = useTransform(anchor.x, pct);
-  const top = useTransform(anchor.y, pct);
+/**
+ * Both the dot and the line are moved with transforms only (never `left/top` or SVG attributes), so following a
+ * turning rung costs the compositor a matrix per frame and nothing is laid out or repainted.
+ */
+function AnchorDot({ anchor, size }: { anchor: Anchor; size: BoxSize }) {
+  const x = useTransform([anchor.x, size.w], ([ax, w]: number[]) => (ax / 100) * w);
+  const y = useTransform([anchor.y, size.h], ([ay, h]: number[]) => (ay / 100) * h);
   return (
     <m.span
       aria-hidden
-      style={{ left, top }}
-      className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full dot-glow"
+      style={{ x, y }}
+      className="absolute left-0 top-0 -ml-[5px] -mt-[5px] h-2.5 w-2.5 rounded-full dot-glow"
     />
+  );
+}
+
+/** A 1px line from a fixed point to the anchor: a rotated, stretched div, so it too is compositor-only. */
+function AnchorLine({ anchor, from, size }: { anchor: Anchor; from: readonly number[]; size: BoxSize }) {
+  const x = useTransform(size.w, (w) => (from[0] / 100) * w);
+  const y = useTransform(size.h, (h) => (from[1] / 100) * h);
+  const dx = useTransform([anchor.x, size.w], ([ax, w]: number[]) => ((ax - from[0]) / 100) * w);
+  const dy = useTransform([anchor.y, size.h], ([ay, h]: number[]) => ((ay - from[1]) / 100) * h);
+  const angle = useTransform([dx, dy], ([vx, vy]: number[]) => (Math.atan2(vy, vx) * 180) / Math.PI);
+  const length = useTransform([dx, dy], ([vx, vy]: number[]) => Math.hypot(vx, vy));
+  return (
+    <m.div aria-hidden style={{ x, y, rotate: angle, transformOrigin: "0 0" }} className="absolute left-0 top-0">
+      <m.div
+        style={{ scaleX: length, transformOrigin: "0 0", backgroundColor: "rgb(var(--accent) / 0.5)" }}
+        className="h-px w-px"
+      />
+    </m.div>
   );
 }
 
@@ -247,24 +274,30 @@ function AnchorSet({
   slots: readonly { line: readonly number[] }[];
   className: string;
 }) {
+  const box = useRef<HTMLDivElement>(null);
+  const w = useMotionValue(0);
+  const h = useMotionValue(0);
+  const size = useMemo(() => ({ w, h }), [w, h]);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const measure = () => {
+      w.set(el.clientWidth);
+      h.set(el.clientHeight);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [w, h]);
+
   return (
-    <div aria-hidden className={clsx("pointer-events-none absolute inset-0", className)}>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-        {anchors.map((a, k) => (
-          <m.line
-            key={k}
-            x1={slots[k].line[0]}
-            y1={slots[k].line[1]}
-            x2={a.x}
-            y2={a.y}
-            style={{ stroke: "rgb(var(--accent) / 0.5)" }}
-            strokeWidth="1"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
+    <div ref={box} aria-hidden className={clsx("pointer-events-none absolute inset-0", className)}>
       {anchors.map((a, k) => (
-        <AnchorDot key={k} anchor={a} />
+        <AnchorLine key={`line-${k}`} anchor={a} from={slots[k].line} size={size} />
+      ))}
+      {anchors.map((a, k) => (
+        <AnchorDot key={`dot-${k}`} anchor={a} size={size} />
       ))}
     </div>
   );

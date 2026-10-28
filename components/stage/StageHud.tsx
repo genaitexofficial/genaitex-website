@@ -6,7 +6,7 @@ import { useDna } from "@/components/dna/DnaProvider";
 
 /**
  * A sci-fi instrument overlay for the chapter stage: a targeting reticle on the base pair at the centre of
- * view (with corner brackets and a tick ruler on large screens) and a flash on each chapter change. There
+ * view (with corner brackets and a tick ruler on large screens) and a soft glow on each chapter change. There
  * are no readouts. (The scanlines and speed streaks are part of the page-long backdrop.) Purely decorative
  * (aria-hidden).
  *
@@ -31,7 +31,12 @@ export function StageHud({
       style={{ opacity: stage }}
       className="pointer-events-none fixed inset-x-0 top-14 h-[calc(68svh-7rem)] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:66.7%]"
     >
-      {changes > 0 && <div key={changes} className="absolute inset-0 animate-flash bg-cyan/30" />}
+      {changes > 0 && (
+        <div
+          key={changes}
+          className="absolute inset-0 animate-flash bg-[radial-gradient(circle_at_var(--cx)_50%,rgb(var(--accent)/0.22),transparent_62%)]"
+        />
+      )}
 
       {/* Corner brackets framing the helix */}
       <div className="absolute left-[var(--cx)] top-1/2 hidden h-[66%] w-[min(46vw,42rem)] -translate-x-1/2 -translate-y-1/2 lg:block">

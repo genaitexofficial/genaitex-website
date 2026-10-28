@@ -5,6 +5,8 @@ import { Component, useEffect, useRef } from "react";
 import { useTransform } from "motion/react";
 import * as m from "motion/react-m";
 import { TetherLayer } from "./TetherLayer";
+import { PerfBadge } from "./PerfBadge";
+import { perfStats } from "./perf";
 import { useDna } from "./DnaProvider";
 import { useAfterLoad, useMediaQuery, useSceneTier, useTabVisible } from "./useScene";
 
@@ -73,11 +75,17 @@ export function DnaBackdrop() {
     };
     const writeFinish = (name: string) => (el.dataset.dnaFinish = name);
     writeFinish(finish.get());
+    const writePerf = () => {
+      const stats = perfStats.get();
+      el.dataset.dnaFps = stats.fps.toFixed(0);
+      el.dataset.dnaQuality = String(stats.quality);
+    };
     const offs = [
       hud.zoom.on("change", write),
       hud.pair.on("change", write),
       hud.seq.on("change", write),
       finish.on("change", writeFinish),
+      perfStats.subscribe(writePerf),
     ];
     return () => offs.forEach((off) => off());
   }, [hud, finish]);
@@ -101,7 +109,7 @@ export function DnaBackdrop() {
         aria-hidden
         data-dna-backdrop
         data-dna-tier={tier ?? "none"}
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden [contain:strict] will-change-transform"
       >
         <div ref={probe} className="invisible absolute left-0 top-0 h-svh w-px" />
 
@@ -140,6 +148,7 @@ export function DnaBackdrop() {
         {/* The chapter card's line to the targeted base pair (phones and tablets) */}
         {show && tier && <TetherLayer />}
       </div>
+      <PerfBadge />
     </>
   );
 }

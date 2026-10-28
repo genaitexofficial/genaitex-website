@@ -81,7 +81,7 @@ function Storefront() {
           <div className="mt-3 h-5 w-16 rounded-full bg-black/55" />
         </div>
         <div className="absolute -right-4 -bottom-6 h-[120%] aspect-square rounded-full bg-black/20" />
-        <div className="absolute right-[10%] top-[18%] h-[64%] aspect-[3/4] rounded-xl bg-white/25 backdrop-blur" />
+        <div className="absolute right-[10%] top-[18%] h-[64%] aspect-[3/4] rounded-xl bg-white/25" />
       </div>
       <div className="grid flex-1 grid-cols-3 gap-[3%]">
         {[0, 1, 2].map((i) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useMotionValueEvent, useScroll } from "motion/react";
 import { clsx } from "clsx";
@@ -21,6 +21,158 @@ import { useDna } from "@/components/dna/DnaProvider";
 import { useMediaQuery } from "@/components/dna/useScene";
 import { useMagneticSettle } from "./useMagneticSettle";
 import { StageHud } from "./StageHud";
+
+/**
+ * One chapter of the stage. Memoized, so a chapter change re-renders only the two chapters whose state changed
+ * (not all five and their option cards), which keeps the main thread free while the camera flies.
+ */
+const ChapterItem = memo(function ChapterItem({
+  c,
+  state,
+  pinned,
+  heading: Heading,
+  onJump,
+}: {
+  c: Chapter;
+  state: "before" | "active" | "after";
+  pinned: boolean;
+  heading: "h1" | "h2";
+  onJump: (target: number | string) => void;
+}) {
+  return (
+      <li
+        id={`chapter-${c.id}`}
+        data-state={state}
+        inert={pinned && state !== "active"}
+        aria-labelledby={`chapter-${c.id}-title`}
+        className={clsx(
+          // stacked (reduced motion): ordinary sections
+          "group/ch relative flex flex-col px-5 py-20 sm:px-8",
+          // pinned: every chapter fills the stage and fades in/out by state
+          "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-[4.25rem] motion-safe:pt-24",
+          "motion-safe:transition-[opacity,transform] motion-safe:duration-[450ms] motion-safe:ease-out",
+          "motion-safe:data-[state=before]:pointer-events-none motion-safe:data-[state=before]:-translate-y-6 motion-safe:data-[state=before]:opacity-0",
+          "motion-safe:data-[state=after]:pointer-events-none motion-safe:data-[state=after]:translate-y-6 motion-safe:data-[state=after]:opacity-0",
+          "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16 lg:motion-safe:pl-[13rem]",
+        )}
+      >
+        {/* Text group: a normal block on large screens; on phones its children join the column (via
+            `contents`) so the option chips, a sibling below, can sit between the intro and the buttons. */}
+        <div
+          data-dna-reticle
+          className={clsx(
+            "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[13rem] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
+            // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
+            "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
+          )}
+        >
+          <div className="order-1 max-w-xl">
+            <p className="eyebrow mb-3">
+              <span className="text-cyan">{c.number}</span> · {c.eyebrow}
+            </p>
+            <Heading
+              id={`chapter-${c.id}-title`}
+              className="text-balance text-3xl font-semibold leading-[1.08] tracking-tight max-lg:motion-safe:text-[1.75rem] sm:text-4xl max-lg:motion-safe:sm:text-[1.75rem] xl:text-5xl"
+            >
+              {c.title}
+            </Heading>
+            <p className="mt-3 max-w-md text-pretty leading-relaxed text-muted max-lg:motion-safe:line-clamp-3 max-lg:motion-safe:text-[15px] [@media(max-height:720px)]:hidden lg:mt-4">
+              {c.lead}
+            </p>
+            <p className="mt-3 hidden max-w-md text-pretty text-sm leading-relaxed text-subtle lg:block motion-safe:max-xl:hidden">
+              {c.body}
+            </p>
+          </div>
+
+          <div className="order-3 mt-5 flex flex-wrap items-center gap-3 lg:mt-8">
+            <Button href={c.cta.href} size="md">
+              {c.cta.label}
+            </Button>
+            {c.secondary &&
+              (c.secondary.href.startsWith("#") ? (
+                <a
+                  href={c.secondary.href}
+                  className="hidden rounded-full border border-line-strong px-5 py-2.5 text-sm text-fg transition-colors hover:border-cyan/50 sm:inline-flex"
+                >
+                  {c.secondary.label}
+                </a>
+              ) : (
+                <Link
+                  href={c.secondary.href}
+                  className="hidden rounded-full border border-line-strong px-5 py-2.5 text-sm text-fg transition-colors hover:border-cyan/50 sm:inline-flex"
+                >
+                  {c.secondary.label}
+                </Link>
+              ))}
+          </div>
+        </div>
+
+        {/* Option cards: chips on phones, floating cards on large screens, a grid when stacked */}
+        <ul
+          className={clsx(
+            "order-2 mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            "motion-safe:contents",
+            "motion-reduce:mt-8 motion-reduce:grid motion-reduce:grid-cols-1 motion-reduce:overflow-visible sm:motion-reduce:grid-cols-2",
+          )}
+          aria-label={`${c.eyebrow}: options`}
+        >
+          {c.callouts.map((co, k) => {
+            const slot = calloutSlots[k];
+            const phone = phoneSlots[k];
+            const Wrapper = co.jumpTo ? "button" : "div";
+            return (
+              <li
+                key={co.title}
+                style={{ "--x": slot.x, "--y": slot.y, "--px": phone.x, "--py": phone.y } as CSSProperties}
+                className={clsx(
+                  "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem]",
+                  "motion-safe:lg:absolute motion-safe:lg:left-[var(--x)] motion-safe:lg:top-[var(--y)] motion-safe:lg:w-60",
+                )}
+              >
+                <Wrapper
+                  {...(co.jumpTo
+                    ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) }
+                    : {})}
+                  className={clsx(
+                    "glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-colors max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight lg:bg-panel/75",
+                    "lg:items-start lg:rounded-2xl lg:p-4 motion-reduce:items-start motion-reduce:rounded-2xl motion-reduce:p-4",
+                    co.jumpTo && "hover:border-cyan/50 hover:bg-wash/[0.07]",
+                  )}
+                >
+                  {co.base ? (
+                    <span
+                      aria-hidden
+                      className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-cyan/60 font-mono text-xs text-cyan lg:mt-0.5 lg:h-7 lg:w-7 lg:text-sm motion-reduce:mt-0.5 motion-reduce:h-7 motion-reduce:w-7"
+                    >
+                      {co.base}
+                    </span>
+                  ) : (
+                    <ChapterIcon
+                      name={co.icon}
+                      className="h-4 w-4 shrink-0 text-cyan lg:mt-0.5 lg:h-6 lg:w-6 motion-reduce:mt-0.5 motion-reduce:h-6 motion-reduce:w-6"
+                    />
+                  )}
+                  <span className="min-w-0">
+                    <span className="block font-medium text-fg">{co.title}</span>
+                    <span className="hidden text-xs leading-snug text-muted lg:mt-1 lg:block motion-reduce:mt-1 motion-reduce:block">
+                      {co.detail}
+                    </span>
+                    {co.pairs && (
+                      <span className="hidden font-mono text-[10px] uppercase tracking-wider text-cyan/80 lg:mt-2 lg:block motion-reduce:mt-2 motion-reduce:block">
+                        Pairs with {co.pairs}
+                      </span>
+                    )}
+                  </span>
+                </Wrapper>
+              </li>
+            );
+          })}
+        </ul>
+
+        <InfoCard card={c.card} />
+      </li>
+  );
+});
 
 /**
  * A scroll-driven story. The page scrolls natively (no scroll hijacking): a tall wrapper holds a
@@ -78,22 +230,25 @@ export function ChapterStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scrollToChapter = (target: number | string, instant = false) => {
-    const index =
-      typeof target === "number" ? target : chapters.findIndex((c) => c.id === target);
-    const i = Math.min(last, Math.max(0, index));
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const smooth = !instant && window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
-    const motion = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
-    if (motion) {
-      const range = wrapper.offsetHeight - window.innerHeight;
-      const top = wrapper.getBoundingClientRect().top + window.scrollY + (last ? (i / last) * range : 0);
-      window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-    } else {
-      document.getElementById(`chapter-${chapters[i].id}`)?.scrollIntoView();
-    }
-  };
+  const scrollToChapter = useCallback(
+    (target: number | string, instant = false) => {
+      const index =
+        typeof target === "number" ? target : chapters.findIndex((c) => c.id === target);
+      const i = Math.min(last, Math.max(0, index));
+      const wrapper = wrapperRef.current;
+      if (!wrapper) return;
+      const smooth = !instant && window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+      const motion = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+      if (motion) {
+        const range = wrapper.offsetHeight - window.innerHeight;
+        const top = wrapper.getBoundingClientRect().top + window.scrollY + (last ? (i / last) * range : 0);
+        window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+      } else {
+        document.getElementById(`chapter-${chapters[i].id}`)?.scrollIntoView();
+      }
+    },
+    [chapters, last],
+  );
 
   // Links like /services#shopify-storefronts target a chapter, which lives inside a pinned stage, so the
   // browser cannot scroll to it natively. Handle the hash on load, on hash changes, and on same-page clicks.
@@ -149,143 +304,15 @@ export function ChapterStage({
         <ol className="relative motion-safe:absolute motion-safe:inset-0">
           {chapters.map((c, i) => {
             const state = i < active ? "before" : i > active ? "after" : "active";
-            const Heading = i === 0 ? firstHeading : "h2";
             return (
-              <li
+              <ChapterItem
                 key={c.id}
-                id={`chapter-${c.id}`}
-                data-state={state}
-                inert={pinned && state !== "active"}
-                aria-labelledby={`chapter-${c.id}-title`}
-                className={clsx(
-                  // stacked (reduced motion): ordinary sections
-                  "group/ch relative flex flex-col px-5 py-20 sm:px-8",
-                  // pinned: every chapter fills the stage and fades in/out by state
-                  "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-[4.25rem] motion-safe:pt-24",
-                  "motion-safe:transition-[opacity,transform] motion-safe:duration-700 motion-safe:ease-out",
-                  "motion-safe:data-[state=before]:pointer-events-none motion-safe:data-[state=before]:-translate-y-6 motion-safe:data-[state=before]:opacity-0",
-                  "motion-safe:data-[state=after]:pointer-events-none motion-safe:data-[state=after]:translate-y-6 motion-safe:data-[state=after]:opacity-0",
-                  "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16 lg:motion-safe:pl-[13rem]",
-                )}
-              >
-                {/* Text group: a normal block on large screens; on phones its children join the column (via
-                    `contents`) so the option chips, a sibling below, can sit between the intro and the buttons. */}
-                <div
-                  data-dna-reticle
-                  className={clsx(
-                    "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[13rem] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
-                    // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
-                    "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
-                  )}
-                >
-                  <div className="order-1 max-w-xl">
-                    <p className="eyebrow mb-3">
-                      <span className="text-cyan">{c.number}</span> · {c.eyebrow}
-                    </p>
-                    <Heading
-                      id={`chapter-${c.id}-title`}
-                      className={clsx(
-                        "text-balance text-3xl font-semibold leading-[1.08] tracking-tight max-lg:motion-safe:text-[1.75rem] sm:text-4xl max-lg:motion-safe:sm:text-[1.75rem] xl:text-5xl",
-                        changes > 0 && "group-data-[state=active]/ch:animate-glitch",
-                      )}
-                    >
-                      {c.title}
-                    </Heading>
-                    <p className="mt-3 max-w-md text-pretty leading-relaxed text-muted max-lg:motion-safe:line-clamp-3 max-lg:motion-safe:text-[15px] [@media(max-height:720px)]:hidden lg:mt-4">
-                      {c.lead}
-                    </p>
-                    <p className="mt-3 hidden max-w-md text-pretty text-sm leading-relaxed text-subtle lg:block motion-safe:max-xl:hidden">
-                      {c.body}
-                    </p>
-                  </div>
-
-                  <div className="order-3 mt-5 flex flex-wrap items-center gap-3 lg:mt-8">
-                    <Button href={c.cta.href} size="md">
-                      {c.cta.label}
-                    </Button>
-                    {c.secondary &&
-                      (c.secondary.href.startsWith("#") ? (
-                        <a
-                          href={c.secondary.href}
-                          className="hidden rounded-full border border-line-strong px-5 py-2.5 text-sm text-fg transition-colors hover:border-cyan/50 sm:inline-flex"
-                        >
-                          {c.secondary.label}
-                        </a>
-                      ) : (
-                        <Link
-                          href={c.secondary.href}
-                          className="hidden rounded-full border border-line-strong px-5 py-2.5 text-sm text-fg transition-colors hover:border-cyan/50 sm:inline-flex"
-                        >
-                          {c.secondary.label}
-                        </Link>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Option cards: chips on phones, floating cards on large screens, a grid when stacked */}
-                <ul
-                  className={clsx(
-                    "order-2 mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-                    "motion-safe:contents",
-                    "motion-reduce:mt-8 motion-reduce:grid motion-reduce:grid-cols-1 motion-reduce:overflow-visible sm:motion-reduce:grid-cols-2",
-                  )}
-                  aria-label={`${c.eyebrow}: options`}
-                >
-                  {c.callouts.map((co, k) => {
-                    const slot = calloutSlots[k];
-                    const phone = phoneSlots[k];
-                    const Wrapper = co.jumpTo ? "button" : "div";
-                    return (
-                      <li
-                        key={co.title}
-                        style={{ "--x": slot.x, "--y": slot.y, "--px": phone.x, "--py": phone.y } as CSSProperties}
-                        className={clsx(
-                          "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem]",
-                          "motion-safe:lg:absolute motion-safe:lg:left-[var(--x)] motion-safe:lg:top-[var(--y)] motion-safe:lg:w-60",
-                        )}
-                      >
-                        <Wrapper
-                          {...(co.jumpTo
-                            ? { type: "button" as const, onClick: () => scrollToChapter(co.jumpTo!) }
-                            : {})}
-                          className={clsx(
-                            "glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-colors max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight lg:bg-panel/75",
-                            "lg:items-start lg:rounded-2xl lg:p-4 motion-reduce:items-start motion-reduce:rounded-2xl motion-reduce:p-4",
-                            co.jumpTo && "hover:border-cyan/50 hover:bg-wash/[0.07]",
-                          )}
-                        >
-                          {co.base ? (
-                            <span
-                              aria-hidden
-                              className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-cyan/60 font-mono text-xs text-cyan lg:mt-0.5 lg:h-7 lg:w-7 lg:text-sm motion-reduce:mt-0.5 motion-reduce:h-7 motion-reduce:w-7"
-                            >
-                              {co.base}
-                            </span>
-                          ) : (
-                            <ChapterIcon
-                              name={co.icon}
-                              className="h-4 w-4 shrink-0 text-cyan lg:mt-0.5 lg:h-6 lg:w-6 motion-reduce:mt-0.5 motion-reduce:h-6 motion-reduce:w-6"
-                            />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block font-medium text-fg">{co.title}</span>
-                            <span className="hidden text-xs leading-snug text-muted lg:mt-1 lg:block motion-reduce:mt-1 motion-reduce:block">
-                              {co.detail}
-                            </span>
-                            {co.pairs && (
-                              <span className="hidden font-mono text-[10px] uppercase tracking-wider text-cyan/80 lg:mt-2 lg:block motion-reduce:mt-2 motion-reduce:block">
-                                Pairs with {co.pairs}
-                              </span>
-                            )}
-                          </span>
-                        </Wrapper>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                <InfoCard card={c.card} />
-              </li>
+                c={c}
+                state={state}
+                pinned={pinned}
+                heading={i === 0 ? firstHeading : "h2"}
+                onJump={scrollToChapter}
+              />
             );
           })}
         </ol>

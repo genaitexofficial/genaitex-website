@@ -37,11 +37,12 @@ export function createHudWriter(hud: HudState) {
     const lz = Math.log(zoom);
     const dt = Math.max(0.001, (nowMs - prevTime) / 1000);
     const rate = prevTime ? Math.abs(lz - prevLog) / dt : 0;
-    speed += (Math.min(1, rate / 2.5) - speed) * 0.2;
+    speed += (Math.min(1, rate / 2.5) - speed) * (1 - Math.exp(-dt / 0.075));
     prevLog = lz;
     prevTime = nowMs;
     hud.zoom.set(zoom);
-    hud.speed.set(speed);
+    // the streaks' opacity: only rewritten when it visibly changes
+    if (Math.abs(speed - hud.speed.get()) > 0.004 || (speed < 0.004 && hud.speed.get() !== 0)) hud.speed.set(speed < 0.004 ? 0 : speed);
     if (rung) {
       hud.seq.set(rung.t);
       hud.pair.set(`${rung.pair[0]}–${rung.pair[1]}`);

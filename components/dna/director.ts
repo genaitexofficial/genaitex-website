@@ -7,6 +7,7 @@ import {
   type FinishWeights,
 } from "@/lib/finishes";
 import { ambientAt, cameraAt, type CameraKey } from "@/lib/helix";
+import { damp, spring, type Spring } from "./spring";
 
 /** A pinned chapter stage on the current page: it takes over the camera while it is on screen. */
 export interface StageSlot {
@@ -85,8 +86,14 @@ const ZOOM_OUT_SPAN = 12;
 /** Steady spin, radians per second: a little livelier on phones and tablets, where the helix is the star. */
 const SPIN_DESKTOP = 0.12;
 const SPIN_PHONE = 0.22;
-/** How quickly the bead finish follows its goal, in seconds. */
-const FINISH_EASE = 0.25;
+/**
+ * How quickly the camera follows its goal, as spring "smooth times" in seconds (about how long a step takes to
+ * get most of the way there). Zoom, turn and slide are quick, so the scene answers a swipe at once; the helix's
+ * position and brightness are slower; the bead finish morphs most gently.
+ */
+const FOLLOW_FAST = 0.1;
+const FOLLOW_SLOW = 0.25;
+const FINISH_EASE = 0.2;
 
 /**
  * The camera brain for the page-long DNA scene. Each frame a renderer asks it for the camera: while a
@@ -98,11 +105,23 @@ const FINISH_EASE = 0.25;
 export function createDirector(out: DirectorOutputs) {
   let stage: StageSlot | null = null;
   let svh = 0;
-  let state: Omit<Camera, "fit" | "moving" | "stage" | "finish"> | null = null;
+  // The camera: each value is a spring chasing its goal (zoom in log space). `primed` once the first frame has
+  // snapped them to where the scroll position says they should be.
+  const zoomS = spring();
+  const slideS = spring();
+  const rollS = spring();
+  const angleS = spring();
+  const cxS = spring();
+  const cyS = spring();
+  const dimS = spring();
+  let primed = false;
   let lastTime = 0;
   let lastStage = 0;
   let drift = 0; // accumulated steady spin (radians)
+  let spinDt = 0; // frame time smoothed for the spin, so uneven frame spacing never makes the helix twitch
   const finish: FinishWeights = [1, 0, 0];
+  const finishVel: FinishWeights = [0, 0, 0];
+  const finishSpring: Spring = { x: 0, v: 0 };
   const finishGoal: FinishWeights = [1, 0, 0];
   const finishScratch: FinishWeights = [1, 0, 0];
   let finishLock: number | null | undefined; // `?finish=` on the first visit: undefined = not read yet
@@ -111,10 +130,15 @@ export function createDirector(out: DirectorOutputs) {
   /** Where the targeting reticle (the middle of the helix) is, in px of the canvas. */
   const reticle = { x: 0, y: 0 };
 
+  const camera: Camera = {
+    zoom: 1, slide: 0, roll: 0, angle: 0, cx: 50, cy: 50, dim: 1, stage: 0, fit: 1, finish, moving: true,
+  };
+
   const sample = (width: number, height: number): Camera => {
     const now = performance.now();
     const dt = lastTime ? Math.min(0.1, (now - lastTime) / 1000) : 0;
     lastTime = now;
+    spinDt = spinDt ? lerp(spinDt, Math.min(dt, 0.05), 0.15) : dt;
 
     const wide = width >= WIDE;
     const small = svh || window.innerHeight;
@@ -177,56 +201,71 @@ export function createDirector(out: DirectorOutputs) {
         dim: lerp(ambient.dim, chapter.dim, weight),
       };
     }
-    const goal = { ...target, angle: g * Math.PI };
-    drift += lerp(ambientSpin, SPIN_DESKTOP, weight) * dt;
+    drift += lerp(ambientSpin, SPIN_DESKTOP, weight) * spinDt;
 
     if (finishLock === undefined) finishLock = parseFinish(window.location.search);
     if (finishLock !== null) finishGoal.forEach((_, k) => (finishGoal[k] = k === finishLock ? 1 : 0));
+    // The bead finish follows its goal on the same kind of spring (each weight keeps its own speed)
     let finishMoving = false;
-    const finishEase = !state || !dt ? 1 : 1 - Math.exp(-dt / FINISH_EASE);
     for (let k = 0; k < 3; k++) {
-      const next = lerp(finish[k], finishGoal[k], finishEase);
-      if (Math.abs(next - finish[k]) > 1e-3) finishMoving = true;
-      finish[k] = next;
+      finishSpring.x = finish[k];
+      finishSpring.v = finishVel[k];
+      if (!primed) finishSpring.x = finishGoal[k];
+      if (damp(finishSpring, finishGoal[k], FINISH_EASE, dt) > 1e-3 * dt * 60) finishMoving = true;
+      finish[k] = Math.max(0, finishSpring.x);
+      finishVel[k] = finishSpring.v;
     }
-    out.finish.set(FINISHES[finish.indexOf(Math.max(...finish))]);
+    let top = 0;
+    for (let k = 1; k < 3; k++) if (finish[k] > finish[top]) top = k;
+    out.finish.set(FINISHES[top]);
 
-    // Ease toward the goal (exponential smoothing; the first frame snaps)
-    if (!state) {
-      state = goal;
+    // The camera follows its goal on springs (the first frame snaps)
+    const goalZoom = Math.log(target.zoom);
+    const goalAngle = (window.scrollY / small) * Math.PI;
+    if (!primed) {
+      zoomS.x = goalZoom;
+      slideS.x = target.slide;
+      rollS.x = target.roll;
+      angleS.x = goalAngle;
+      cxS.x = target.cx;
+      cyS.x = target.cy;
+      dimS.x = target.dim;
+      primed = true;
       moving = true;
     } else {
-      const fast = 1 - Math.exp(-dt / 0.09);
-      const slow = 1 - Math.exp(-dt / 0.25);
-      const prev = state;
-      state = {
-        zoom: Math.exp(lerp(Math.log(prev.zoom), Math.log(goal.zoom), fast)),
-        slide: lerp(prev.slide, goal.slide, fast),
-        roll: lerp(prev.roll, goal.roll, fast),
-        angle: lerp(prev.angle, goal.angle, fast),
-        cx: lerp(prev.cx, goal.cx, slow),
-        cy: lerp(prev.cy, goal.cy, slow),
-        dim: lerp(prev.dim, goal.dim, slow),
-      };
-      moving =
-        Math.abs(Math.log(state.zoom / prev.zoom)) > 2e-4 ||
-        Math.abs(state.slide - prev.slide) > 2e-4 ||
-        Math.abs(state.angle - prev.angle) > 2e-4 ||
-        Math.abs(state.roll - prev.roll) > 2e-4 ||
-        Math.abs(state.cx - prev.cx) > 0.01 ||
-        Math.abs(state.dim - prev.dim) > 1e-3 ||
-        finishMoving;
+      // every spring must advance each frame, so none of these may be skipped by a short-circuit
+      const dz = damp(zoomS, goalZoom, FOLLOW_FAST, dt);
+      const ds = damp(slideS, target.slide, FOLLOW_FAST, dt);
+      const da = damp(angleS, goalAngle, FOLLOW_FAST, dt);
+      const dr = damp(rollS, target.roll, FOLLOW_FAST, dt);
+      const dx = damp(cxS, target.cx, FOLLOW_SLOW, dt);
+      const dy = damp(cyS, target.cy, FOLLOW_SLOW, dt);
+      const dd = damp(dimS, target.dim, FOLLOW_SLOW, dt);
+      moving = dz > 2e-4 || ds > 2e-4 || da > 2e-4 || dr > 2e-4 || dx > 0.01 || dy > 0.01 || dd > 1e-3 || finishMoving;
     }
     lastStage = lerp(lastStage, weight, dt ? 1 - Math.exp(-dt / 0.12) : 1);
 
-    out.dim.set(state.dim);
-    out.cx.set(state.cx);
-    out.cy.set(state.cy);
-    out.stage.set(lastStage);
+    // Published to the page rounded off, so a spring's long exponential tail does not rewrite styles every frame
+    out.dim.set(Math.round(dimS.x * 1000) / 1000);
+    out.cx.set(Math.round(cxS.x * 100) / 100);
+    out.cy.set(Math.round(cyS.x * 100) / 100);
+    out.stage.set(Math.round(lastStage * 1000) / 1000);
 
-    reticle.x = (state.cx / 100) * width;
-    reticle.y = (state.cy / 100) * height;
-    return { ...state, angle: state.angle + drift, stage: lastStage, fit, finish, moving };
+    reticle.x = (cxS.x / 100) * width;
+    reticle.y = (cyS.x / 100) * height;
+
+    // one camera object, reused every frame (no garbage to collect mid-scroll)
+    camera.zoom = Math.exp(zoomS.x);
+    camera.slide = slideS.x;
+    camera.roll = rollS.x;
+    camera.angle = angleS.x + drift;
+    camera.cx = cxS.x;
+    camera.cy = cyS.x;
+    camera.dim = dimS.x;
+    camera.stage = lastStage;
+    camera.fit = fit;
+    camera.moving = moving;
+    return camera;
   };
 
   return {

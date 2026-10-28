@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { BASE_SHADE, SCENE_LOOK } from "@/lib/finishes";
@@ -8,32 +8,12 @@ import { baseColors, buildHelix, HELIX_FULL, HELIX_TILT, mulberry32 } from "@/li
 import { getSceneTheme, subscribe, type SceneTheme } from "@/components/theme/store";
 import type { Anchor } from "./anchors";
 import type { Director } from "./director";
+import { createGovernor, QUALITY_SCALE, QUALITY_STEPS } from "./governor";
 import { createHudWriter, type HudState } from "./hud";
 import { MatcapBlend, type Role } from "./matcap";
 
 const baseKeys = ["A", "T", "G", "C"] as const;
 const BEADS_PER_RUNG = HELIX_FULL.beadsPerHalfRung * 2;
-// Idle pages re-render at about 16 fps (the helix only drifts); anything moving renders every frame.
-const IDLE_MS = 60;
-
-/** Drives on-demand rendering: every frame while the camera moves, a slow tick while it rests. */
-function Pulse({ movingRef, active }: { movingRef: { current: boolean }; active: boolean }) {
-  const invalidate = useThree((s) => s.invalidate);
-  useEffect(() => {
-    if (!active) return;
-    let raf = 0;
-    let last = 0;
-    const tick = (now: number) => {
-      raf = requestAnimationFrame(tick);
-      if (now - last < (movingRef.current ? 0 : IDLE_MS)) return;
-      last = now;
-      invalidate();
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [active, invalidate, movingRef]);
-  return null;
-}
 
 /** The desktop themes paint the beads with matcaps (see matcap.ts); phones and tablets keep real lighting. */
 function useMatcaps(theme: SceneTheme) {
@@ -60,17 +40,7 @@ function useMatcaps(theme: SceneTheme) {
 
 const serverTheme = (): SceneTheme => "legacy";
 
-function Dna({
-  director,
-  anchors,
-  hud,
-  movingRef,
-}: {
-  director: Director;
-  anchors: Anchor[];
-  hud: HudState;
-  movingRef: { current: boolean };
-}) {
+function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]; hud: HudState }) {
   const tilt = useRef<THREE.Group>(null);
   const spin = useRef<THREE.Group>(null);
   const backbone = useRef<THREE.InstancedMesh>(null);
@@ -107,6 +77,16 @@ function Dna({
   const look = SCENE_LOOK[theme];
   const matcaps = useMatcaps(theme);
 
+  // Keeps the scene smooth on any device: it lowers the resolution (and, at the lowest step, the bead detail)
+  // when frames run long, and climbs back when there is headroom.
+  const [quality, setQuality] = useState(0);
+  const governor = useMemo(() => createGovernor(setQuality), []);
+  const setDpr = useThree((s) => s.setDpr);
+  useEffect(() => {
+    setDpr(Math.min(window.devicePixelRatio || 1, 1.5) * QUALITY_SCALE[quality]);
+  }, [quality, setDpr]);
+  const lowDetail = quality >= QUALITY_STEPS - 1;
+
   // Beads never move relative to the helix, so their instance data is written once.
   useLayoutEffect(() => {
     const b = backbone.current;
@@ -141,14 +121,14 @@ function Dna({
   const writeHud = useMemo(() => createHudWriter(hud), [hud]);
   const screen = useMemo(() => ({ x: new Float32Array(rungs.length), y: new Float32Array(rungs.length) }), [rungs]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = tilt.current;
     const s = spin.current;
     if (!t || !s) return;
 
     const { width, height } = state.size;
+    governor.tick(performance.now());
     const cam = director.sample(width, height);
-    movingRef.current = cam.moving;
     if (matcaps) {
       matcaps.body.blend.update(cam.finish);
       matcaps.bead.blend.update(cam.finish);
@@ -190,6 +170,7 @@ function Dna({
 
     // Callout lines belong to the chapter stage
     if (cam.stage > 0.02) {
+      const follow = 1 - Math.exp(-Math.min(0.1, delta) / 0.13); // the dots trail their rungs by ~0.13 s at any frame rate
       anchors.forEach((a, k) => {
         const aim = width >= 1024 ? a.target : a.phone;
         const r = director.stageRatio(height); // stage percentages are of svh, rung percentages of the canvas
@@ -205,8 +186,8 @@ function Dna({
           }
         }
         const cur = smooth.current[k];
-        cur.x += (bx - cur.x) * 0.12;
-        cur.y += (by - cur.y) * 0.12;
+        cur.x += (bx - cur.x) * follow;
+        cur.y += (by - cur.y) * follow;
         a.x.set(cur.x);
         a.y.set(cur.y / r);
       });
@@ -248,7 +229,7 @@ function Dna({
       <group ref={tilt}>
         <group ref={spin}>
           <instancedMesh ref={backbone} args={[undefined, undefined, backboneData.count]}>
-            <sphereGeometry args={[1, 24, 16]} />
+            <sphereGeometry key={lowDetail ? "low" : "full"} args={lowDetail ? [1, 14, 10] : [1, 24, 16]} />
             {matcaps ? (
               <meshMatcapMaterial key="matcap" matcap={matcaps.body.texture} toneMapped={false} />
             ) : (
@@ -263,7 +244,7 @@ function Dna({
             )}
           </instancedMesh>
           <instancedMesh ref={rungBeads} args={[undefined, undefined, rungData.count]}>
-            <sphereGeometry args={[1, 14, 10]} />
+            <sphereGeometry key={lowDetail ? "low" : "full"} args={lowDetail ? [1, 8, 6] : [1, 14, 10]} />
             {matcaps ? (
               <meshMatcapMaterial key="matcap" matcap={matcaps.bead.texture} toneMapped={false} />
             ) : (
@@ -314,17 +295,17 @@ export default function DnaCanvas({
   hud: HudState;
   active: boolean;
 }) {
-  const movingRef = useRef(true);
+  // Drawn on every display frame while the tab is visible (the helix is always turning, and the camera answers
+  // the scroll at once); stopped completely while it is hidden.
   return (
     <Canvas
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 5.4], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      frameloop="demand"
+      frameloop={active ? "always" : "never"}
       aria-hidden
     >
-      <Pulse movingRef={movingRef} active={active} />
-      <Dna director={director} anchors={anchors} hud={hud} movingRef={movingRef} />
+      <Dna director={director} anchors={anchors} hud={hud} />
     </Canvas>
   );
 }

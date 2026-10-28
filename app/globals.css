@@ -32,46 +32,20 @@
   --animate-float: float 7s ease-in-out infinite;
   --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
   --animate-fade-in: fade-in 1.2s ease-out both;
-  --animate-glitch: glitch-in 0.45s steps(9, end) both;
-  --animate-flash: flash 0.4s ease-out both;
+  --animate-flash: flash 0.8s ease-in-out both;
 
   @keyframes marquee {
     to {
       transform: translateX(-50%);
     }
   }
-  /* One short burst when a chapter changes: slices of the heading jump sideways with coloured fringes. */
-  @keyframes glitch-in {
-    0% {
-      transform: translateX(-7px);
-      clip-path: inset(8% 0 58% 0);
-      text-shadow: 3px 0 var(--glitch-a), -3px 0 var(--glitch-b);
-    }
-    22% {
-      transform: translateX(6px);
-      clip-path: inset(56% 0 6% 0);
-    }
-    44% {
-      transform: translateX(-3px);
-      clip-path: inset(28% 0 34% 0);
-      text-shadow: 2px 0 var(--glitch-a), -2px 0 var(--glitch-b);
-    }
-    66% {
-      transform: translateX(2px);
-      clip-path: inset(0 0 0 0);
-    }
-    100% {
-      transform: none;
-      clip-path: inset(0 0 0 0);
-      text-shadow: none;
-    }
-  }
+  /* A soft glow that swells and fades round the reticle when a chapter changes */
   @keyframes flash {
     0% {
       opacity: 0;
     }
-    18% {
-      opacity: 0.2;
+    35% {
+      opacity: 1;
     }
     100% {
       opacity: 0;
@@ -108,7 +82,7 @@
   --haze-b: rgb(40 80 255 / 0.14);
   --orb-a: rgb(34 150 255 / 0.34);
   --orb-b: rgb(20 90 220 / 0.16);
-  --glass: rgb(6 9 18 / 0.66);
+  --glass: rgb(6 9 18 / 0.78);
   --glass-phone: rgb(6 9 18 / 0.76);
   --glass-wash: rgb(255 255 255 / 0.03);
   --card: rgb(6 9 18 / 0.6);
@@ -121,7 +95,6 @@
   --grid: rgb(255 255 255 / 0.045);
   --scan: rgb(125 211 252 / 0.045);
   --streak: rgb(125 211 252 / 0.55);
-  --scan-blend: screen;
   --ruler: rgb(125 211 252 / 0.55);
   --spot: rgb(139 92 246 / 0.16);
   --btn: linear-gradient(110deg, #8b5cf6, #22d3ee);
@@ -142,8 +115,6 @@
   --dot-glow: 0 0 14px 3px rgb(34 211 238 / 0.65);
   --cursor: radial-gradient(circle, rgb(139 92 246 / 0.13) 0%, rgb(34 211 238 / 0.05) 40%, transparent 70%);
   --header-glow: rgb(139 92 246 / 0.22);
-  --glitch-a: #22d3ee;
-  --glitch-b: #f0abfc;
   --cta-a: rgb(139 92 246 / 0.35);
   --cta-b: rgb(34 211 238 / 0.22);
   --rule-a: rgb(139 92 246 / 0.6);
@@ -177,7 +148,7 @@
     --haze-b: rgb(160 166 176 / 0.06);
     --orb-a: rgb(222 226 234 / 0.16);
     --orb-b: rgb(150 156 168 / 0.07);
-    --glass: rgb(18 19 22 / 0.66);
+    --glass: rgb(18 19 22 / 0.78);
     --glass-wash: rgb(255 255 255 / 0.03);
     --card: rgb(18 19 22 / 0.6);
     --card-wash-a: rgb(255 255 255 / 0.04);
@@ -188,7 +159,6 @@
     --grid: rgb(255 255 255 / 0.04);
     --scan: rgb(225 228 235 / 0.035);
     --streak: rgb(225 228 235 / 0.45);
-    --scan-blend: screen;
     --ruler: rgb(225 228 235 / 0.55);
     --spot: rgb(255 255 255 / 0.07);
     --btn: linear-gradient(180deg, #f6f4ef, #c9ccd3);
@@ -209,8 +179,6 @@
     --dot-glow: 0 0 12px 2px rgb(230 233 238 / 0.5);
     --cursor: radial-gradient(circle, rgb(255 255 255 / 0.07) 0%, rgb(200 205 214 / 0.03) 40%, transparent 70%);
     --header-glow: rgb(210 214 222 / 0.08);
-    --glitch-a: #e6e9ee;
-    --glitch-b: #6b7078;
     --cta-a: rgb(200 205 214 / 0.12);
     --cta-b: rgb(255 255 255 / 0.08);
     --rule-a: rgb(154 160 168 / 0.6);
@@ -237,7 +205,7 @@
     --haze-b: rgb(188 192 200 / 0.35);
     --orb-a: rgb(255 255 255 / 0.9);
     --orb-b: rgb(204 208 215 / 0.35);
-    --glass: rgb(255 255 255 / 0.66);
+    --glass: rgb(255 255 255 / 0.8);
     --glass-wash: rgb(255 255 255 / 0.2);
     --card: rgb(255 255 255 / 0.62);
     --card-wash-a: rgb(255 255 255 / 0.5);
@@ -248,7 +216,6 @@
     --grid: rgb(27 28 31 / 0.05);
     --scan: rgb(27 28 31 / 0.035);
     --streak: rgb(27 28 31 / 0.3);
-    --scan-blend: multiply;
     --ruler: rgb(27 28 31 / 0.5);
     --spot: rgb(27 28 31 / 0.05);
     --btn: linear-gradient(180deg, #3a3c41, #1f2023);
@@ -269,8 +236,6 @@
     --dot-glow: 0 0 0 4px rgb(43 45 49 / 0.12);
     --cursor: radial-gradient(circle, rgb(255 255 255 / 0.5) 0%, rgb(190 194 201 / 0.12) 40%, transparent 70%);
     --header-glow: rgb(255 255 255 / 0.6);
-    --glitch-a: #7d828b;
-    --glitch-b: #2b2d31;
     --cta-a: rgb(188 192 200 / 0.55);
     --cta-b: rgb(255 255 255 / 0.9);
     --rule-a: rgb(125 130 139 / 0.6);
@@ -343,18 +308,13 @@ body {
     mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 100%);
   }
 
-  /* Panels sit over the page-long DNA scene, so they carry their own dark backing to keep text readable.
-     The frosted blur is for large, hover-capable screens only: blurring a live canvas is costly on phones. */
+  /* Panels sit over the page-long DNA scene, so they carry their own backing to keep text readable. There is
+     deliberately no backdrop blur: re-blurring a canvas that redraws every frame is the costliest thing a
+     browser can be asked to do while scrolling, so the backing is simply a little more opaque. */
   .glass {
     background: linear-gradient(var(--glass-wash), var(--glass-wash)), var(--glass);
     border: 1px solid var(--color-line);
     box-shadow: var(--panel-shadow);
-  }
-  @media (min-width: 1024px) and (hover: hover) {
-    .glass {
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
   }
   /* On phones the helix is bright behind the content, so panels carry a stronger dark backing */
   @media (max-width: 1023px) {
@@ -408,7 +368,6 @@ body {
       transparent 1px,
       transparent 4px
     );
-    mix-blend-mode: var(--scan-blend);
   }
   /* Speed lines radiating from the reticle while the zoom is moving (opacity is driven by zoom speed) */
   .hud-streaks {
@@ -457,6 +416,7 @@ body {
   }
   .dna-orb {
     background: radial-gradient(closest-side, var(--orb-a), var(--orb-b) 55%, transparent);
+    will-change: transform;
   }
   /* Soft glows inside the closing call-to-action card, and the line joining the process steps */
   .cta-glow {

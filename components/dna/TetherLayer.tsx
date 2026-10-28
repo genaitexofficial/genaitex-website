@@ -36,14 +36,20 @@ export function TetherLayer() {
 
     let raf = 0;
     let last = 0;
+    // The active chapter's card, remembered between frames (looking it up every frame is needless work)
+    let card: HTMLElement | null = null;
+    const activeCard = () => {
+      if (card?.isConnected && card.closest("li")?.getAttribute("data-state") === "active") return card;
+      return (card = document.querySelector<HTMLElement>('li[data-state="active"] [data-dna-reticle]'));
+    };
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
       if (document.hidden || t - last < (director.moving ? 0 : 66)) return;
       last = t;
       const inStage = stage.get();
-      const card = inStage > 0.05 ? document.querySelector<HTMLElement>('li[data-state="active"] [data-dna-reticle]') : null;
-      if (!card) return g.setAttribute("opacity", "0");
-      const b = card.getBoundingClientRect();
+      const el = inStage > 0.05 ? activeCard() : null;
+      if (!el) return g.setAttribute("opacity", "0");
+      const b = el.getBoundingClientRect();
       const rt = director.reticle;
       const ax = Math.min(Math.max(rt.x, b.left + 28), b.right - 28);
       path.setAttribute("d", `M${rt.x.toFixed(1)} ${(rt.y + 26).toFixed(1)}L${ax.toFixed(1)} ${b.top.toFixed(1)}`);
