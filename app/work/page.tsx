@@ -3,13 +3,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ProjectFilter } from "@/components/work/ProjectFilter";
 import { CTA } from "@/components/home/CTA";
 import { projects } from "@/lib/projects";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Work",
+export const metadata: Metadata = pageMetadata({
+  title: "Website, Shopify & Web App Projects",
   description:
-    "Selected static websites, Shopify storefronts and custom web applications from genaitex.",
-  alternates: { canonical: "/work" },
-};
+    "Concept projects showing the static websites, Shopify storefronts and custom web apps genaitex builds, and the quality we hold them to.",
+  path: "/work",
+});
 
 export default function WorkPage() {
   const hasConcepts = projects.some((p) => p.isSample);
@@ -17,6 +18,7 @@ export default function WorkPage() {
   return (
     <>
       <PageHeader
+        crumbs={[{ name: "Work", path: "/work" }]}
         eyebrow="Portfolio"
         title={
           <>

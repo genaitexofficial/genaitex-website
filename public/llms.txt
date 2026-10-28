@@ -1,0 +1,24 @@
+# genaitex
+
+> genaitex is a studio that builds websites and web applications, AI and automation, custom UI designs, CRM setups, AI product advertisements and marketing for businesses in India and worldwide. It also creates ready-made UI designs and websites that you can choose and have adapted to your brand.
+
+Website: https://genaitex.com
+Email: genaitexofficial@gmail.com
+
+## Services
+- [Static website design](https://genaitex.com/services/static-website-design): fast, search-ready static websites, from INR 2,000.
+- [Ecommerce website development](https://genaitex.com/services/ecommerce-website-development): custom Shopify and fully custom online stores, 5 pages from INR 10,000 and 10 pages from INR 20,000.
+- [Web app development](https://genaitex.com/services/web-app-development): web applications, dashboards and customer portals, quoted per project.
+- [AI automation and integrations](https://genaitex.com/services/ai-automation-integrations): AI assistants grounded in your content, search, workflow automation and integrations.
+- [Custom UI design](https://genaitex.com/services/custom-ui-design): interfaces, design systems and clickable prototypes.
+- [CRM setup](https://genaitex.com/services/crm-setup): HubSpot, Zoho CRM or Pipedrive set up around how you sell.
+- [AI product advertisements](https://genaitex.com/services/ai-product-ads): product visuals and short video ads made with AI and reviewed by a person.
+- [Digital marketing](https://genaitex.com/services/marketing): SEO, content, social, email and paid ads, with no promised rankings.
+- [Ready-made UI and websites](https://genaitex.com/services/ready-made-ui-websites): finished designs and sites adapted to your brand.
+
+## Company
+- [About](https://genaitex.com/about)
+- [Work](https://genaitex.com/work): concept projects showing the kind of work genaitex builds.
+- [Contact](https://genaitex.com/contact)
+
+Prices are starting prices; the final amount is confirmed in a quote.

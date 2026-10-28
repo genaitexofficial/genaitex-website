@@ -11,6 +11,8 @@ import { DnaBackdrop } from "@/components/dna/DnaBackdrop";
 import { CursorGlow } from "@/components/ui/CursorGlow";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { site } from "@/lib/site";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { siteGraph } from "@/lib/jsonld";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -28,54 +30,50 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name}: ${site.tagline}`,
+    default: site.seoTitle,
     template: `%s · ${site.name}`,
   },
-  description: site.description,
+  description: site.seoDescription,
   applicationName: site.name,
   openGraph: {
     type: "website",
     siteName: site.name,
-    title: `${site.name}: ${site.tagline}`,
-    description: site.description,
+    locale: "en_IN",
+    title: site.seoTitle,
+    description: site.seoDescription,
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name}: ${site.tagline}`,
-    description: site.description,
+    title: site.seoTitle,
+    description: site.seoDescription,
   },
   alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  // Search Console / Bing Webmaster Tools "HTML tag" verification, from env vars (see .env.example)
+  verification: {
+    google: site.verification.google || undefined,
+    other: site.verification.bing ? { "msvalidate.01": site.verification.bing } : undefined,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05060a",
-  colorScheme: "dark",
-};
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  name: site.name,
-  url: site.url,
-  description: site.description,
-  email: site.email,
-  serviceType: [
-    "Website and web application development",
-    "Ecommerce website development",
-    "AI, automation and integrations",
-    "Custom UI design",
-    "CRM setup",
-    "AI product advertisements",
-    "Digital marketing",
+  // Phones and tablets are always dark; large screens follow the Day / Night theme (which follows the device)
+  themeColor: [
+    { media: "(min-width: 1024px) and (prefers-color-scheme: light)", color: "#f3f1ec" },
+    { color: "#05060a" },
   ],
-  areaServed: "Worldwide",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="en-IN"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -84,13 +82,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Likewise for the currency prices are shown in (rupees for visitors in India, else dollars) */}
         <script dangerouslySetInnerHTML={{ __html: currencyScript }} />
-        <script
-          type="application/ld+json"
-          // Escape "<" so the JSON can never close the script tag early.
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-          }}
-        />
+        <JsonLd data={siteGraph()} />
         <Providers>
           <ThemeProvider>
             <DnaProvider>

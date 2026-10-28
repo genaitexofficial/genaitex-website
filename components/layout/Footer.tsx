@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { Year } from "./Year";
-import { services } from "@/lib/services";
+import { seoPages } from "@/lib/seoPages";
 import { site, whatsappLink } from "@/lib/site";
 
 export function Footer() {
@@ -41,13 +41,13 @@ export function Footer() {
           <div>
             <h2 className="eyebrow mb-5">Services</h2>
             <ul className="space-y-3">
-              {services.map((s) => (
-                <li key={s.slug}>
+              {seoPages.map((p) => (
+                <li key={p.slug}>
                   <Link
-                    href={`/services#${s.slug}`}
+                    href={`/services/${p.slug}`}
                     className="text-muted transition-colors hover:text-fg"
                   >
-                    {s.title}
+                    {p.name}
                   </Link>
                 </li>
               ))}

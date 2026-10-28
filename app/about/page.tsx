@@ -5,13 +5,15 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhyUs } from "@/components/home/WhyUs";
 import { CTA } from "@/components/home/CTA";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "About",
-  description: `Meet ${site.name}: a studio building websites and applications, AI and automation, custom UI designs, CRM setups, AI product ads and marketing.`,
-  alternates: { canonical: "/about" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "About genaitex: a Web, AI & Growth Studio",
+  description:
+    "One team that designs, builds and launches websites, AI automation, CRM setups and marketing, with 5 years in the field. Meet genaitex.",
+  path: "/about",
+});
 
 const stackGroups = [
   { label: "Frontend", items: ["Next.js", "React", "Astro", "TypeScript", "Tailwind CSS", "Motion"] },
@@ -25,6 +27,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader
+        crumbs={[{ name: "About", path: "/about" }]}
         eyebrow="About"
         title={
           <>

@@ -9,6 +9,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
 import { Price } from "@/components/currency/Price";
 import { services } from "@/lib/services";
+import { seoPages } from "@/lib/seoPages";
 
 /**
  * "Choose your starting point": pick one of the six services to see what's included, who it is for, the tech
@@ -185,12 +186,17 @@ export function OptionPicker({
             {s.startLabel}
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden />
           </Button>
-          <Link
-            href={`/services#${s.slug}`}
-            className="rounded-full border border-line-strong px-6 py-3.5 text-sm text-fg transition-colors hover:border-cyan/50"
-          >
-            Full details
-          </Link>
+          {seoPages
+            .filter((p) => p.service === s.slug)
+            .map((p, _i, all) => (
+              <Link
+                key={p.slug}
+                href={`/services/${p.slug}`}
+                className="rounded-full border border-line-strong px-6 py-3.5 text-sm text-fg transition-colors hover:border-cyan/50"
+              >
+                {all.length > 1 ? p.name : "Full details"}
+              </Link>
+            ))}
           {!s.pricing && (
             <p className="w-full text-sm text-subtle sm:ml-2 sm:w-auto">
               Priced per project: tell us what you need and we reply with a quote.

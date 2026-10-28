@@ -8,7 +8,9 @@ import { BrowserMockup } from "@/components/work/BrowserMockup";
 import { hostFor } from "@/components/work/ProjectCard";
 import { CTA } from "@/components/home/CTA";
 import { Parallax } from "@/components/ui/Parallax";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { categoryLabels, getNextProject, getProject, projects } from "@/lib/projects";
+import { clip, pageMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -18,11 +20,12 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   const { slug } = await params;
   const project = getProject(slug);
   if (!project) return {};
-  return {
-    title: project.title,
-    description: project.summary,
-    alternates: { canonical: `/work/${project.slug}` },
-  };
+  return pageMetadata({
+    title: `${project.title}: ${categoryLabels[project.category]}${project.isSample ? " concept" : " project"}`,
+    description: clip(project.summary),
+    path: `/work/${project.slug}`,
+    ownImage: true,
+  });
 }
 
 export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]">) {
@@ -36,7 +39,14 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
     <>
       <header className="relative isolate overflow-hidden pb-12 pt-32 sm:pt-40">
         <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
+          <Breadcrumbs
+            crumbs={[
+              { name: "Work", path: "/work" },
+              { name: project.title, path: `/work/${project.slug}` },
+            ]}
+            className="absolute left-5 top-[-3rem] sm:left-8"
+          />
           <Link
             href="/work"
             className="mb-10 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"

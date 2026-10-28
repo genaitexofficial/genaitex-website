@@ -6,12 +6,13 @@ import { Suspense } from "react";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { ContactFormWithPrefill } from "@/components/contact/ContactFormWithPrefill";
 import { site, whatsappLink } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: `Start a project with ${site.name}. Tell us what you're building and we'll reply with next steps.`,
-  alternates: { canonical: "/contact" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Contact: start a website, AI or CRM project",
+  description: `Start a project with ${site.name}. Tell us what you are building and we reply with next steps, usually within one business day.`,
+  path: "/contact",
+});
 
 export default function ContactPage() {
   const wa = whatsappLink();
@@ -19,6 +20,7 @@ export default function ContactPage() {
   return (
     <>
       <PageHeader
+        crumbs={[{ name: "Contact", path: "/contact" }]}
         eyebrow="Contact"
         title={
           <>

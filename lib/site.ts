@@ -9,6 +9,12 @@ export const site = {
   description:
     "genaitex is a studio building websites and applications, AI and automation, custom UI designs, CRM setups, AI product advertisements and marketing.",
 
+  // The title of the home page in search results (the tagline above is the on-page headline, not the search title).
+  seoTitle: "genaitex: Websites, AI Automation & Growth Studio in India",
+  // Short, search-led description of the home page (about 150 characters).
+  seoDescription:
+    "Websites, Shopify stores, AI automation, UI design, CRM setup and AI product ads for businesses in India. Custom builds or ready-made UIs and websites.",
+
   // The primary domain. genaitex.in should redirect here (set up in Vercel), never serve a copy.
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://genaitex.com",
 
@@ -25,8 +31,23 @@ export const site = {
   // CONFIGURE: short status line shown above the hero headline. Set to "" to hide.
   availability: "Now booking new projects",
 
-  // CONFIGURE: add { label: "LinkedIn", href: "https://..." } entries to show them in the footer
+  // CONFIGURE: add { label: "LinkedIn", href: "https://..." } entries to show them in the footer. They also become the
+  // `sameAs` profiles in the structured data (Google uses them to connect the brand to its profiles).
   socials: [] as { label: string; href: string }[],
+
+  // CONFIGURE: where the studio is based, for the structured data and local search. Left empty, nothing is published.
+  // Use the city and region only (no street address is needed): e.g. { city: "Hyderabad", region: "Telangana", country: "IN" }.
+  location: {
+    city: process.env.NEXT_PUBLIC_CITY ?? "",
+    region: process.env.NEXT_PUBLIC_REGION ?? "",
+    country: process.env.NEXT_PUBLIC_COUNTRY ?? "",
+  },
+
+  // Search-engine verification codes (Google Search Console "HTML tag" method, Bing Webmaster Tools). Optional.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
+    bing: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "",
+  },
 
   nav: [
     { label: "Services", href: "/services" },
