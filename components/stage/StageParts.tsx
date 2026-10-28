@@ -79,6 +79,16 @@ export const calloutSlots = [
 ] as const;
 
 /**
+ * How a stage presents its four options on large screens: `float` = cards floating around the DNA, with lines to
+ * it (the Services page); `list` = just the headings, stacked in the middle of the DNA (the Home page). Phones
+ * and tablets always get the floating pills.
+ */
+export type StageLayout = "float" | "list";
+
+/** Where the DNA is centred (percent of the width) on large screens, per layout. */
+export const stageCx: Record<StageLayout, number> = { float: 66.7, list: 62 };
+
+/**
  * The same four options on phones and tablets: small pills floating around the helix in the upper part of
  * the screen. `x`/`y` place a pill (percent of the stage); `line` is [pill attachment x, y, then the spot where
  * the line prefers to meet a base pair].
@@ -150,12 +160,16 @@ export function ScrollHint({ visible }: { visible: boolean }) {
 }
 
 /** Right-hand info card (the screenshot's "Genetic Code" card): the fifth card colour, bold like the option cards. */
-export function InfoCard({ card }: { card: Chapter["card"] }) {
+export function InfoCard({ card, layout = "float" }: { card: Chapter["card"]; layout?: StageLayout }) {
   return (
     <aside
       aria-label={card.title}
       style={{ "--c": "var(--slot-5)", "--t": "var(--slot-text-5)" } as CSSProperties}
-      className="slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block"
+      className={clsx(
+        "slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm",
+        // the Home list shows headings only: no info card beside the DNA
+        layout === "float" && "motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block",
+      )}
     >
       <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-[rgb(var(--t))]">{card.title}</p>
       <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">{card.body}</p>
@@ -225,10 +239,10 @@ function AnchorLine({ anchor, from, size, k }: { anchor: Anchor; from: readonly 
  * Connector lines from the option cards to the helix rungs they point at. Large screens use the desktop
  * layout; phones and tablets use their own (`phoneSlots`), so each is drawn in its own box.
  */
-export function AnchorLines({ anchors }: { anchors: Anchor[] }) {
+export function AnchorLines({ anchors, layout = "float" }: { anchors: Anchor[]; layout?: StageLayout }) {
   return (
     <>
-      <AnchorSet anchors={anchors} slots={calloutSlots} className="hidden motion-safe:lg:block" />
+      {layout === "float" && <AnchorSet anchors={anchors} slots={calloutSlots} className="hidden motion-safe:lg:block" />}
       <AnchorSet anchors={anchors} slots={phoneSlots} className="motion-safe:lg:hidden" />
     </>
   );

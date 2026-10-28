@@ -16,6 +16,8 @@ export interface StageSlot {
   /** 0..1 as the stage wrapper travels from entering the viewport (0) to leaving it (1). */
   presence: MotionValue<number>;
   keys: readonly CameraKey[];
+  /** Where the helix is centred on large screens while this stage is in control (percent of the width). */
+  cx?: number;
 }
 
 /** Values the director publishes every frame for the backdrop and HUD to bind to. */
@@ -188,7 +190,7 @@ export function createDirector(out: DirectorOutputs) {
         zoom: cam.zoom,
         slide: cam.focus + (p - 0.5) * 0.8,
         roll: cam.roll,
-        cx: wide ? STAGE_CX : 50,
+        cx: wide ? (stage.cx ?? STAGE_CX) : 50,
         cy: wide ? 50 : ((PHONE_STAGE_CY * small) / height) * 100,
         dim: 1,
       };

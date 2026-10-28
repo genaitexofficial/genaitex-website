@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useTransform, type MotionValue } from "motion/react";
 import * as m from "motion/react-m";
 import { useDna } from "@/components/dna/DnaProvider";
@@ -17,10 +18,16 @@ import { useDna } from "@/components/dna/DnaProvider";
 export function StageHud({
   progress,
   changes,
+  cx = 66.7,
+  reticle = true,
 }: {
   progress: MotionValue<number>;
   /** How many times the chapter has changed: re-keys the flash so it replays once per change. */
   changes: number;
+  /** Where the helix is centred on large screens (percent of the width). */
+  cx?: number;
+  /** Show the targeting reticle on the base pair at the centre (off where text sits in the middle of the DNA). */
+  reticle?: boolean;
 }) {
   const { stage } = useDna();
   const rulerY = useTransform(progress, (p) => `${-p * 480}px`);
@@ -28,8 +35,8 @@ export function StageHud({
   return (
     <m.div
       aria-hidden
-      style={{ opacity: stage }}
-      className="pointer-events-none fixed inset-x-0 top-14 h-[calc(68svh-7rem)] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:66.7%]"
+      style={{ opacity: stage, ...({ "--cx-lg": `${cx}%` } as CSSProperties) }}
+      className="pointer-events-none fixed inset-x-0 top-14 h-[calc(68svh-7rem)] [--cx:50%] motion-reduce:hidden lg:inset-y-0 lg:top-0 lg:h-svh lg:[--cx:var(--cx-lg)]"
     >
       {changes > 0 && (
         <div
@@ -55,7 +62,7 @@ export function StageHud({
       </div>
 
       {/* Targeting reticle on the base pair at the centre of view */}
-      <div className="absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div className={`absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2 ${reticle ? "" : "lg:hidden"}`}>
         <svg width="132" height="132" viewBox="0 0 132 132" fill="none" className="text-cyan">
           <circle cx="66" cy="66" r="24" stroke="currentColor" strokeOpacity="0.8" strokeWidth="1" />
           <circle

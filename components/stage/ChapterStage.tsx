@@ -11,11 +11,13 @@ import { StageScrim } from "./StageScrim";
 import {
   calloutSlots,
   phoneSlots,
+  stageCx,
   ChapterIcon,
   AnchorLines,
   InfoCard,
   Pager,
   ScrollHint,
+  type StageLayout,
 } from "./StageParts";
 import { useDna } from "@/components/dna/DnaProvider";
 import { useMediaQuery } from "@/components/dna/useScene";
@@ -31,14 +33,17 @@ const ChapterItem = memo(function ChapterItem({
   state,
   pinned,
   heading: Heading,
+  layout,
   onJump,
 }: {
   c: Chapter;
   state: "before" | "active" | "after";
   pinned: boolean;
   heading: "h1" | "h2";
+  layout: StageLayout;
   onJump: (target: number | string) => void;
 }) {
+  const list = layout === "list";
   return (
       <li
         id={`chapter-${c.id}`}
@@ -61,7 +66,11 @@ const ChapterItem = memo(function ChapterItem({
         <div
           data-dna-reticle
           className={clsx(
-            "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
+            "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:top-1/2 motion-safe:lg:-translate-y-1/2",
+            // the Home list puts the text hard left (3rem from the edge); other stages line it up with the logo
+            list
+              ? "motion-safe:lg:left-12 motion-safe:lg:w-[min(28rem,36%)]"
+              : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[28rem]",
             // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
             "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
           )}
@@ -107,11 +116,12 @@ const ChapterItem = memo(function ChapterItem({
           </div>
         </div>
 
-        {/* Option cards: chips on phones, floating cards on large screens, a grid when stacked */}
+        {/* Option cards: chips on phones, floating cards on large screens (hidden where the headings list takes
+            over), a grid when stacked */}
         <ul
           className={clsx(
             "order-2 mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            "motion-safe:contents",
+            list ? "motion-safe:max-lg:contents motion-safe:lg:hidden" : "motion-safe:contents",
             "motion-reduce:mt-8 motion-reduce:grid motion-reduce:grid-cols-1 motion-reduce:overflow-visible sm:motion-reduce:grid-cols-2",
           )}
           aria-label={`${c.eyebrow}: options`}
@@ -180,7 +190,43 @@ const ChapterItem = memo(function ChapterItem({
           })}
         </ul>
 
-        <InfoCard card={c.card} />
+        {/* The Home list: the four options as big coloured blocks with their headings, stacked in the middle of the
+            DNA (large screens, motion on). Dark text on the bright colours is readable in Day and Night. */}
+        {list && (
+          <ul
+            aria-label={`${c.eyebrow}: list`}
+            className="hidden motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5"
+            style={{ "--cx": `${stageCx.list}%` } as CSSProperties}
+          >
+            {c.callouts.map((co, k) => {
+              const Item = co.jumpTo ? "button" : "div";
+              return (
+                <li key={co.title} style={{ "--c": `var(--slot-${k + 1})` } as CSSProperties}>
+                  <Item
+                    {...(co.jumpTo ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) } : {})}
+                    style={{ backgroundImage: "linear-gradient(180deg, rgb(255 255 255 / 0.24), transparent 60%)" }}
+                    className={clsx(
+                      "flex min-h-[4.5rem] w-full items-center justify-between gap-4 rounded-2xl bg-[rgb(var(--c))] px-6 py-3 text-left text-[#15161a] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),0_16px_30px_-14px_rgb(var(--c)/0.75)] xl:min-h-[5.25rem] xl:px-7",
+                      co.jumpTo && "transition-transform hover:-translate-y-0.5",
+                    )}
+                  >
+                    <span className="min-w-0 text-balance text-3xl font-semibold leading-[1.05] tracking-tight xl:text-[2.5rem]">
+                      {co.title}
+                    </span>
+                    {co.price && (
+                      <Price
+                        inr={co.price.inr}
+                        className="shrink-0 rounded-full bg-[#15161a]/10 px-3 py-1 font-mono text-sm font-semibold tracking-wide"
+                      />
+                    )}
+                  </Item>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <InfoCard card={c.card} layout={layout} />
       </li>
   );
 });
@@ -198,10 +244,13 @@ export function ChapterStage({
   chapters,
   label,
   firstHeading = "h1",
+  layout = "float",
 }: {
   chapters: Chapter[];
   label: string;
   firstHeading?: "h1" | "h2";
+  /** How the options sit on large screens: cards floating around the DNA (default), or just headings stacked in its middle. */
+  layout?: StageLayout;
 }) {
   const wrapperRef = useRef<HTMLElement>(null);
   const last = chapters.length - 1;
@@ -216,9 +265,9 @@ export function ChapterStage({
 
   // While this stage is on the page, the site-wide DNA takes its camera from the chapters.
   useEffect(() => {
-    director.setStage({ progress: scrollYProgress, presence, keys });
+    director.setStage({ progress: scrollYProgress, presence, keys, cx: stageCx[layout] });
     return () => director.setStage(null);
-  }, [director, scrollYProgress, presence, keys]);
+  }, [director, scrollYProgress, presence, keys, layout]);
 
   const indexAt = (p: number) => Math.min(last, Math.max(0, Math.round(p * last)));
   const shown = useRef(0);
@@ -302,12 +351,12 @@ export function ChapterStage({
       className="relative motion-safe:h-[calc(var(--n)*100svh)]"
     >
       <div className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
-        <StageScrim />
+        <StageScrim layout={layout} />
 
         {pinned && (
           <>
-            <StageHud progress={scrollYProgress} changes={changes} />
-            <AnchorLines anchors={anchors} />
+            <StageHud progress={scrollYProgress} changes={changes} cx={stageCx[layout]} reticle={layout === "float"} />
+            <AnchorLines anchors={anchors} layout={layout} />
             <ScrollHint visible={active === 0} />
             <Pager total={chapters.length} active={active} onSelect={scrollToChapter} />
           </>
@@ -323,6 +372,7 @@ export function ChapterStage({
                 state={state}
                 pinned={pinned}
                 heading={i === 0 ? firstHeading : "h2"}
+                layout={layout}
                 onJump={scrollToChapter}
               />
             );

@@ -10,7 +10,7 @@ import { homeChapters } from "@/lib/chapters";
 export default function Home() {
   return (
     <>
-      <ChapterStage chapters={homeChapters} label="What genaitex builds" />
+      <ChapterStage chapters={homeChapters} label="What genaitex builds" layout="list" />
       <TechMarquee />
       <OptionPicker />
       <FeaturedWork />
