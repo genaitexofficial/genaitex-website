@@ -149,8 +149,8 @@ export interface CameraKey {
   roll?: number;
 }
 
-const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
-const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+export const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+export const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 /**
  * Interpolates the chapter camera keys at scroll progress `p` (0..1).

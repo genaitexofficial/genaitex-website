@@ -17,7 +17,7 @@ type Status = "idle" | "submitting" | "success" | "error";
 type FieldErrors = Partial<Record<ContactField, string>>;
 
 const fieldBase =
-  "w-full rounded-xl border border-line bg-white/[0.03] px-4 py-3.5 text-fg placeholder:text-subtle transition-colors hover:border-line-strong focus:border-violet focus:bg-white/[0.05] focus:outline-none aria-[invalid=true]:border-rose-400/70";
+  "w-full rounded-xl border border-line bg-wash/[0.03] px-4 py-3.5 text-fg placeholder:text-subtle transition-colors hover:border-line-strong focus:border-violet focus:bg-wash/[0.05] focus:outline-none aria-[invalid=true]:border-rose-400/70";
 
 export function ContactForm({ initialType = "" }: { initialType?: string }) {
   const uid = useId();

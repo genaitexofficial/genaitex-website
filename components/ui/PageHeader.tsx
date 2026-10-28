@@ -15,7 +15,7 @@ export function PageHeader({
       <div aria-hidden className="bg-grid absolute inset-0 -z-10" />
       <div
         aria-hidden
-        className="absolute -top-40 left-1/2 -z-10 h-[640px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(139,92,246,0.22),transparent)]"
+        className="absolute -top-40 left-1/2 -z-10 h-[640px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(closest-side,var(--header-glow),transparent)]"
       />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="dna-node">

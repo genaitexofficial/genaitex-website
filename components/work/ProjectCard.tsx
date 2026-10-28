@@ -65,7 +65,7 @@ export function ProjectCard({
             {project.stack.slice(0, 4).map((s) => (
               <li
                 key={s}
-                className="rounded-md bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-muted"
+                className="rounded-md bg-wash/[0.05] px-2.5 py-1 font-mono text-xs text-muted"
               >
                 {s}
               </li>

@@ -44,7 +44,7 @@ export function StageHud({
         <div className="absolute -right-5 top-6 hidden h-24 w-2.5 overflow-hidden lg:block">
           <m.div
             style={{ y: rulerY }}
-            className="h-[700px] w-full bg-[repeating-linear-gradient(to_bottom,rgba(125,211,252,0.55)_0,rgba(125,211,252,0.55)_1px,transparent_1px,transparent_8px)]"
+            className="h-[700px] w-full bg-[repeating-linear-gradient(to_bottom,var(--ruler)_0,var(--ruler)_1px,transparent_1px,transparent_8px)]"
           />
         </div>
       </div>

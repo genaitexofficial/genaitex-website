@@ -100,7 +100,7 @@ export default function AboutPage() {
                   {g.items.map((t) => (
                     <li
                       key={t}
-                      className="rounded-md bg-white/[0.05] px-3 py-1.5 font-mono text-sm text-muted"
+                      className="rounded-md bg-wash/[0.05] px-3 py-1.5 font-mono text-sm text-muted"
                     >
                       {t}
                     </li>

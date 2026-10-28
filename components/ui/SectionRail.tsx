@@ -33,7 +33,7 @@ export function SectionRail({ items }: { items: { id: string; label: string }[] 
                 aria-hidden
                 className={clsx(
                   "absolute -left-[1.28rem] top-1.5 h-2 w-2 rounded-full transition-all duration-300",
-                  on ? "scale-125 bg-cyan shadow-[0_0_10px_2px_rgba(34,211,238,0.6)]" : "bg-line-strong",
+                  on ? "dot-glow scale-125" : "bg-line-strong",
                 )}
               />
               <a

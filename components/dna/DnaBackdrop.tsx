@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { Component, useEffect, useRef } from "react";
-import { clsx } from "clsx";
 import { useTransform } from "motion/react";
 import * as m from "motion/react-m";
 import { TetherLayer } from "./TetherLayer";
@@ -25,8 +24,6 @@ class SceneBoundary extends Component<{ children: React.ReactNode }, { failed: b
   }
 }
 
-const haze =
-  "bg-[radial-gradient(ellipse_60%_70%_at_68%_45%,rgba(34,150,255,0.14),transparent_70%),radial-gradient(ellipse_50%_60%_at_8%_0%,rgba(40,80,255,0.14),transparent_70%)]";
 
 /**
  * The DNA double helix behind the whole site, fixed to the viewport from the top of every page to the
@@ -39,7 +36,7 @@ const haze =
  *   zooming out and spinning as you scroll, and the content appears out of it (`.dna-node` in globals.css).
  */
 export function DnaBackdrop() {
-  const { director, hud, anchors, dim, cx, cy } = useDna();
+  const { director, hud, anchors, dim, cx, cy, finish } = useDna();
   const tier = useSceneTier();
   const wide = useMediaQuery("(min-width: 768px)");
   const active = useTabVisible();
@@ -74,9 +71,16 @@ export function DnaBackdrop() {
       el.dataset.dnaPair = hud.pair.get();
       el.dataset.dnaSeq = String(Math.round(hud.seq.get() * 339) + 1);
     };
-    const offs = [hud.zoom.on("change", write), hud.pair.on("change", write), hud.seq.on("change", write)];
+    const writeFinish = (name: string) => (el.dataset.dnaFinish = name);
+    writeFinish(finish.get());
+    const offs = [
+      hud.zoom.on("change", write),
+      hud.pair.on("change", write),
+      hud.seq.on("change", write),
+      finish.on("change", writeFinish),
+    ];
     return () => offs.forEach((off) => off());
-  }, [hud]);
+  }, [hud, finish]);
 
   const orbX = useTransform(cx, (v) => `${v}vw`);
   const orbY = useTransform(cy, (v) => `${v}lvh`);
@@ -88,7 +92,7 @@ export function DnaBackdrop() {
     <>
       {/* Blue-violet haze and a faint grid, behind everything, with or without the scene */}
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden">
-        <div className={clsx("absolute inset-0", haze)} />
+        <div className="dna-haze absolute inset-0" />
         <div className="bg-grid absolute inset-0 opacity-50" />
       </div>
 
@@ -107,7 +111,7 @@ export function DnaBackdrop() {
             className="absolute left-0 top-0 h-[min(110vw,820px)] w-[min(110vw,820px)] -translate-x-1/2 -translate-y-1/2"
             style={{ x: orbX, y: orbY }}
           >
-            <div className="h-full w-full animate-float bg-[radial-gradient(closest-side,rgba(34,150,255,0.34),rgba(20,90,220,0.16)_55%,transparent)] motion-reduce:animate-none" />
+            <div className="dna-orb h-full w-full animate-float motion-reduce:animate-none" />
           </m.div>
           {show && tier && (
             <div className="absolute inset-0 animate-fade-in">

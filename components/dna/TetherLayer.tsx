@@ -26,10 +26,10 @@ export function TetherLayer() {
     const path = document.createElementNS(SVG, "path");
     const dot = document.createElementNS(SVG, "circle");
     path.setAttribute("fill", "none");
-    path.setAttribute("stroke", "rgba(103,232,249,0.7)");
+    path.setAttribute("style", "stroke: rgb(var(--accent) / 0.7)");
     path.setAttribute("stroke-width", "1.5");
     dot.setAttribute("r", "2");
-    dot.setAttribute("fill", "rgba(103,232,249,0.9)");
+    dot.setAttribute("style", "fill: rgb(var(--accent) / 0.9)");
     g.append(path, dot);
     g.setAttribute("opacity", "0");
     root.append(g);

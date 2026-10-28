@@ -32,7 +32,7 @@ export function BrowserMockup({
       aria-hidden
       style={{ "--a": a, "--b": b } as React.CSSProperties}
       className={clsx(
-        "relative overflow-hidden rounded-2xl border border-line-strong bg-surface-2 shadow-2xl shadow-black/50",
+        "relative overflow-hidden rounded-2xl border border-white/15 bg-[#10131d] shadow-2xl shadow-black/40",
         className,
       )}
     >
@@ -46,7 +46,7 @@ export function BrowserMockup({
           <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
           <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
         </div>
-        <div className="mx-auto max-w-[60%] flex-1 truncate rounded-md bg-white/[0.06] px-3 py-1 text-center font-mono text-[10px] text-subtle">
+        <div className="mx-auto max-w-[60%] flex-1 truncate rounded-md bg-white/[0.06] px-3 py-1 text-center font-mono text-[10px] text-[#838ba0]">
           {host}
         </div>
         <div className="w-10" />

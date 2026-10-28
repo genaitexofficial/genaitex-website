@@ -83,8 +83,8 @@ export function OptionPicker({
               className={clsx(
                 "group relative flex flex-col items-start gap-3 rounded-2xl border p-4 text-left transition-colors sm:p-5",
                 on
-                  ? "border-cyan/60 bg-[linear-gradient(180deg,rgba(34,150,255,0.14),rgba(34,150,255,0.04))] shadow-[0_0_40px_-12px_rgba(34,211,238,0.5)]"
-                  : "border-line bg-white/[0.02] hover:border-line-strong hover:bg-white/[0.04]",
+                  ? "picker-active border-cyan/60"
+                  : "border-line bg-wash/[0.02] hover:border-line-strong hover:bg-wash/[0.04]",
               )}
             >
               <span className="flex w-full items-center justify-between">
@@ -133,7 +133,7 @@ export function OptionPicker({
             )}
             <ul className="mt-6 flex flex-wrap gap-2" aria-label="Technologies">
               {s.stack.map((t) => (
-                <li key={t} className="rounded-md bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-muted">
+                <li key={t} className="rounded-md bg-wash/[0.05] px-2.5 py-1 font-mono text-xs text-muted">
                   {t}
                 </li>
               ))}

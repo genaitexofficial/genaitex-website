@@ -1,4 +1,11 @@
 import type { MotionValue } from "motion/react";
+import {
+  FINISHES,
+  finishWeights,
+  parseFinish,
+  SCREENS_PER_FINISH,
+  type FinishWeights,
+} from "@/lib/finishes";
 import { ambientAt, cameraAt, type CameraKey } from "@/lib/helix";
 
 /** A pinned chapter stage on the current page: it takes over the camera while it is on screen. */
@@ -19,6 +26,8 @@ export interface DirectorOutputs {
   cy: MotionValue<number>;
   /** 0..1: how much the chapter stage is in control (drives the HUD's visibility). */
   stage: MotionValue<number>;
+  /** Name of the bead finish that is showing most (chrome, pearl or gunmetal), for tests and styling. */
+  finish: MotionValue<string>;
 }
 
 export interface Camera {
@@ -34,6 +43,8 @@ export interface Camera {
   dim: number;
   /** Stage weight 0..1. */
   stage: number;
+  /** How much of each bead finish is showing (chrome, pearl, gunmetal; sums to 1). Desktop themes only. */
+  finish: Readonly<FinishWeights>;
   /** Helix size relative to a full-height desktop view (1 = desktop; narrower phones scale down to fit the width). */
   fit: number;
   /** True while anything is still changing, so renderers can run at full rate. */
@@ -74,6 +85,8 @@ const ZOOM_OUT_SPAN = 12;
 /** Steady spin, radians per second: a little livelier on phones and tablets, where the helix is the star. */
 const SPIN_DESKTOP = 0.12;
 const SPIN_PHONE = 0.22;
+/** How quickly the bead finish follows its goal, in seconds. */
+const FINISH_EASE = 0.25;
 
 /**
  * The camera brain for the page-long DNA scene. Each frame a renderer asks it for the camera: while a
@@ -85,10 +98,14 @@ const SPIN_PHONE = 0.22;
 export function createDirector(out: DirectorOutputs) {
   let stage: StageSlot | null = null;
   let svh = 0;
-  let state: Omit<Camera, "fit" | "moving" | "stage"> | null = null;
+  let state: Omit<Camera, "fit" | "moving" | "stage" | "finish"> | null = null;
   let lastTime = 0;
   let lastStage = 0;
   let drift = 0; // accumulated steady spin (radians)
+  const finish: FinishWeights = [1, 0, 0];
+  const finishGoal: FinishWeights = [1, 0, 0];
+  const finishScratch: FinishWeights = [1, 0, 0];
+  let finishLock: number | null | undefined; // `?finish=` on the first visit: undefined = not read yet
   let moving = true;
   const rungs: RungPositions = { x: new Float32Array(0), y: new Float32Array(0), w: 0, h: 0 };
   /** Where the targeting reticle (the middle of the helix) is, in px of the canvas. */
@@ -124,6 +141,9 @@ export function createDirector(out: DirectorOutputs) {
     }
     const ambientSpin = wide ? SPIN_DESKTOP : SPIN_PHONE;
 
+    // Bead finish: the ambient cycle follows the distance scrolled; a stage overrides it chapter by chapter
+    finishWeights(g / SCREENS_PER_FINISH, 3, true, finishGoal);
+
     // Stage camera (chapter keyframes), blended in as the stage arrives and out as it leaves
     let target = ambient;
     let weight = 0;
@@ -136,6 +156,10 @@ export function createDirector(out: DirectorOutputs) {
       // bottom of a short page does not pull the camera or show its HUD.
       const ramp = (x: number) => smooth01(clamp01(x * 2 - 1));
       weight = ramp(presence / edge) * ramp((1 - presence) / edge);
+      if (weight > 0) {
+        finishWeights(p * (stage.keys.length - 1), stage.keys.length, false, finishScratch);
+        for (let k = 0; k < 3; k++) finishGoal[k] = lerp(finishGoal[k], finishScratch[k], weight);
+      }
       const chapter = {
         zoom: cam.zoom,
         slide: cam.focus + (p - 0.5) * 0.8,
@@ -155,6 +179,17 @@ export function createDirector(out: DirectorOutputs) {
     }
     const goal = { ...target, angle: g * Math.PI };
     drift += lerp(ambientSpin, SPIN_DESKTOP, weight) * dt;
+
+    if (finishLock === undefined) finishLock = parseFinish(window.location.search);
+    if (finishLock !== null) finishGoal.forEach((_, k) => (finishGoal[k] = k === finishLock ? 1 : 0));
+    let finishMoving = false;
+    const finishEase = !state || !dt ? 1 : 1 - Math.exp(-dt / FINISH_EASE);
+    for (let k = 0; k < 3; k++) {
+      const next = lerp(finish[k], finishGoal[k], finishEase);
+      if (Math.abs(next - finish[k]) > 1e-3) finishMoving = true;
+      finish[k] = next;
+    }
+    out.finish.set(FINISHES[finish.indexOf(Math.max(...finish))]);
 
     // Ease toward the goal (exponential smoothing; the first frame snaps)
     if (!state) {
@@ -179,7 +214,8 @@ export function createDirector(out: DirectorOutputs) {
         Math.abs(state.angle - prev.angle) > 2e-4 ||
         Math.abs(state.roll - prev.roll) > 2e-4 ||
         Math.abs(state.cx - prev.cx) > 0.01 ||
-        Math.abs(state.dim - prev.dim) > 1e-3;
+        Math.abs(state.dim - prev.dim) > 1e-3 ||
+        finishMoving;
     }
     lastStage = lerp(lastStage, weight, dt ? 1 - Math.exp(-dt / 0.12) : 1);
 
@@ -190,7 +226,7 @@ export function createDirector(out: DirectorOutputs) {
 
     reticle.x = (state.cx / 100) * width;
     reticle.y = (state.cy / 100) * height;
-    return { ...state, angle: state.angle + drift, stage: lastStage, fit, moving };
+    return { ...state, angle: state.angle + drift, stage: lastStage, fit, finish, moving };
   };
 
   return {

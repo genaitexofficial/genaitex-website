@@ -4,6 +4,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Providers } from "@/components/layout/Providers";
 import { DnaProvider } from "@/components/dna/DnaProvider";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { themeScript } from "@/components/theme/store";
 import { DnaBackdrop } from "@/components/dna/DnaBackdrop";
 import { CursorGlow } from "@/components/ui/CursorGlow";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
@@ -70,8 +72,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
+        {/* Sets the desktop theme before first paint, so there is never a flash of the wrong one */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script
           type="application/ld+json"
           // Escape "<" so the JSON can never close the script tag early.
@@ -80,22 +85,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <Providers>
-          <DnaProvider>
-            <DnaBackdrop />
-            <a
-              href="#main"
-              className="sr-only z-[100] rounded-md bg-white px-4 py-2 text-sm font-medium text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
-            >
-              Skip to content
-            </a>
-            <CursorGlow />
-            <Navbar />
-            <ScrollProgress />
-            <main id="main" className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </DnaProvider>
+          <ThemeProvider>
+            <DnaProvider>
+              <DnaBackdrop />
+              <a
+                href="#main"
+                className="sr-only z-[100] rounded-md bg-white px-4 py-2 text-sm font-medium text-black focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+              >
+                Skip to content
+              </a>
+              <CursorGlow />
+              <Navbar />
+              <ScrollProgress />
+              <main id="main" className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </DnaProvider>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

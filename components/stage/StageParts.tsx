@@ -105,7 +105,7 @@ export function ChapterRail({
                 aria-hidden
                 className={clsx(
                   "absolute -left-[1.72rem] top-1.5 h-2 w-2 rounded-full transition-all duration-300",
-                  i === active ? "scale-125 bg-cyan shadow-[0_0_12px_2px_rgba(34,211,238,0.7)]" : "bg-line-strong",
+                  i === active ? "dot-glow scale-125" : "bg-line-strong",
                 )}
               />
               <button
@@ -190,14 +190,14 @@ export function ScrollHint({ visible }: { visible: boolean }) {
 /** Right-hand info card (the screenshot's "Genetic Code" card). */
 export function InfoCard({ card }: { card: Chapter["card"] }) {
   return (
-    <aside aria-label={card.title} className="glass hidden w-64 rounded-3xl bg-[#050914]/80 p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block">
+    <aside aria-label={card.title} className="glass hidden w-64 rounded-3xl bg-panel/80 p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block">
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-fg">{card.title}</p>
       <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">{card.body}</p>
       {card.meter && (
         <div className="mt-5">
           <div className="h-1 w-full overflow-hidden rounded-full bg-line-strong">
             <div
-              className="h-full rounded-full bg-[linear-gradient(90deg,#8b5cf6,#22d3ee)]"
+              className="bar-fill h-full rounded-full"
               style={{ width: `${card.meter.fill * 100}%` }}
             />
           </div>
@@ -220,7 +220,7 @@ function AnchorDot({ anchor }: { anchor: Anchor }) {
     <m.span
       aria-hidden
       style={{ left, top }}
-      className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan shadow-[0_0_14px_3px_rgba(34,211,238,0.65)]"
+      className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full dot-glow"
     />
   );
 }
@@ -257,7 +257,7 @@ function AnchorSet({
             y1={slots[k].line[1]}
             x2={a.x}
             y2={a.y}
-            stroke="rgba(34,211,238,0.5)"
+            style={{ stroke: "rgb(var(--accent) / 0.5)" }}
             strokeWidth="1"
             vectorEffect="non-scaling-stroke"
           />

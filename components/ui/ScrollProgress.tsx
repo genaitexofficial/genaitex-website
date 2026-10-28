@@ -10,7 +10,7 @@ export function ScrollProgress() {
     <m.div
       aria-hidden
       style={{ scaleX: scrollYProgress }}
-      className="fixed inset-x-0 top-16 z-40 h-px origin-left bg-[linear-gradient(90deg,#8b5cf6,#22d3ee)] motion-reduce:hidden"
+      className="fixed inset-x-0 top-16 z-40 h-px origin-left bar-fill motion-reduce:hidden"
     />
   );
 }

@@ -20,6 +20,7 @@ export interface Dna {
   cx: MotionValue<number>;
   cy: MotionValue<number>;
   stage: MotionValue<number>;
+  finish: MotionValue<string>;
 }
 
 const DnaContext = createContext<Dna | null>(null);
@@ -40,9 +41,10 @@ export function DnaProvider({ children }: { children: React.ReactNode }) {
   const cx = useMotionValue(50);
   const cy = useMotionValue(50);
   const stage = useMotionValue(0);
+  const finish = useMotionValue("chrome");
   const value = useMemo<Dna>(
-    () => ({ director: createDirector({ dim, cx, cy, stage }), hud, anchors, dim, cx, cy, stage }),
-    [hud, anchors, dim, cx, cy, stage],
+    () => ({ director: createDirector({ dim, cx, cy, stage, finish }), hud, anchors, dim, cx, cy, stage, finish }),
+    [hud, anchors, dim, cx, cy, stage, finish],
   );
   return <DnaContext value={value}>{children}</DnaContext>;
 }

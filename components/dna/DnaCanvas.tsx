@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { BASE_SHADE, SCENE_LOOK } from "@/lib/finishes";
 import { baseColors, buildHelix, HELIX_FULL, HELIX_TILT, mulberry32 } from "@/lib/helix";
+import { getSceneTheme, subscribe, type SceneTheme } from "@/components/theme/store";
 import type { Anchor } from "./anchors";
 import type { Director } from "./director";
 import { createHudWriter, type HudState } from "./hud";
+import { MatcapBlend, type Role } from "./matcap";
 
 const baseKeys = ["A", "T", "G", "C"] as const;
 const BEADS_PER_RUNG = HELIX_FULL.beadsPerHalfRung * 2;
@@ -32,6 +35,31 @@ function Pulse({ movingRef, active }: { movingRef: { current: boolean }; active:
   return null;
 }
 
+/** The desktop themes paint the beads with matcaps (see matcap.ts); phones and tablets keep real lighting. */
+function useMatcaps(theme: SceneTheme) {
+  const set = useMemo(() => {
+    if (theme === "legacy") return null;
+    const make = (role: Role) => {
+      const blend = new MatcapBlend(theme === "night", role);
+      const texture = new THREE.CanvasTexture(blend.canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      blend.onChange = () => (texture.needsUpdate = true);
+      return { blend, texture };
+    };
+    return { body: make("body"), bead: make("bead") };
+  }, [theme]);
+  useEffect(
+    () => () => {
+      set?.body.texture.dispose();
+      set?.bead.texture.dispose();
+    },
+    [set],
+  );
+  return set;
+}
+
+const serverTheme = (): SceneTheme => "legacy";
+
 function Dna({
   director,
   anchors,
@@ -52,15 +80,10 @@ function Dna({
   const data = useMemo(() => {
     const { beads, rungs } = buildHelix();
     const m = new THREE.Matrix4();
-    const c = new THREE.Color();
     const pack = (list: typeof beads) => {
       const matrices = new Float32Array(list.length * 16);
-      const colors = new Float32Array(list.length * 3);
-      list.forEach((b, i) => {
-        m.makeScale(b.r, b.r, b.r).setPosition(b.x, b.y, b.z).toArray(matrices, i * 16);
-        if (b.color > 0) c.set(baseColors[baseKeys[b.color - 1]]).toArray(colors, i * 3);
-      });
-      return { matrices, colors, count: list.length };
+      list.forEach((b, i) => m.makeScale(b.r, b.r, b.r).setPosition(b.x, b.y, b.z).toArray(matrices, i * 16));
+      return { matrices, count: list.length };
     };
     const rand = mulberry32(99);
     const dust = new Float32Array(900 * 3);
@@ -80,6 +103,10 @@ function Dna({
   }, []);
   const { backboneData, rungData, rungList, rungs, dust } = data;
 
+  const theme = useSyncExternalStore(subscribe, getSceneTheme, serverTheme);
+  const look = SCENE_LOOK[theme];
+  const matcaps = useMatcaps(theme);
+
   // Beads never move relative to the helix, so their instance data is written once.
   useLayoutEffect(() => {
     const b = backbone.current;
@@ -91,9 +118,22 @@ function Dna({
     if (r) {
       r.instanceMatrix.array.set(rungData.matrices);
       r.instanceMatrix.needsUpdate = true;
-      r.instanceColor = new THREE.InstancedBufferAttribute(rungData.colors, 3);
     }
   }, [backboneData, rungData]);
+
+  // Base-pair colours: the original blues on phones and tablets, lightness steps of the finish on desktop.
+  useLayoutEffect(() => {
+    const r = rungBeads.current;
+    if (!r) return;
+    const colors = new Float32Array(rungList.length * 3);
+    const c = new THREE.Color();
+    rungList.forEach((b, i) => {
+      if (theme === "legacy") c.set(baseColors[baseKeys[b.color - 1]]);
+      else c.setScalar(BASE_SHADE[b.color - 1]);
+      c.toArray(colors, i * 3);
+    });
+    r.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+  }, [rungList, theme]);
 
   const world = useMemo(() => new THREE.Vector3(), []);
   const mat = useMemo(() => new THREE.Matrix4(), []);
@@ -109,6 +149,10 @@ function Dna({
     const { width, height } = state.size;
     const cam = director.sample(width, height);
     movingRef.current = cam.moving;
+    if (matcaps) {
+      matcaps.body.blend.update(cam.finish);
+      matcaps.bead.blend.update(cam.finish);
+    }
     const persp = state.camera as THREE.PerspectiveCamera;
 
     // Optical zoom (no flying inside the strands). The view offset is in pixels, so the zoom stays centred on
@@ -191,36 +235,50 @@ function Dna({
 
   return (
     <>
-      <fog attach="fog" args={["#050914", 4.8, 7.6]} />
-      <ambientLight intensity={0.7} />
-      <pointLight position={[3, 3, 5]} intensity={90} color="#7dd3fc" />
-      <pointLight position={[-4, -3, 3]} intensity={55} color="#a78bfa" />
-      <directionalLight position={[-3, 2, -4]} intensity={2.2} color="#7dd3fc" />
+      <fog key={theme} attach="fog" args={[look.fog, 4.8, 7.6]} />
+      {!matcaps && (
+        <>
+          <ambientLight intensity={0.7} />
+          <pointLight position={[3, 3, 5]} intensity={90} color="#7dd3fc" />
+          <pointLight position={[-4, -3, 3]} intensity={55} color="#a78bfa" />
+          <directionalLight position={[-3, 2, -4]} intensity={2.2} color="#7dd3fc" />
+        </>
+      )}
 
       <group ref={tilt}>
         <group ref={spin}>
           <instancedMesh ref={backbone} args={[undefined, undefined, backboneData.count]}>
             <sphereGeometry args={[1, 24, 16]} />
-            <meshStandardMaterial
-              color="#2b6fe0"
-              emissive="#0b3fa8"
-              emissiveIntensity={0.9}
-              roughness={0.25}
-              metalness={0.15}
-            />
+            {matcaps ? (
+              <meshMatcapMaterial key="matcap" matcap={matcaps.body.texture} toneMapped={false} />
+            ) : (
+              <meshStandardMaterial
+                key="standard"
+                color="#2b6fe0"
+                emissive="#0b3fa8"
+                emissiveIntensity={0.9}
+                roughness={0.25}
+                metalness={0.15}
+              />
+            )}
           </instancedMesh>
           <instancedMesh ref={rungBeads} args={[undefined, undefined, rungData.count]}>
             <sphereGeometry args={[1, 14, 10]} />
-            <meshBasicMaterial toneMapped={false} />
+            {matcaps ? (
+              <meshMatcapMaterial key="matcap" matcap={matcaps.bead.texture} toneMapped={false} />
+            ) : (
+              <meshBasicMaterial key="basic" toneMapped={false} />
+            )}
           </instancedMesh>
           <instancedMesh ref={halo} args={[undefined, undefined, BEADS_PER_RUNG]} frustumCulled={false}>
             <sphereGeometry args={[1, 14, 10]} />
             <meshBasicMaterial
-              color="#7dd3fc"
+              key={theme}
+              color={look.halo}
               transparent
-              opacity={0.3}
+              opacity={look.haloOpacity}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={look.additive ? THREE.AdditiveBlending : THREE.NormalBlending}
               toneMapped={false}
             />
           </instancedMesh>
@@ -232,12 +290,13 @@ function Dna({
           <bufferAttribute attach="attributes-position" args={[dust, 3]} />
         </bufferGeometry>
         <pointsMaterial
+          key={theme}
           size={0.03}
-          color="#7dd3fc"
+          color={look.dust}
           transparent
-          opacity={0.55}
+          opacity={look.dustOpacity}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={look.additive ? THREE.AdditiveBlending : THREE.NormalBlending}
         />
       </points>
     </>

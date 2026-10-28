@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { FINISHES } from "@/lib/finishes";
 import { baseColors, buildHelix, HELIX_TILT } from "@/lib/helix";
+import { getSceneTheme, subscribe, type SceneTheme } from "@/components/theme/store";
 import type { Anchor } from "./anchors";
 import type { Director } from "./director";
 import { createHudWriter, type HudState } from "./hud";
+import { drawSprite } from "./matcap";
 
 /**
  * The 2D-canvas renderer for the page-long scene: the same DNA double helix and the same fly-through zoom,
@@ -42,6 +45,30 @@ function sphereSprite(color: string, glossy: boolean, size: number) {
   return c;
 }
 
+/** One look of the beads at the two sprite resolutions: index 0 is a backbone bead, 1..4 the four bases. */
+interface SpriteSet {
+  small: HTMLCanvasElement[];
+  large: HTMLCanvasElement[];
+}
+
+/** The original blue beads (phones and tablets). */
+function legacySprites(): SpriteSet {
+  const colorList = ["#2b6fe0", ...baseKeys.map((k) => baseColors[k])];
+  // Two resolutions: small sprites for ordinary beads, large ones so zoomed-in beads stay sharp.
+  return {
+    small: colorList.map((c, i) => sphereSprite(c, i === 0, 64)),
+    large: colorList.map((c, i) => sphereSprite(c, i === 0, 192)),
+  };
+}
+
+/** One finish of the desktop themes, built the first time it is needed. */
+function finishSprites(finish: number, night: boolean): SpriteSet {
+  const make = (size: number) => [0, 1, 2, 3, 4].map((kind) => drawSprite(FINISHES[finish], night, kind, size));
+  return { small: make(64), large: make(192) };
+}
+
+const serverTheme = (): SceneTheme => "legacy";
+
 export default function DnaCanvasLite({
   director,
   anchors,
@@ -54,6 +81,11 @@ export default function DnaCanvasLite({
   active: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const theme = useSyncExternalStore(subscribe, getSceneTheme, serverTheme);
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,10 +94,17 @@ export default function DnaCanvasLite({
 
     // Phones get the sparse bead set; wide screens (which only land here without a GPU) can afford the full one.
     const { beads, rungs } = buildHelix(!window.matchMedia("(min-width: 1024px)").matches);
-    const colorList = ["#2b6fe0", ...baseKeys.map((k) => baseColors[k])];
-    // Two resolutions: small sprites for ordinary beads, large ones so zoomed-in beads stay sharp.
-    const small = colorList.map((c, i) => sphereSprite(c, i === 0, 64));
-    const large = colorList.map((c, i) => sphereSprite(c, i === 0, 192));
+    // Sprite sets are built on demand and kept: the blue set, and each finish for each theme.
+    const sets = new Map<string, SpriteSet>();
+    const setFor = (look: SceneTheme, finish: number) => {
+      const key = look === "legacy" ? "legacy" : `${look}-${finish}`;
+      let set = sets.get(key);
+      if (!set) {
+        set = look === "legacy" ? legacySprites() : finishSprites(finish, look === "night");
+        sets.set(key, set);
+      }
+      return set;
+    };
     const n = beads.length;
     const sx = new Float32Array(n);
     const sy = new Float32Array(n);
@@ -130,15 +169,31 @@ export default function DnaCanvasLite({
       // far beads first, so near beads overlap them
       order.sort((a, b) => sz[a] - sz[b]);
 
+      // Which looks to paint: the blue set, or on desktop the finishes in proportion to their weights, each
+      // laid over the last at its share of the total (an exact weighted mix; usually just one or two).
+      const look = themeRef.current;
+      const layers: { set: SpriteSet; share: number }[] = [];
+      if (look === "legacy") layers.push({ set: setFor(look, 0), share: 1 });
+      else {
+        let total = 0;
+        cam.finish.forEach((v, f) => {
+          if (v < 0.02) return;
+          total += v;
+          layers.push({ set: setFor(look, f), share: v / total });
+        });
+      }
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       for (let k = 0; k < n; k++) {
         const i = order[k];
         const size = ss[i];
         if (sx[i] < -size || sx[i] > w + size || sy[i] < -size || sy[i] > h + size) continue;
-        ctx.globalAlpha = Math.max(0.3, Math.min(1, 0.7 + sz[i] * 0.3));
-        const set = size > 70 ? large : small;
-        ctx.drawImage(set[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);
+        const depth = Math.max(0.3, Math.min(1, 0.7 + sz[i] * 0.3));
+        for (const { set, share } of layers) {
+          ctx.globalAlpha = depth * share;
+          ctx.drawImage((size > 70 ? set.large : set.small)[beads[i].color], sx[i] - size / 2, sy[i] - size / 2, size, size);
+        }
       }
       ctx.globalAlpha = 1;
 

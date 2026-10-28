@@ -37,7 +37,7 @@ export default function ContactPage() {
                 <h2 className="font-medium">Email</h2>
                 <a
                   href={`mailto:${site.email}`}
-                  className="mt-1 block break-all text-muted underline decoration-white/20 underline-offset-4 transition-colors hover:text-fg hover:decoration-cyan"
+                  className="mt-1 block break-all text-muted underline decoration-wash/20 underline-offset-4 transition-colors hover:text-fg hover:decoration-cyan"
                 >
                   {site.email}
                 </a>
@@ -52,7 +52,7 @@ export default function ContactPage() {
                     href={wa}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 block text-muted underline decoration-white/20 underline-offset-4 transition-colors hover:text-fg hover:decoration-cyan"
+                    className="mt-1 block text-muted underline decoration-wash/20 underline-offset-4 transition-colors hover:text-fg hover:decoration-cyan"
                   >
                     Message us directly
                   </a>

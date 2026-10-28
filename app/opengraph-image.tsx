@@ -17,13 +17,13 @@ export default function OpengraphImage() {
           justifyContent: "space-between",
           padding: 80,
           background:
-            "radial-gradient(circle at 85% 10%, rgba(34,211,238,0.35), transparent 45%), radial-gradient(circle at 10% 100%, rgba(139,92,246,0.45), transparent 50%), #05060a",
-          color: "#eceef5",
+            "radial-gradient(circle at 85% 10%, rgba(230,233,238,0.22), transparent 45%), radial-gradient(circle at 10% 100%, rgba(154,160,168,0.3), transparent 50%), #0e0f11",
+          color: "#edeae4",
         }}
       >
         <div style={{ display: "flex", fontSize: 44, fontWeight: 700, letterSpacing: -1 }}>
           gen
-          <span style={{ color: "#a78bfa" }}>ai</span>
+          <span style={{ color: "#9aa0a8" }}>ai</span>
           tex
         </div>
 
@@ -40,7 +40,7 @@ export default function OpengraphImage() {
           >
             {site.tagline}
           </div>
-          <div style={{ display: "flex", marginTop: 32, fontSize: 30, color: "#a3aabd" }}>
+          <div style={{ display: "flex", marginTop: 32, fontSize: 30, color: "#a9adb4" }}>
             Static websites · Shopify storefronts · Custom development
           </div>
         </div>

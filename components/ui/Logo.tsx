@@ -8,8 +8,8 @@ export function Logo({ className }: { className?: string }) {
       <svg viewBox="0 0 64 64" className="h-7 w-7" aria-hidden>
         <defs>
           <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#8b5cf6" />
-            <stop offset="1" stopColor="#22d3ee" />
+            <stop offset="0" style={{ stopColor: "var(--logo-a)" }} />
+            <stop offset="1" style={{ stopColor: "var(--logo-b)" }} />
           </linearGradient>
         </defs>
         {/* </> code mark */}

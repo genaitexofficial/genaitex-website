@@ -19,7 +19,7 @@ export function Process() {
         {/* connecting line (desktop) */}
         <div
           aria-hidden
-          className="absolute left-0 right-0 top-[19px] hidden h-px bg-[linear-gradient(90deg,transparent,rgba(139,92,246,0.6),rgba(34,211,238,0.6),transparent)] lg:block"
+          className="absolute left-0 right-0 top-[19px] hidden h-px step-rule lg:block"
         />
         {processSteps.map((step, i) => (
           <li key={step.title}>

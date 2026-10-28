@@ -10,7 +10,7 @@ export function ServiceIcon({ name, className }: { name: IconName; className?: s
     <span
       aria-hidden
       className={clsx(
-        "inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(139,92,246,0.25),rgba(34,211,238,0.18))] ring-1 ring-inset ring-white/10",
+        "inline-flex h-12 w-12 items-center justify-center rounded-2xl icon-tile",
         className,
       )}
     >

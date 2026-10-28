@@ -87,7 +87,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 underline decoration-white/20 underline-offset-4 hover:decoration-cyan"
+                    className="inline-flex items-center gap-1.5 underline decoration-wash/25 underline-offset-4 hover:decoration-cyan"
                   >
                     {hostFor(project)} <ArrowUpRight className="h-4 w-4" aria-hidden />
                   </a>
@@ -144,7 +144,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
                 {project.stack.map((t) => (
                   <li
                     key={t}
-                    className="rounded-md bg-white/[0.05] px-3 py-1.5 font-mono text-sm text-muted"
+                    className="rounded-md bg-wash/[0.05] px-3 py-1.5 font-mono text-sm text-muted"
                   >
                     {t}
                   </li>

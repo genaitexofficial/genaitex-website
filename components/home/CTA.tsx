@@ -12,7 +12,7 @@ export function CTA() {
         <div className="relative isolate overflow-hidden rounded-[2rem] border border-line-strong bg-surface px-6 py-20 text-center sm:px-16">
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_90%_at_50%_120%,rgba(139,92,246,0.35),transparent_70%),radial-gradient(ellipse_50%_60%_at_85%_-10%,rgba(34,211,238,0.22),transparent_70%)]"
+            className="absolute inset-0 -z-10 cta-glow"
           />
           <div aria-hidden className="bg-grid absolute inset-0 -z-10 opacity-60" />
 

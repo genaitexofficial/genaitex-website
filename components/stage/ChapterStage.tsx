@@ -175,7 +175,7 @@ export function ChapterStage({
                   className={clsx(
                     "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:left-[13rem] motion-safe:lg:top-1/2 motion-safe:lg:w-[28rem] motion-safe:lg:-translate-y-1/2",
                     // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
-                    "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-[#050914]/62 max-lg:motion-safe:p-5",
+                    "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
                   )}
                 >
                   <div className="order-1 max-w-xl">
@@ -249,9 +249,9 @@ export function ChapterStage({
                             ? { type: "button" as const, onClick: () => scrollToChapter(co.jumpTo!) }
                             : {})}
                           className={clsx(
-                            "glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-colors max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight lg:bg-[#050914]/75",
+                            "glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-colors max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight lg:bg-panel/75",
                             "lg:items-start lg:rounded-2xl lg:p-4 motion-reduce:items-start motion-reduce:rounded-2xl motion-reduce:p-4",
-                            co.jumpTo && "hover:border-cyan/50 hover:bg-white/[0.07]",
+                            co.jumpTo && "hover:border-cyan/50 hover:bg-wash/[0.07]",
                           )}
                         >
                           {co.base ? (

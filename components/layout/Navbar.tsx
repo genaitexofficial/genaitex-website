@@ -9,6 +9,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { site } from "@/lib/site";
 
 export function Navbar() {
@@ -62,7 +63,7 @@ export function Navbar() {
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={clsx(
                   "rounded-full px-4 py-2 text-sm transition-colors",
-                  isActive(item.href) ? "bg-white/[0.07] text-fg" : "text-muted hover:text-fg",
+                  isActive(item.href) ? "bg-wash/[0.07] text-fg" : "text-muted hover:text-fg",
                 )}
               >
                 {item.label}
@@ -71,7 +72,8 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Button href="/contact" size="md">
             Start a project <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>

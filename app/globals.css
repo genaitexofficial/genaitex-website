@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
 /* ───────────────────────── Design tokens ───────────────────────── */
-@theme inline {
+/*
+ * Colour tokens. They are plain custom properties (not inlined) so a theme can change them at runtime: the
+ * values here are the original dark-blue look, used on phones and tablets; on screens 1024px and wider the
+ * Day and Night themes below override them (see "Desktop themes"). `cyan` and `violet` are the accent roles:
+ * the desktop themes map them to silver, ash and platinum, so no component needs to know about the theme.
+ */
+@theme static {
   --color-ink: #05060a;
   --color-surface: #0a0c13;
   --color-surface-2: #10131d;
@@ -13,7 +19,12 @@
   --color-violet: #8b5cf6;
   --color-violet-soft: #a78bfa;
   --color-cyan: #22d3ee;
+  /* the dark backing behind panels and cards, and the tint used for subtle washes (white on dark, ink on light) */
+  --color-panel: #050914;
+  --color-wash: #ffffff;
+}
 
+@theme inline {
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
@@ -29,12 +40,12 @@
       transform: translateX(-50%);
     }
   }
-  /* One short burst when a chapter changes: slices of the heading jump sideways with cyan/magenta fringes. */
+  /* One short burst when a chapter changes: slices of the heading jump sideways with coloured fringes. */
   @keyframes glitch-in {
     0% {
       transform: translateX(-7px);
       clip-path: inset(8% 0 58% 0);
-      text-shadow: 3px 0 #22d3ee, -3px 0 #f0abfc;
+      text-shadow: 3px 0 var(--glitch-a), -3px 0 var(--glitch-b);
     }
     22% {
       transform: translateX(6px);
@@ -43,7 +54,7 @@
     44% {
       transform: translateX(-3px);
       clip-path: inset(28% 0 34% 0);
-      text-shadow: 2px 0 #22d3ee, -2px 0 #f0abfc;
+      text-shadow: 2px 0 var(--glitch-a), -2px 0 var(--glitch-b);
     }
     66% {
       transform: translateX(2px);
@@ -91,6 +102,196 @@
 /* ───────────────────────── Base ───────────────────────── */
 :root {
   color-scheme: dark;
+  /* Everything below is themed: these are the original dark-blue values (phones and tablets). */
+  --accent: 34 211 238; /* rgb triplet of the accent, for translucent uses */
+  --haze-a: rgb(34 150 255 / 0.14);
+  --haze-b: rgb(40 80 255 / 0.14);
+  --orb-a: rgb(34 150 255 / 0.34);
+  --orb-b: rgb(20 90 220 / 0.16);
+  --glass: rgb(6 9 18 / 0.66);
+  --glass-phone: rgb(6 9 18 / 0.76);
+  --glass-wash: rgb(255 255 255 / 0.03);
+  --card: rgb(6 9 18 / 0.6);
+  --card-phone: rgb(6 9 18 / 0.72);
+  --card-wash-a: rgb(255 255 255 / 0.04);
+  --card-wash-b: rgb(255 255 255 / 0.015);
+  --panel-shadow: none;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --grid: rgb(255 255 255 / 0.045);
+  --scan: rgb(125 211 252 / 0.045);
+  --streak: rgb(125 211 252 / 0.55);
+  --scan-blend: screen;
+  --ruler: rgb(125 211 252 / 0.55);
+  --spot: rgb(139 92 246 / 0.16);
+  --btn: linear-gradient(110deg, #8b5cf6, #22d3ee);
+  --btn-fg: #05060a;
+  --btn-shadow: 0 0 40px -10px rgb(139 92 246 / 0.8);
+  --btn-shadow-hover: 0 0 60px -8px rgb(34 211 238 / 0.7);
+  --sel-bg: rgb(139 92 246 / 0.45);
+  --sel-fg: #fff;
+  --text-gradient: linear-gradient(110deg, #a78bfa 0%, #22d3ee 60%, #67e8f9 100%);
+  --logo-a: #8b5cf6;
+  --logo-b: #22d3ee;
+  --scrim: 5 9 20; /* rgb triplet of the colour the left text scrim fades from */
+  --picker-active: linear-gradient(180deg, rgb(34 150 255 / 0.14), rgb(34 150 255 / 0.04));
+  --picker-glow: 0 0 40px -12px rgb(34 211 238 / 0.5);
+  --icon-bg: linear-gradient(135deg, rgb(139 92 246 / 0.25), rgb(34 211 238 / 0.18));
+  --icon-ring: rgb(255 255 255 / 0.1);
+  --progress: linear-gradient(90deg, #8b5cf6, #22d3ee);
+  --dot-glow: 0 0 14px 3px rgb(34 211 238 / 0.65);
+  --cursor: radial-gradient(circle, rgb(139 92 246 / 0.13) 0%, rgb(34 211 238 / 0.05) 40%, transparent 70%);
+  --header-glow: rgb(139 92 246 / 0.22);
+  --glitch-a: #22d3ee;
+  --glitch-b: #f0abfc;
+  --cta-a: rgb(139 92 246 / 0.35);
+  --cta-b: rgb(34 211 238 / 0.22);
+  --rule-a: rgb(139 92 246 / 0.6);
+  --rule-b: rgb(34 211 238 / 0.6);
+}
+
+/*
+ * Desktop themes (screens 1024px and wider). <html data-theme="day|night"> is set before first paint by the
+ * inline script in app/layout.tsx and kept in sync by components/theme/ThemeProvider.tsx: Auto follows the
+ * device's light/dark setting, and the navbar button cycles Auto, Day, Night. Both themes are monochrome
+ * off-white / silver / ash. Below 1024px nothing here applies, so phones and tablets keep the original look.
+ */
+@media (min-width: 1024px) {
+  :root[data-theme="night"] {
+    color-scheme: dark;
+    --color-ink: #0e0f11;
+    --color-surface: #15161a;
+    --color-surface-2: #1c1d22;
+    --color-line: rgb(255 255 255 / 0.09);
+    --color-line-strong: rgb(255 255 255 / 0.17);
+    --color-fg: #edeae4;
+    --color-muted: #a9adb4;
+    --color-subtle: #868a92;
+    --color-violet: #9aa0a8;
+    --color-violet-soft: #c7cbd2;
+    --color-cyan: #e6e9ee;
+    --color-panel: #101113;
+    --color-wash: #ffffff;
+    --accent: 230 233 238;
+    --haze-a: rgb(210 214 222 / 0.07);
+    --haze-b: rgb(160 166 176 / 0.06);
+    --orb-a: rgb(222 226 234 / 0.16);
+    --orb-b: rgb(150 156 168 / 0.07);
+    --glass: rgb(18 19 22 / 0.66);
+    --glass-wash: rgb(255 255 255 / 0.03);
+    --card: rgb(18 19 22 / 0.6);
+    --card-wash-a: rgb(255 255 255 / 0.04);
+    --card-wash-b: rgb(255 255 255 / 0.015);
+    --panel-shadow: none;
+    --card-shadow: none;
+    --card-shadow-hover: none;
+    --grid: rgb(255 255 255 / 0.04);
+    --scan: rgb(225 228 235 / 0.035);
+    --streak: rgb(225 228 235 / 0.45);
+    --scan-blend: screen;
+    --ruler: rgb(225 228 235 / 0.55);
+    --spot: rgb(255 255 255 / 0.07);
+    --btn: linear-gradient(180deg, #f6f4ef, #c9ccd3);
+    --btn-fg: #16171a;
+    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.65), 0 8px 30px -12px rgb(230 233 238 / 0.35);
+    --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.85), 0 10px 40px -10px rgb(230 233 238 / 0.5);
+    --sel-bg: rgb(200 204 212 / 0.35);
+    --sel-fg: #fff;
+    --text-gradient: linear-gradient(110deg, #ffffff 0%, #c4c8cf 55%, #8e939b 100%);
+    --logo-a: #f4f2ee;
+    --logo-b: #9aa0a8;
+    --scrim: 14 15 17;
+    --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.02));
+    --picker-glow: 0 0 40px -14px rgb(230 233 238 / 0.4);
+    --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
+    --icon-ring: rgb(255 255 255 / 0.12);
+    --progress: linear-gradient(90deg, #8e939b, #f4f2ee);
+    --dot-glow: 0 0 12px 2px rgb(230 233 238 / 0.5);
+    --cursor: radial-gradient(circle, rgb(255 255 255 / 0.07) 0%, rgb(200 205 214 / 0.03) 40%, transparent 70%);
+    --header-glow: rgb(210 214 222 / 0.08);
+    --glitch-a: #e6e9ee;
+    --glitch-b: #6b7078;
+    --cta-a: rgb(200 205 214 / 0.12);
+    --cta-b: rgb(255 255 255 / 0.08);
+    --rule-a: rgb(154 160 168 / 0.6);
+    --rule-b: rgb(230 233 238 / 0.6);
+  }
+
+  :root[data-theme="day"] {
+    color-scheme: light;
+    --color-ink: #f3f1ec;
+    --color-surface: #fbfaf7;
+    --color-surface-2: #e9e7e1;
+    --color-line: rgb(27 28 31 / 0.1);
+    --color-line-strong: rgb(27 28 31 / 0.18);
+    --color-fg: #1b1c1f;
+    --color-muted: #4b4f56;
+    --color-subtle: #656971;
+    --color-violet: #7d828b;
+    --color-violet-soft: #5d626a;
+    --color-cyan: #2b2d31;
+    --color-panel: #fbfaf7;
+    --color-wash: #1b1c1f;
+    --accent: 43 45 49;
+    --haze-a: rgb(255 255 255 / 0.75);
+    --haze-b: rgb(188 192 200 / 0.35);
+    --orb-a: rgb(255 255 255 / 0.9);
+    --orb-b: rgb(204 208 215 / 0.35);
+    --glass: rgb(255 255 255 / 0.66);
+    --glass-wash: rgb(255 255 255 / 0.2);
+    --card: rgb(255 255 255 / 0.62);
+    --card-wash-a: rgb(255 255 255 / 0.5);
+    --card-wash-b: rgb(255 255 255 / 0.2);
+    --panel-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 16px 36px -22px rgb(27 28 31 / 0.3);
+    --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 18px 40px -22px rgb(27 28 31 / 0.28);
+    --card-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 24px 48px -22px rgb(27 28 31 / 0.36);
+    --grid: rgb(27 28 31 / 0.05);
+    --scan: rgb(27 28 31 / 0.035);
+    --streak: rgb(27 28 31 / 0.3);
+    --scan-blend: multiply;
+    --ruler: rgb(27 28 31 / 0.5);
+    --spot: rgb(27 28 31 / 0.05);
+    --btn: linear-gradient(180deg, #3a3c41, #1f2023);
+    --btn-fg: #f6f4ef;
+    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 12px 24px -12px rgb(27 28 31 / 0.55);
+    --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 16px 30px -12px rgb(27 28 31 / 0.65);
+    --sel-bg: rgb(125 130 139 / 0.35);
+    --sel-fg: #1b1c1f;
+    --text-gradient: linear-gradient(110deg, #1b1c1f 0%, #4b4f56 55%, #6f747c 100%);
+    --logo-a: #3a3c41;
+    --logo-b: #8a8f98;
+    --scrim: 243 241 236;
+    --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.6));
+    --picker-glow: 0 14px 30px -18px rgb(27 28 31 / 0.4);
+    --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(205 209 216 / 0.6));
+    --icon-ring: rgb(27 28 31 / 0.12);
+    --progress: linear-gradient(90deg, #1b1c1f, #8a8f98);
+    --dot-glow: 0 0 0 4px rgb(43 45 49 / 0.12);
+    --cursor: radial-gradient(circle, rgb(255 255 255 / 0.5) 0%, rgb(190 194 201 / 0.12) 40%, transparent 70%);
+    --header-glow: rgb(255 255 255 / 0.6);
+    --glitch-a: #7d828b;
+    --glitch-b: #2b2d31;
+    --cta-a: rgb(188 192 200 / 0.55);
+    --cta-b: rgb(255 255 255 / 0.9);
+    --rule-a: rgb(125 130 139 / 0.6);
+    --rule-b: rgb(27 28 31 / 0.5);
+  }
+}
+
+/* While the visitor flips the theme, colours cross-fade (the class is added briefly by ThemeProvider) */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  html.theme-fade,
+  html.theme-fade *,
+  html.theme-fade *::before,
+  html.theme-fade *::after {
+    transition:
+      background-color 0.35s ease,
+      color 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.35s ease,
+      fill 0.35s ease,
+      stroke 0.35s ease !important;
+  }
 }
 
 html {
@@ -114,8 +315,8 @@ body {
 }
 
 ::selection {
-  background: rgb(139 92 246 / 0.45);
-  color: #fff;
+  background: var(--sel-bg);
+  color: var(--sel-fg);
 }
 
 :focus-visible {
@@ -127,7 +328,7 @@ body {
 /* ───────────────────────── Components ───────────────────────── */
 @layer components {
   .text-gradient {
-    background-image: linear-gradient(110deg, #a78bfa 0%, #22d3ee 60%, #67e8f9 100%);
+    background-image: var(--text-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -136,8 +337,8 @@ body {
   /* Faint engineering-paper grid that fades toward the edges */
   .bg-grid {
     background-image:
-      linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+      linear-gradient(to right, var(--grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
     background-size: 56px 56px;
     mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 100%);
   }
@@ -145,8 +346,9 @@ body {
   /* Panels sit over the page-long DNA scene, so they carry their own dark backing to keep text readable.
      The frosted blur is for large, hover-capable screens only: blurring a live canvas is costly on phones. */
   .glass {
-    background: linear-gradient(rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.03)), rgb(6 9 18 / 0.66);
+    background: linear-gradient(var(--glass-wash), var(--glass-wash)), var(--glass);
     border: 1px solid var(--color-line);
+    box-shadow: var(--panel-shadow);
   }
   @media (min-width: 1024px) and (hover: hover) {
     .glass {
@@ -157,7 +359,7 @@ body {
   /* On phones the helix is bright behind the content, so panels carry a stronger dark backing */
   @media (max-width: 1023px) {
     .glass {
-      background: linear-gradient(rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.03)), rgb(6 9 18 / 0.76);
+      background: linear-gradient(var(--glass-wash), var(--glass-wash)), var(--glass-phone);
     }
   }
 
@@ -165,9 +367,10 @@ body {
   .glow-card {
     position: relative;
     isolation: isolate;
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015)), rgb(6 9 18 / 0.6);
+    background: linear-gradient(180deg, var(--card-wash-a), var(--card-wash-b)), var(--card);
     border: 1px solid var(--color-line);
-    transition: border-color 0.3s ease, transform 0.3s ease;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   }
   .glow-card::before {
     content: "";
@@ -179,19 +382,20 @@ body {
     transition: opacity 0.3s ease;
     background: radial-gradient(
       420px circle at var(--mx, 50%) var(--my, 50%),
-      rgb(139 92 246 / 0.16),
+      var(--spot),
       transparent 60%
     );
   }
   .glow-card:hover {
     border-color: var(--color-line-strong);
+    box-shadow: var(--card-shadow-hover);
   }
   .glow-card:hover::before {
     opacity: 1;
   }
   @media (max-width: 1023px) {
     .glow-card {
-      background: linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015)), rgb(6 9 18 / 0.72);
+      background: linear-gradient(180deg, var(--card-wash-a), var(--card-wash-b)), var(--card-phone);
     }
   }
 
@@ -199,24 +403,70 @@ body {
   .hud-scanlines {
     background: repeating-linear-gradient(
       to bottom,
-      rgb(125 211 252 / 0.045) 0,
-      rgb(125 211 252 / 0.045) 1px,
+      var(--scan) 0,
+      var(--scan) 1px,
       transparent 1px,
       transparent 4px
     );
-    mix-blend-mode: screen;
+    mix-blend-mode: var(--scan-blend);
   }
   /* Speed lines radiating from the reticle while the zoom is moving (opacity is driven by zoom speed) */
   .hud-streaks {
     background: repeating-conic-gradient(
       from 0deg at var(--cx) var(--cy),
       transparent 0deg 5deg,
-      rgb(125 211 252 / 0.55) 5deg 5.35deg
+      var(--streak) 5deg 5.35deg
     );
     -webkit-mask-image: radial-gradient(circle at var(--cx) var(--cy), transparent 14%, #000 72%);
     mask-image: radial-gradient(circle at var(--cx) var(--cy), transparent 14%, #000 72%);
   }
 
+  /* Primary button: the original gradient on phones, a brushed-metal pill in the desktop themes */
+  .btn-primary {
+    background: var(--btn);
+    color: var(--btn-fg);
+    box-shadow: var(--btn-shadow);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--btn-shadow-hover);
+  }
+  /* Icon tile behind a service icon */
+  .icon-tile {
+    background: var(--icon-bg);
+    box-shadow: inset 0 0 0 1px var(--icon-ring);
+  }
+  /* The selected option tab */
+  .picker-active {
+    background: var(--picker-active);
+    box-shadow: var(--picker-glow);
+  }
+  /* Thin progress/meter fills */
+  .bar-fill {
+    background: var(--progress);
+  }
+  /* A glowing dot (rail markers, rung anchors) */
+  .dot-glow {
+    background-color: var(--color-cyan);
+    box-shadow: var(--dot-glow);
+  }
+  /* DNA backdrop: haze and the soft glow behind the helix */
+  .dna-haze {
+    background:
+      radial-gradient(ellipse 60% 70% at 68% 45%, var(--haze-a), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 8% 0%, var(--haze-b), transparent 70%);
+  }
+  .dna-orb {
+    background: radial-gradient(closest-side, var(--orb-a), var(--orb-b) 55%, transparent);
+  }
+  /* Soft glows inside the closing call-to-action card, and the line joining the process steps */
+  .cta-glow {
+    background:
+      radial-gradient(ellipse 70% 90% at 50% 120%, var(--cta-a), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 85% -10%, var(--cta-b), transparent 70%);
+  }
+  .step-rule {
+    background: linear-gradient(90deg, transparent, var(--rule-a), var(--rule-b), transparent);
+  }
   .eyebrow {
     font-family: var(--font-mono);
     font-size: 0.75rem;
