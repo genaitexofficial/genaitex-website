@@ -90,6 +90,41 @@ export const calloutSlots = [
   { pos: "motion-safe:lg:left-[67%] motion-safe:xl:left-[64%] motion-safe:lg:bottom-[max(6%,1.5rem)]", line: [70, 88, 73, 60] },
 ] as const;
 
+/**
+ * Large screens: the chapter's parts fade (and slide) themselves, not the chapter as a whole. The cards are glass with
+ * a backdrop blur, and an ancestor with `opacity` below 1 would cut a blur off from the DNA behind it. The blur is also
+ * dropped for the chapters that are not showing. (Below 1024px the chapter itself still fades, see its classes.)
+ */
+export const FADE =
+  "lg:motion-safe:transition-[opacity,transform,translate] lg:motion-safe:duration-[450ms] lg:motion-safe:ease-out lg:motion-safe:group-data-[state=before]/ch:opacity-0 lg:motion-safe:group-data-[state=before]/ch:[transform:translateY(-1.5rem)] lg:motion-safe:group-data-[state=after]/ch:opacity-0 lg:motion-safe:group-data-[state=after]/ch:[transform:translateY(1.5rem)]";
+export const GLASS_ACTIVE =
+  "lg:group-data-[state=before]/ch:[backdrop-filter:none] lg:group-data-[state=after]/ch:[backdrop-filter:none]";
+
+/** The glass a card wears on large screens: stack tone N (pearl, silver, ash, gunmetal, graphite) and its ink. */
+export const glassTone = (n: number) =>
+  ({
+    "--g": `var(--stack-${n})`,
+    "--glass-tint": `var(--stack-tint-${n})`,
+    "--glass-ink": `var(--stack-ink-${n})`,
+    "--glass-shine": `var(--stack-shine-${n})`,
+    "--glass-onink": `var(--stack-onink-${n})`,
+  }) as CSSProperties;
+
+/**
+ * A chapter with a sixth card (Home scroll 2, the Services websites chapter) on screens 1280px and wider: card 3 moves up
+ * to the middle of the left column and the sixth card takes the bottom-left corner. Below 1280px the sixth card is
+ * hidden and card 3 stays where `calloutSlots` puts it.
+ */
+export const extraSlots = [
+  calloutSlots[0],
+  calloutSlots[1],
+  {
+    pos: "motion-safe:lg:left-[max(41%,var(--edge))] motion-safe:lg:bottom-[max(6%,1.5rem)] motion-safe:xl:bottom-auto motion-safe:xl:top-1/2 motion-safe:xl:-translate-y-1/2",
+    line: [52, 50, 61, 50],
+  },
+  calloutSlots[3],
+] as const;
+
 /** The right edge of the text column plus a gap: the left-hand cards start no further left than this. */
 export const textEdge = "calc(max(2rem, (100vw - 80rem) / 2 + 2rem) + min(28rem, 36vw) + 1.5rem)";
 
@@ -276,8 +311,12 @@ export function ExtraCard({ card }: { card: Callout }) {
   return (
     <aside
       aria-label={card.title}
-      style={{ "--c": "var(--slot-6)", "--t": "var(--slot-text-6)", "--edge": textEdge } as CSSProperties}
-      className="slot-card hidden w-64 rounded-3xl p-4 motion-reduce:mt-4 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:left-[max(41%,var(--edge))] motion-safe:xl:top-1/2 motion-safe:xl:block motion-safe:xl:w-[17rem] motion-safe:xl:-translate-y-1/2"
+      style={{ "--c": "var(--slot-6)", "--edge": textEdge, ...glassTone(5) } as CSSProperties}
+      className={clsx(
+        "slot-card liquid-glass [--t:var(--slot-text-6)] hidden w-64 rounded-3xl p-4 motion-reduce:mt-4 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:left-[max(41%,var(--edge))] motion-safe:xl:bottom-[max(6%,1.5rem)] motion-safe:xl:block motion-safe:xl:w-[17rem]",
+        FADE,
+        GLASS_ACTIVE,
+      )}
     >
       <div className="flex items-start gap-2.5">
         <span aria-hidden className="slot-chip mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg">
@@ -301,9 +340,11 @@ export function InfoCard({ card, layout = "float" }: { card: Chapter["card"]; la
   return (
     <aside
       aria-label={card.title}
-      style={{ "--c": "var(--slot-5)", "--t": "var(--slot-text-5)" } as CSSProperties}
+      style={{ "--c": "var(--slot-5)", ...glassTone(1) } as CSSProperties}
       className={clsx(
-        "slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm xl:w-[17rem]",
+        "slot-card liquid-glass [--t:var(--slot-text-5)] hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm xl:w-[17rem]",
+        FADE,
+        GLASS_ACTIVE,
         // the Home list shows headings only: no info card beside the DNA
         layout === "float" && "motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-1/2 motion-safe:xl:-translate-y-1/2 motion-safe:xl:block",
       )}
@@ -376,13 +417,21 @@ function AnchorLine({ anchor, from, size, k }: { anchor: Anchor; from: readonly 
  * Connector lines from the option cards to the helix rungs they point at. Large screens use the desktop
  * layout; phones and tablets use their own (`phoneSlots`), so each is drawn in its own box.
  */
-export function AnchorLines({ anchors, listShown = false }: { anchors: Anchor[]; listShown?: boolean }) {
+export function AnchorLines({
+  anchors,
+  listShown = false,
+  slots = calloutSlots,
+}: {
+  anchors: Anchor[];
+  listShown?: boolean;
+  slots?: readonly { line: readonly number[] }[];
+}) {
   return (
     <>
       {/* on large screens the lines serve the floating cards, so they fade away while the glass stack is showing */}
       <AnchorSet
         anchors={anchors}
-        slots={calloutSlots}
+        slots={slots}
         className={clsx("hidden motion-safe:lg:block transition-opacity duration-500", listShown && "motion-safe:lg:opacity-0")}
       />
       <AnchorSet anchors={anchors} slots={phoneSlots} className="motion-safe:lg:hidden" />

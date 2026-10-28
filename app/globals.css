@@ -117,6 +117,12 @@
   --stack-tint-5: 0.42;
   --stack-ink-5: 255 255 255;
   --stack-shine-5: 0.3;
+  --stack-onink-1: 21 22 26;
+  --stack-onink-2: 21 22 26;
+  --stack-onink-3: 21 22 26;
+  --stack-onink-4: 21 22 26;
+  --stack-onink-5: 21 22 26;
+  --glass-under-card: rgb(22 23 27 / 0.96);
   --glass-shadow: 0 0 0;
   --haze-a: rgb(34 150 255 / 0.14);
   --haze-b: rgb(40 80 255 / 0.14);
@@ -221,6 +227,12 @@
     --stack-tint-5: 0.42;
     --stack-ink-5: 255 255 255;
     --stack-shine-5: 0.3;
+    --stack-onink-1: 21 22 26;
+    --stack-onink-2: 21 22 26;
+    --stack-onink-3: 21 22 26;
+    --stack-onink-4: 21 22 26;
+    --stack-onink-5: 21 22 26;
+    --glass-under-card: rgb(22 23 27 / 0.96);
     --glass-shadow: 0 0 0;
     --haze-a: rgb(210 214 222 / 0.07);
     --haze-b: rgb(160 166 176 / 0.06);
@@ -304,6 +316,12 @@
     --stack-tint-5: 0.9;
     --stack-ink-5: 246 244 239;
     --stack-shine-5: 0.2;
+    --stack-onink-1: 246 244 239;
+    --stack-onink-2: 246 244 239;
+    --stack-onink-3: 246 244 239;
+    --stack-onink-4: 21 22 26;
+    --stack-onink-5: 21 22 26;
+    --glass-under-card: rgb(255 255 255 / 0.94);
     --glass-shadow: 27 28 31;
     --slot-1: 38 40 45; /* the cards wear the theme's own finishes: gunmetal to ash on light */
     --slot-2: 76 80 88;
@@ -504,17 +522,18 @@ body {
       0 0 14px 3px rgb(var(--c) / 0.6);
   }
 
-  /* Liquid glass (the Home stack): translucent glass in the site's own finishes (pearl, silver, ash, gunmetal) that
-     softens the DNA behind it, with a bright specular rim and sheen. Set --c (the tone), --glass-tint, --glass-ink
-     and --glass-shine (how much white gloss; less on dark blocks so the text keeps its contrast) on the block, from
-     --stack-N. The blur is the only backdrop-filter on the site, so it is limited to these four blocks. */
+  /* Liquid glass (the Home stack and the floating cards on large screens): translucent glass in the site's own
+     finishes (pearl, silver, ash, gunmetal, graphite) that softens the DNA behind it, with a bright specular rim
+     and sheen. Set --c or --g (the tone), --glass-tint, --glass-ink and --glass-shine (how much white gloss; less on
+     dark blocks so the text keeps its contrast) on the block, from --stack-N. The blur is the one costly effect on
+     the site, so it is limited to these blocks and drops away on a device that cannot keep up (see glassBlur.ts). */
   .liquid-glass {
     position: relative;
     isolation: isolate;
     color: rgb(var(--glass-ink));
     background:
       linear-gradient(135deg, rgb(255 255 255 / calc(0.3 * var(--glass-shine, 1))), rgb(255 255 255 / calc(0.04 * var(--glass-shine, 1))) 42%, rgb(255 255 255 / calc(0.12 * var(--glass-shine, 1)))),
-      linear-gradient(rgb(var(--c) / var(--glass-tint)), rgb(var(--c) / var(--glass-tint))),
+      linear-gradient(rgb(var(--g, var(--c)) / var(--glass-tint)), rgb(var(--g, var(--c)) / var(--glass-tint))),
       var(--glass-under);
     -webkit-backdrop-filter: blur(18px) saturate(1.8);
     backdrop-filter: blur(18px) saturate(1.8);
@@ -555,6 +574,23 @@ body {
     [data-glass] .liquid-glass {
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
+    }
+  }
+
+  /* Phones and tablets: the cards keep their original near-solid look (the glass is for large screens) */
+  @media (max-width: 1023px) {
+    .slot-card.liquid-glass {
+      color: inherit;
+      background: var(--card-solid);
+      box-shadow:
+        inset 4px 0 0 rgb(var(--c)),
+        0 18px 38px -16px rgb(var(--c) / 0.65),
+        0 2px 8px -2px rgb(0 0 0 / 0.2);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .slot-card.liquid-glass::before {
+      display: none;
     }
   }
 
@@ -701,5 +737,31 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * The floating cards on large screens wear the same glass as the Home stack: each card passes --g (its tone) and
+ * --glass-tint / --glass-ink / --glass-shine / --glass-onink from the --stack-N tokens. The text variables follow the
+ * ink, so text-fg / text-muted read on dark glass too; the icon chip and the Book button take the ink colour. Unlayered,
+ * so these win over the utility-set --t and the .btn-primary colours. Phones and tablets are not touched.
+ */
+@media (min-width: 1024px) {
+  .slot-card.liquid-glass {
+    --t: var(--glass-ink);
+    --glass-under: var(--glass-under-card);
+    --color-fg: rgb(var(--glass-ink));
+    --color-muted: rgb(var(--glass-ink) / 0.78);
+    --color-subtle: rgb(var(--glass-ink) / 0.62);
+    border-color: transparent;
+  }
+  .slot-card.liquid-glass .slot-chip {
+    background: rgb(var(--glass-ink) / 0.1);
+    border-color: rgb(var(--glass-ink) / 0.28);
+  }
+  .slot-card.liquid-glass .btn-primary {
+    background: rgb(var(--glass-ink));
+    color: rgb(var(--glass-onink));
+    box-shadow: none;
   }
 }

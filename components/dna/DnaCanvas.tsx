@@ -190,6 +190,12 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
             pick = i;
           }
         }
+        if (wide && pick >= 0 && best > director.reach2) {
+          // nothing free near where this line wants to end: rest under its card rather than stretch across the helix
+          pick = -1;
+          bx = a.rest.x;
+          by = a.rest.y * r;
+        }
         if (wide && pick >= 0) director.claim(pick);
         const cur = smooth.current[k];
         cur.x += (bx - cur.x) * follow;

@@ -311,6 +311,8 @@ export function createDirector(out: DirectorOutputs) {
     claim(i: number) {
       claimed.push(i);
     },
+    /** A dot only takes a base pair this close to where its line prefers to end (squared, in stage percent); farther, it rests. */
+    reach2: 18 * 18,
     /** The small-viewport height in px (the stage's `100svh`), which never changes as mobile toolbars slide. */
     setSvh(px: number) {
       svh = px;

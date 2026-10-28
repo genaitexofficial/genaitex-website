@@ -10,9 +10,13 @@ import { chapterAliases, type Chapter } from "@/lib/chapters";
 import { StageScrim } from "./StageScrim";
 import {
   calloutSlots,
+  extraSlots,
   phoneSlots,
   stageCx,
   textEdge,
+  FADE,
+  GLASS_ACTIVE,
+  glassTone,
   CardExtras,
   ExtraCard,
   ChapterIcon,
@@ -26,6 +30,7 @@ import {
 import { useDna } from "@/components/dna/DnaProvider";
 import { useMediaQuery } from "@/components/dna/useScene";
 import { useMagneticSettle } from "./useMagneticSettle";
+import { useGlassFlat } from "./glassBlur";
 import { StageHud } from "./StageHud";
 
 /**
@@ -59,9 +64,9 @@ const ChapterItem = memo(function ChapterItem({
           "group/ch relative flex flex-col px-5 py-20 sm:px-8",
           // pinned: every chapter fills the stage and fades in/out by state
           "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-[4.25rem] motion-safe:pt-24",
-          "motion-safe:transition-[opacity,transform] motion-safe:duration-[450ms] motion-safe:ease-out",
-          "motion-safe:data-[state=before]:pointer-events-none motion-safe:data-[state=before]:-translate-y-6 motion-safe:data-[state=before]:opacity-0",
-          "motion-safe:data-[state=after]:pointer-events-none motion-safe:data-[state=after]:translate-y-6 motion-safe:data-[state=after]:opacity-0",
+          "max-lg:motion-safe:transition-[opacity,transform] max-lg:motion-safe:duration-[450ms] max-lg:motion-safe:ease-out",
+          "motion-safe:data-[state=before]:pointer-events-none max-lg:motion-safe:data-[state=before]:-translate-y-6 max-lg:motion-safe:data-[state=before]:opacity-0",
+          "motion-safe:data-[state=after]:pointer-events-none max-lg:motion-safe:data-[state=after]:translate-y-6 max-lg:motion-safe:data-[state=after]:opacity-0",
           "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16",
         )}
       >
@@ -75,6 +80,7 @@ const ChapterItem = memo(function ChapterItem({
             list
               ? "motion-safe:lg:left-12 motion-safe:lg:w-[min(28rem,36%)]"
               : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[min(28rem,36%)]",
+            FADE,
             // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
             "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
           )}
@@ -141,7 +147,7 @@ const ChapterItem = memo(function ChapterItem({
           aria-label={`${c.eyebrow}: options`}
         >
           {c.callouts.map((co, k) => {
-            const slot = calloutSlots[k];
+            const slot = (c.extra && !list ? extraSlots : calloutSlots)[k];
             const phone = phoneSlots[k];
             const Wrapper = co.jumpTo ? "button" : "div";
             return (
@@ -150,6 +156,7 @@ const ChapterItem = memo(function ChapterItem({
                 style={
                   {
                     "--edge": textEdge,
+                    ...glassTone(k + 1),
                     "--px": phone.x,
                     "--py": phone.y,
                     "--c": `var(--slot-${k + 1})`,
@@ -167,9 +174,11 @@ const ChapterItem = memo(function ChapterItem({
                     ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) }
                     : {})}
                   className={clsx(
-                    "slot-card flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight",
+                    "slot-card liquid-glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight",
                     "lg:grid lg:grid-cols-[2rem_minmax(0,1fr)] lg:items-start lg:gap-y-0 lg:rounded-2xl lg:p-4 motion-reduce:grid motion-reduce:grid-cols-[2rem_minmax(0,1fr)] motion-reduce:items-start motion-reduce:gap-y-0 motion-reduce:rounded-2xl motion-reduce:p-4",
                     co.jumpTo && "hover:-translate-y-0.5",
+                    FADE,
+                    GLASS_ACTIVE,
                   )}
                 >
                   <span
@@ -254,6 +263,19 @@ export function ChapterStage({
   }, [director, scrollYProgress, presence, keys, cxs]);
 
   const listShown = stackFirst && active === 0;
+
+  // Where the connectors start and aim: the active chapter's card positions (a chapter with a sixth card moves card 3)
+  const wide = useMediaQuery("(min-width: 1280px)");
+  const slots = chapters[active].extra && !listShown && wide ? extraSlots : calloutSlots;
+  useEffect(() => {
+    anchors.forEach((a, k) => {
+      a.rest.x = slots[k].line[0];
+      a.rest.y = slots[k].line[1];
+      a.target.x = slots[k].line[2];
+      a.target.y = slots[k].line[3];
+    });
+  }, [anchors, slots]);
+  const glassFlat = useGlassFlat();
 
   // Where the active chapter's cards are (large screens), so the connector dots never end up under one.
   const stageRef = useRef<HTMLDivElement>(null);
@@ -373,13 +395,13 @@ export function ChapterStage({
       style={{ "--n": chapters.length } as CSSProperties}
       className="relative motion-safe:h-[calc(var(--n)*100svh)]"
     >
-      <div ref={stageRef} className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
+      <div ref={stageRef} data-glass={glassFlat ? "flat" : "blur"} className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
         <StageScrim stack={stackFirst} listShown={listShown} />
 
         {pinned && (
           <>
             <StageHud progress={scrollYProgress} changes={changes} cx={cxs[active]} reticle={!listShown} />
-            <AnchorLines anchors={anchors} listShown={listShown} />
+            <AnchorLines anchors={anchors} listShown={listShown} slots={slots} />
             <ScrollHint visible={active === 0} />
             <Pager total={chapters.length} active={active} onSelect={scrollToChapter} />
           </>
