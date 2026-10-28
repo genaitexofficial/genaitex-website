@@ -171,20 +171,26 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
     // Callout lines belong to the chapter stage
     if (cam.stage > 0.02) {
       const follow = 1 - Math.exp(-Math.min(0.1, delta) / 0.13); // the dots trail their rungs by ~0.13 s at any frame rate
+      director.beginAnchors();
       anchors.forEach((a, k) => {
-        const aim = width >= 1024 ? a.target : a.phone;
+        const wide = width >= 1024;
+        const aim = wide ? a.target : a.phone;
         const r = director.stageRatio(height); // stage percentages are of svh, rung percentages of the canvas
         let best = Infinity;
-        let bx = aim.x;
-        let by = aim.y * r;
+        let bx = wide ? a.rest.x : aim.x;
+        let by = (wide ? a.rest.y : aim.y) * r;
+        let pick = -1;
         for (let i = 0; i < rungs.length; i++) {
+          if (wide && !director.usable(i, screen.x[i], screen.y[i] / r)) continue;
           const d = (screen.x[i] - aim.x) ** 2 + (screen.y[i] - aim.y * r) ** 2;
           if (d < best) {
             best = d;
             bx = screen.x[i];
             by = screen.y[i];
+            pick = i;
           }
         }
+        if (wide && pick >= 0) director.claim(pick);
         const cur = smooth.current[k];
         cur.x += (bx - cur.x) * follow;
         cur.y += (by - cur.y) * follow;

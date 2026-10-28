@@ -155,19 +155,19 @@ export function OptionPicker({
         {s.pricing && (
           <div className="mt-10 border-t border-line pt-8">
             <h4 className="eyebrow mb-5">Pricing</h4>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(13rem,1fr))]">
               {s.pricing.map((tier) => (
                 <li key={tier.id} className="rounded-2xl border border-line bg-wash/[0.03] p-5">
                   <p className="font-medium text-fg">{tier.label}</p>
                   {tier.detail && <p className="mt-1 text-sm text-muted">{tier.detail}</p>}
                   <p className="mt-4 font-mono text-lg tracking-tight text-cyan">
-                    <Price inr={tier.inr} />
+                    {tier.priceLabel ?? <Price inr={tier.inr} />}
                   </p>
                   <Link
-                    href={`/contact?type=${s.contactType}&plan=${tier.id}`}
+                    href={`/contact?type=${tier.type ?? s.contactType}&plan=${tier.id}`}
                     className="mt-4 inline-flex items-center gap-1.5 text-sm text-fg underline decoration-wash/20 underline-offset-4 transition-colors hover:decoration-cyan"
                   >
-                    {tier.inr === undefined ? "Get a quote" : "Choose this"}
+                    {tier.inr === undefined ? (tier.action ?? "Get a quote") : "Choose this"}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                 </li>

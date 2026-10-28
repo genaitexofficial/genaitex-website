@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  ArrowRight,
   Bot,
   ChartColumn,
+  Check,
   ChevronLeft,
   ChevronRight,
   CodeXml,
@@ -31,11 +33,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { clsx } from "clsx";
+import Link from "next/link";
 import * as m from "motion/react-m";
 import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useMotionValue, useTransform, type MotionValue } from "motion/react";
 import type { Anchor } from "@/components/dna/anchors";
-import type { Chapter, IconKey } from "@/lib/chapters";
+import type { Callout, Chapter, IconKey } from "@/lib/chapters";
 import { Price } from "@/components/currency/Price";
 import { useGlassFlat } from "./glassBlur";
 
@@ -72,13 +75,23 @@ export function ChapterIcon({ name, className }: { name: IconKey; className?: st
   return <Icon aria-hidden className={className} />;
 }
 
-/** Where the four option cards sit around the centrepiece on large screens (percent of the stage). */
+/**
+ * Where the four option cards sit around the centrepiece on large screens: two along the top, two along the
+ * bottom, with the sixth card and the info card between them on either side of the DNA's targeting reticle.
+ * The left-hand cards keep clear of the text column (`--edge`, set on each card), top cards hang from the top
+ * and bottom cards stand on the bottom, so their height never matters. `line` is [x, y of where the connector
+ * starts, then the spot (percent of the stage) where it prefers to meet a base pair]; it starts inside the card
+ * (which covers it), so it comes out of the card's edge whatever the card's height.
+ */
 export const calloutSlots = [
-  { x: "41%", y: "8%", line: [48.5, 19, 54, 36] },
-  { x: "64%", y: "22%", line: [66.5, 33, 71, 45] },
-  { x: "36%", y: "79%", line: [53, 79, 58, 62] },
-  { x: "62%", y: "80%", line: [64, 80, 65, 62] },
+  { pos: "motion-safe:lg:left-[max(41%,var(--edge))] motion-safe:lg:top-[max(8.5%,5.25rem)]", line: [52, 14, 60, 40] },
+  { pos: "motion-safe:lg:left-[67%] motion-safe:xl:left-[64%] motion-safe:lg:top-[max(8.5%,5.25rem)]", line: [70, 14, 73, 40] },
+  { pos: "motion-safe:lg:left-[max(41%,var(--edge))] motion-safe:lg:bottom-[max(6%,1.5rem)]", line: [52, 88, 60, 60] },
+  { pos: "motion-safe:lg:left-[67%] motion-safe:xl:left-[64%] motion-safe:lg:bottom-[max(6%,1.5rem)]", line: [70, 88, 73, 60] },
 ] as const;
+
+/** The right edge of the text column plus a gap: the left-hand cards start no further left than this. */
+export const textEdge = "calc(max(2rem, (100vw - 80rem) / 2 + 2rem) + min(28rem, 36vw) + 1.5rem)";
 
 /**
  * How a chapter presents its four options on large screens: `float` = cards floating around the DNA, with lines to
@@ -187,7 +200,7 @@ export function StageStack({
       className="group/stack hidden motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5"
       data-stack={on ? "on" : "off"}
     >
-      {chapter.callouts.map((co, k) => {
+      {[...chapter.callouts, ...(chapter.extra ? [chapter.extra] : [])].map((co, k) => {
         const Item = co.jumpTo ? "button" : "div";
         return (
           <li
@@ -226,6 +239,63 @@ export function StageStack({
   );
 }
 
+/**
+ * What a card covers and its Book link. Large screens and the stacked layout only: phones keep the compact chip.
+ * The points need some height, so they wait for a screen at least 860px tall (the Book link is always there).
+ */
+export function CardExtras({ includes, book, title }: { includes?: string[]; book?: Callout["book"]; title: string }) {
+  if (!includes && !book) return null;
+  return (
+    <div className="hidden lg:col-span-2 lg:block motion-reduce:col-span-2 motion-reduce:block">
+      {includes && (
+        <ul className="mt-2.5 hidden space-y-1 text-[11.5px] leading-snug text-muted xl:[@media(min-height:860px)]:block motion-reduce:block">
+          {includes.map((t) => (
+            <li key={t} className="flex gap-1.5">
+              <Check aria-hidden className="mt-[3px] h-3 w-3 shrink-0 text-[rgb(var(--t))]" />
+              {t}
+            </li>
+          ))}
+        </ul>
+      )}
+      {book && (
+        <Link
+          href={book.href}
+          aria-label={`${book.label}: ${title}`}
+          className="btn-primary mt-3 inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold"
+        >
+          {book.label}
+          <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/** The sixth card (e.g. "Ready-made UI & websites"): left of the DNA's reticle, mirroring the info card on the right. */
+export function ExtraCard({ card }: { card: Callout }) {
+  return (
+    <aside
+      aria-label={card.title}
+      style={{ "--c": "var(--slot-6)", "--t": "var(--slot-text-6)", "--edge": textEdge } as CSSProperties}
+      className="slot-card hidden w-64 rounded-3xl p-4 motion-reduce:mt-4 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm motion-safe:xl:absolute motion-safe:xl:left-[max(41%,var(--edge))] motion-safe:xl:top-1/2 motion-safe:xl:block motion-safe:xl:w-[17rem] motion-safe:xl:-translate-y-1/2"
+    >
+      <div className="flex items-start gap-2.5">
+        <span aria-hidden className="slot-chip mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg">
+          <ChapterIcon name={card.icon} className="h-[18px] w-[18px]" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-medium text-fg">{card.title}</p>
+          {card.tag && (
+            <p className="mt-0.5 font-mono text-[11px] font-medium tracking-wide text-[rgb(var(--t))]">{card.tag}</p>
+          )}
+          <p className="mt-1 text-xs leading-snug text-muted">{card.detail}</p>
+          <CardExtras includes={card.includes} book={card.book} title={card.title} />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 /** Right-hand info card (the screenshot's "Genetic Code" card): the fifth card colour, bold like the option cards. */
 export function InfoCard({ card, layout = "float" }: { card: Chapter["card"]; layout?: StageLayout }) {
   return (
@@ -233,9 +303,9 @@ export function InfoCard({ card, layout = "float" }: { card: Chapter["card"]; la
       aria-label={card.title}
       style={{ "--c": "var(--slot-5)", "--t": "var(--slot-text-5)" } as CSSProperties}
       className={clsx(
-        "slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm",
+        "slot-card hidden w-64 rounded-3xl p-5 motion-reduce:mt-6 motion-reduce:block motion-reduce:w-full motion-reduce:max-w-sm xl:w-[17rem]",
         // the Home list shows headings only: no info card beside the DNA
-        layout === "float" && "motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-[44%] motion-safe:xl:block",
+        layout === "float" && "motion-safe:xl:absolute motion-safe:xl:right-[6.5rem] motion-safe:xl:top-1/2 motion-safe:xl:-translate-y-1/2 motion-safe:xl:block",
       )}
     >
       <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-[rgb(var(--t))]">{card.title}</p>

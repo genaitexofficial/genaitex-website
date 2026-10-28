@@ -142,6 +142,10 @@ export function createDirector(out: DirectorOutputs) {
   const rungs: RungPositions = { x: new Float32Array(0), y: new Float32Array(0), w: 0, h: 0 };
   /** Where the targeting reticle (the middle of the helix) is, in px of the canvas. */
   const reticle = { x: 0, y: 0 };
+  /** Rectangles (x0, y0, x1, y1, ... in percent of the stage) the connector dots keep out from under: the cards. */
+  const keepOut: number[] = [];
+  /** The rungs the connector dots have taken this frame, so two dots never sit on the same base pair. */
+  const claimed: number[] = [];
 
   const camera: Camera = {
     zoom: 1, slide: 0, roll: 0, angle: 0, cx: 50, cy: 50, dim: 1, stage: 0, fit: 1, finish, moving: true,
@@ -286,6 +290,26 @@ export function createDirector(out: DirectorOutputs) {
     /** Called with the chapter stage on the current page, or null when it leaves. */
     setStage(next: StageSlot | null) {
       stage = next;
+    },
+    /** The cards on the stage (percent of the stage, four numbers each), so a connector never ends under one. */
+    setKeepOut(rects: readonly number[]) {
+      keepOut.length = 0;
+      for (const v of rects) keepOut.push(v);
+    },
+    /** Start choosing a rung for each connector dot (large screens): none are taken yet. */
+    beginAnchors() {
+      claimed.length = 0;
+    },
+    /** True if rung `i`, at the point (percent of the stage), is free for a dot: on screen, not under a card, not already taken. */
+    usable(i: number, x: number, y: number) {
+      if (x < 2 || x > 98 || y < 9 || y > 97 || claimed.includes(i)) return false;
+      for (let j = 0; j < keepOut.length; j += 4) {
+        if (x >= keepOut[j] && y >= keepOut[j + 1] && x <= keepOut[j + 2] && y <= keepOut[j + 3]) return false;
+      }
+      return true;
+    },
+    claim(i: number) {
+      claimed.push(i);
     },
     /** The small-viewport height in px (the stage's `100svh`), which never changes as mobile toolbars slide. */
     setSvh(px: number) {

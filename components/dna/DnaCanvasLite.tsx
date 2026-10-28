@@ -257,20 +257,25 @@ export default function DnaCanvasLite({
       director.publishRungs(rx, ry, w, h);
       if (cam.stage > 0.02) {
         const r = director.stageRatio(h); // stage percentages are of svh, rung percentages of the canvas
+        director.beginAnchors();
         for (let k = 0; k < anchors.length; k++) {
           const a = anchors[k];
           const aim = wide ? a.target : a.phone;
           let best = Infinity;
-          let bx = aim.x;
-          let by = aim.y * r;
+          let bx = wide ? a.rest.x : aim.x;
+          let by = (wide ? a.rest.y : aim.y) * r;
+          let pick = -1;
           for (let i = 0; i < rungs.length; i++) {
+            if (wide && !director.usable(i, rx[i], ry[i] / r)) continue;
             const d = (rx[i] - aim.x) ** 2 + (ry[i] - aim.y * r) ** 2;
             if (d < best) {
               best = d;
               bx = rx[i];
               by = ry[i];
+              pick = i;
             }
           }
+          if (wide && pick >= 0) director.claim(pick);
           const e = easedAnchors[k];
           e.x += (bx - e.x) * follow;
           e.y += (by - e.y) * follow;

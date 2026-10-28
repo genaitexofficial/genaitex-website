@@ -39,6 +39,12 @@ export interface Callout {
   jumpTo?: string;
   /** A price line under the title: "From ₹…" in the visitor's currency, or "Custom quote" when `inr` is left out. */
   price?: { inr?: number };
+  /** Shown instead of a price line (a card that is not priced per package, e.g. "Ready to launch"). */
+  tag?: string;
+  /** A few short points about what the card covers (large screens and the stacked layout; phones keep the compact chip). */
+  includes?: string[];
+  /** A "Book" link under the card, to the contact form with this option preselected. */
+  book?: { label: string; href: string };
 }
 
 export interface Chapter {
@@ -57,6 +63,8 @@ export interface Chapter {
   card: { title: string; body: string; meter?: { label: string; value: string; fill: number } };
   /** A short strip of facts under the text (large screens and the stacked layout; phones leave it out). */
   proof?: { value: string; label: string }[];
+  /** A card beyond the four options: on a floating-card chapter the sixth card beside the info card (large screens and the stacked layout); on the Home glass stack the fifth block. */
+  extra?: Callout;
   cta: { label: string; href: string };
   secondary?: { label: string; href: string };
 }
@@ -73,7 +81,7 @@ export const homeChapters: Chapter[] = [
     label: "Studio",
     eyebrow: "The building blocks of growth",
     title: "Websites, AI & growth, built by people who've done it for 5 years.",
-    lead: "genaitex is a studio for websites and apps, AI and automation, interfaces, CRM and AI-made ads: everything a business needs to launch and grow, under one roof.",
+    lead: "genaitex is a studio for websites and apps, AI and automation, interfaces, CRM and AI-made ads, plus ready-made UIs and websites you can buy, make your own and launch: everything a business needs, under one roof.",
     body: "We fix what quietly holds businesses back: a slow site that loses visitors, hours lost to manual work, leads that slip through the cracks, ads that get scrolled past.",
     proof: [
       { value: "5 years", label: "in websites, AI & growth" },
@@ -120,6 +128,7 @@ export const homeChapters: Chapter[] = [
       body: "Every launch is checked for speed, accessibility and SEO before it goes live.",
       meter: { label: "Lighthouse target", value: "95+", fill: 0.95 },
     },
+    extra: { title: "Ready-made UI & Websites", detail: "Finished designs and sites, ready to make yours", icon: "layers", jumpTo: "websites" },
     cta: { label: "Start a project", href: "/contact" },
     secondary: { label: "Choose your starting point", href: "#options" },
   },
@@ -129,18 +138,47 @@ export const homeChapters: Chapter[] = [
     label: "Websites & Apps",
     eyebrow: "Websites & Applications",
     title: "Sites, stores and apps built to perform.",
-    lead: "From a fast static website to a custom online store or a full web app: designed and built end to end, and easy for you to run.",
+    lead: "From a fast static website to a custom online store or a full web app, designed and built end to end. Or start from one of our ready-made UIs and websites.",
     body: "Static websites are pre-rendered and served from the edge, ecommerce can be a custom Shopify build or a fully custom storefront, and apps are built around how your team works. Prices are starting points; the final amount is confirmed in your quote.",
     camera: { zoom: 2.4, focus: 2.2, roll: 0.06 },
     callouts: [
-      { title: "Static website", detail: "Marketing sites, landing pages, portfolios", icon: "globe", price: { inr: 2000 } },
-      { title: "Ecommerce, 5 pages", detail: "A custom store built around your products", icon: "store", price: { inr: 10000 } },
-      { title: "Ecommerce, 10 pages", detail: "More pages, the same custom build", icon: "package", price: { inr: 20000 } },
+      {
+        title: "Static website",
+        detail: "Marketing sites, landing pages, portfolios",
+        icon: "globe",
+        price: { inr: 2000 },
+        includes: ["Fast, pre-rendered pages", "Responsive and SEO-ready", "Hosting and analytics set up"],
+        book: { label: "Book", href: "/contact?type=web&plan=static" },
+      },
+      {
+        title: "Ecommerce, 5 pages",
+        detail: "A custom store built around your products",
+        icon: "store",
+        price: { inr: 10000 },
+        includes: ["Shopify or fully custom store", "Product pages, cart, checkout", "Payments and analytics linked"],
+        book: { label: "Book", href: "/contact?type=web&plan=ecom-5" },
+      },
+      {
+        title: "Ecommerce, 10 pages",
+        detail: "More pages, the same custom build",
+        icon: "package",
+        price: { inr: 20000 },
+        includes: ["Everything in the 5-page store", "Ten pages for your content", "Payments and analytics linked"],
+        book: { label: "Book", href: "/contact?type=web&plan=ecom-10" },
+      },
       { title: "Web apps & dashboards", detail: "Built around how your team works", icon: "code", price: {} },
     ],
     card: {
       title: "Ideal for",
       body: "Businesses, brands and teams that need a premium site, a store that converts, or software that fits.",
+    },
+    extra: {
+      title: "Ready-made UI & websites",
+      detail: "Finished designs and sites, ready to make yours",
+      icon: "layers",
+      tag: "Ready to launch",
+      includes: ["Browse finished UIs and sites", "Adapted to your brand", "Faster than a custom build"],
+      book: { label: "Browse & book", href: "/contact?type=ready" },
     },
     cta: { label: "Get a quote for a website", href: "/contact?type=web" },
     secondary: { label: "See what's included", href: "/services#websites-applications" },

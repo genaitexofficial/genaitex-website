@@ -36,6 +36,7 @@ export function DnaProvider({ children }: { children: React.ReactNode }) {
   const anchors = useAnchors(
     calloutSlots.map((s) => [s.line[2], s.line[3]] as [number, number]),
     phoneSlots.map((s) => [s.line[2], s.line[3]] as [number, number]),
+    calloutSlots.map((s) => [s.line[0], s.line[1]] as [number, number]),
   );
   const dim = useMotionValue(0.4);
   const cx = useMotionValue(50);

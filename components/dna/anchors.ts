@@ -13,12 +13,18 @@ export interface Anchor {
   target: { x: number; y: number };
   /** The same, on phones and tablets. */
   phone: { x: number; y: number };
+  /**
+   * Where the line starts, inside its card (percent of the stage, large screens). When no base pair is free for the
+   * dot (all are under cards or off screen) it rests here, so the line has no length and is not drawn.
+   */
+  rest: { x: number; y: number };
 }
 
 /** Four anchors (one per option card). Hooks must run in a fixed order, so they are written out. */
 export function useAnchors(
   targets: readonly [number, number][],
   phoneTargets: readonly [number, number][],
+  rests: readonly [number, number][],
 ): Anchor[] {
   const x0 = useMotionValue(targets[0][0]);
   const y0 = useMotionValue(targets[0][1]);
@@ -40,6 +46,7 @@ export function useAnchors(
         y,
         target: { x: targets[k][0], y: targets[k][1] },
         phone: { x: phoneTargets[k][0], y: phoneTargets[k][1] },
+        rest: { x: rests[k][0], y: rests[k][1] },
       })),
     // targets are module constants
     // eslint-disable-next-line react-hooks/exhaustive-deps

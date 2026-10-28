@@ -12,6 +12,9 @@ import {
   calloutSlots,
   phoneSlots,
   stageCx,
+  textEdge,
+  CardExtras,
+  ExtraCard,
   ChapterIcon,
   AnchorLines,
   InfoCard,
@@ -71,7 +74,7 @@ const ChapterItem = memo(function ChapterItem({
             // the Home list puts the text hard left (3rem from the edge); other stages line it up with the logo
             list
               ? "motion-safe:lg:left-12 motion-safe:lg:w-[min(28rem,36%)]"
-              : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[28rem]",
+              : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[min(28rem,36%)]",
             // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
             "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
           )}
@@ -146,8 +149,7 @@ const ChapterItem = memo(function ChapterItem({
                 key={co.title}
                 style={
                   {
-                    "--x": slot.x,
-                    "--y": slot.y,
+                    "--edge": textEdge,
                     "--px": phone.x,
                     "--py": phone.y,
                     "--c": `var(--slot-${k + 1})`,
@@ -156,7 +158,8 @@ const ChapterItem = memo(function ChapterItem({
                 }
                 className={clsx(
                   "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem]",
-                  "motion-safe:lg:absolute motion-safe:lg:left-[var(--x)] motion-safe:lg:top-[var(--y)] motion-safe:lg:w-60",
+                  "motion-safe:lg:absolute motion-safe:lg:w-60 motion-safe:xl:w-[17rem]",
+                  slot.pos,
                 )}
               >
                 <Wrapper
@@ -165,7 +168,7 @@ const ChapterItem = memo(function ChapterItem({
                     : {})}
                   className={clsx(
                     "slot-card flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight",
-                    "lg:items-start lg:rounded-2xl lg:p-4 motion-reduce:items-start motion-reduce:rounded-2xl motion-reduce:p-4",
+                    "lg:grid lg:grid-cols-[2rem_minmax(0,1fr)] lg:items-start lg:gap-y-0 lg:rounded-2xl lg:p-4 motion-reduce:grid motion-reduce:grid-cols-[2rem_minmax(0,1fr)] motion-reduce:items-start motion-reduce:gap-y-0 motion-reduce:rounded-2xl motion-reduce:p-4",
                     co.jumpTo && "hover:-translate-y-0.5",
                   )}
                 >
@@ -194,6 +197,7 @@ const ChapterItem = memo(function ChapterItem({
                         Pairs with {co.pairs}
                       </span>
                     )}
+                    <CardExtras includes={co.includes} book={co.book} title={co.title} />
                   </span>
                 </Wrapper>
               </li>
@@ -202,6 +206,7 @@ const ChapterItem = memo(function ChapterItem({
         </ul>
 
         <InfoCard card={c.card} layout={layout} />
+        {c.extra && layout === "float" && <ExtraCard card={c.extra} />}
       </li>
   );
 });
@@ -249,6 +254,44 @@ export function ChapterStage({
   }, [director, scrollYProgress, presence, keys, cxs]);
 
   const listShown = stackFirst && active === 0;
+
+  // Where the active chapter's cards are (large screens), so the connector dots never end up under one.
+  const stageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !pinned) return;
+    let live = true;
+    const measure = () => {
+      if (!live) return;
+      const rects: number[] = [];
+      if (window.innerWidth >= 1024) {
+        const box = stage.getBoundingClientRect();
+        stage.querySelectorAll(`#chapter-${chapters[active].id} .slot-card`).forEach((card) => {
+          const b = card.getBoundingClientRect();
+          if (!b.width) return;
+          const pad = 14; // keep the dot's glow clear of the edge too
+          rects.push(
+            ((b.left - pad - box.left) / box.width) * 100,
+            ((b.top - pad - box.top) / box.height) * 100,
+            ((b.right + pad - box.left) / box.width) * 100,
+            ((b.bottom + pad - box.top) / box.height) * 100,
+          );
+        });
+      }
+      director.setKeepOut(rects);
+    };
+    measure();
+    const settled = setTimeout(measure, 520); // the arriving chapter slides in for 450 ms
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    document.fonts?.ready.then(measure);
+    return () => {
+      live = false;
+      clearTimeout(settled);
+      observer.disconnect();
+      director.setKeepOut([]);
+    };
+  }, [active, chapters, director, pinned]);
   const indexAt = (p: number) => Math.min(last, Math.max(0, Math.round(p * last)));
   const shown = useRef(0);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
@@ -330,7 +373,7 @@ export function ChapterStage({
       style={{ "--n": chapters.length } as CSSProperties}
       className="relative motion-safe:h-[calc(var(--n)*100svh)]"
     >
-      <div className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
+      <div ref={stageRef} className="relative isolate overflow-hidden motion-safe:sticky motion-safe:top-0 motion-safe:h-svh">
         <StageScrim stack={stackFirst} listShown={listShown} />
 
         {pinned && (

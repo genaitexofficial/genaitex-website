@@ -24,4 +24,10 @@ export interface PriceTier {
   label: string;
   detail?: string;
   inr?: number;
+  /** Shown instead of "Custom quote" when there is no amount (e.g. "Browse & book"). */
+  priceLabel?: string;
+  /** Link wording instead of "Get a quote" when there is no amount. */
+  action?: string;
+  /** `/contact?type=…` slug when it differs from the service's own. */
+  type?: string;
 }

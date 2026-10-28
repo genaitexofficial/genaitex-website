@@ -2,6 +2,7 @@ import * as z from "zod/mini";
 
 export const projectTypes = [
   "Websites & Applications",
+  "Ready-made UI & websites",
   "AI, Automation & Integrations",
   "Custom UI Designs",
   "CRM Setup",
@@ -15,6 +16,7 @@ export type ProjectType = (typeof projectTypes)[number];
 /** `/contact?type=…` values, used by the option picker and the stage's call-to-action buttons. */
 export const typeSlugs: Record<string, ProjectType> = {
   web: "Websites & Applications",
+  ready: "Ready-made UI & websites",
   ai: "AI, Automation & Integrations",
   design: "Custom UI Designs",
   crm: "CRM Setup",

@@ -39,6 +39,14 @@ export const websitePricing: PriceTier[] = [
   { id: "ecom-5", label: "Custom Ecommerce website", detail: "5 pages", inr: 10000 },
   { id: "ecom-10", label: "Custom Ecommerce website", detail: "10 pages", inr: 20000 },
   { id: "app", label: "Web apps & dashboards", detail: "Built around how your team works" },
+  {
+    id: "ready",
+    label: "Ready-made UI & websites",
+    detail: "Finished designs and sites, adapted to your brand",
+    priceLabel: "Browse & book",
+    action: "Browse & book",
+    type: "ready",
+  },
 ];
 
 export const services: Service[] = [
@@ -48,13 +56,14 @@ export const services: Service[] = [
     startLabel: "Start a website or app",
     icon: "globe",
     title: "Websites & Applications",
-    summary: "Fast static websites, custom ecommerce stores and web apps, designed and built end to end.",
+    summary: "Fast static websites, custom ecommerce stores, web apps and ready-made UIs and websites, designed and built end to end.",
     pitch:
-      "From a sharp marketing site to a custom online store or a full web application, we design and build it end to end: fast, accessible and easy for you to run. Ecommerce can be a tightly customised Shopify build or a fully custom storefront, and apps are built around how your team actually works.",
+      "From a sharp marketing site to a custom online store or a full web application, we design and build it end to end: fast, accessible and easy for you to run. Ecommerce can be a tightly customised Shopify build or a fully custom storefront, and apps are built around how your team actually works. We also create ready-made UIs and websites that you can buy, adapt to your brand and launch.",
     idealFor:
       "Businesses, brands and teams that need a premium website, an online store that converts, or software that fits the way they work.",
     includes: [
-      "Custom design: no templates, no page-builder bloat",
+      "Custom design for your brand: no page-builder bloat",
+      "Ready-made UIs and websites: finished designs you can buy, have adapted to your brand and launch",
       "Static websites: pre-rendered, fast on any connection and SEO-ready",
       "Custom ecommerce on Shopify (themes or headless) or a fully custom storefront",
       "Product pages, cart, checkout extensions and payment integrations",
