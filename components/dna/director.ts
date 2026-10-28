@@ -49,7 +49,7 @@ export interface Camera {
   dim: number;
   /** Stage weight 0..1. */
   stage: number;
-  /** How much of each bead finish is showing (chrome, pearl, gunmetal; sums to 1). Desktop themes only. */
+  /** How much of each bead finish is showing (chrome, pearl, gunmetal; sums to 1). Unused with the themes off. */
   finish: Readonly<FinishWeights>;
   /** Helix size relative to a full-height desktop view (1 = desktop; narrower phones scale down to fit the width). */
   fit: number;
@@ -177,7 +177,7 @@ export function createDirector(out: DirectorOutputs) {
         roll: amb.roll * 0.3,
         cx: 50,
         cy: ((0.44 * small) / height) * 100,
-        dim: 0.8,
+        dim: 0.66,
       };
     }
     const ambientSpin = wide ? SPIN_DESKTOP : SPIN_PHONE;

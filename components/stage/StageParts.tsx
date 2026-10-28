@@ -131,7 +131,8 @@ export const textEdge = "calc(max(2rem, (100vw - 80rem) / 2 + 2rem) + min(28rem,
 /**
  * How a chapter presents its four options on large screens: `float` = cards floating around the DNA, with lines to
  * it (every chapter of Services, and Home scrolls 2-5); `list` = just the headings, as a glass stack in the middle
- * of the DNA (Home scroll 1). Phones and tablets always get the floating pills.
+ * of the DNA (Home scroll 1). Phones and tablets get the same two layouts, fitted to the screen: a glass stack above
+ * the text card, or compact glass cards around the helix that open a details sheet.
  */
 export type StageLayout = "float" | "list";
 
@@ -210,8 +211,9 @@ export function ScrollHint({ visible }: { visible: boolean }) {
 }
 
 /**
- * Home scroll 1 on large screens: the four options as big blocks of Liquid Glass in the site's own finishes (pearl,
- * silver, ash, gunmetal), with just their headings (and prices), stacked in the middle of the DNA. It lives on the stage, not inside the chapter, so no
+ * Home scroll 1: the options as big blocks of Liquid Glass in the site's own finishes (pearl, silver, ash, gunmetal,
+ * graphite), with just their headings (and prices), stacked over the DNA: in the middle of it on large screens, above the
+ * text card on phones (two columns on tablets). It lives on the stage, not inside the chapter, so no
  * ancestor fades with opacity: a faded ancestor would cut the glass off from the DNA behind it (the blur would
  * show nothing). Each block fades itself instead. The blur is dropped for an opaque frosted fill on a device that
  * cannot keep up (see glassBlur.ts).
@@ -232,7 +234,13 @@ export function StageStack({
       inert={!on}
       data-glass={flat ? "flat" : "blur"}
       style={{ "--cx": `${stageCx.list}%` } as CSSProperties}
-      className="group/stack hidden motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5"
+      className={clsx(
+        "group/stack hidden",
+        // large screens: a column in the middle of the DNA
+        "motion-safe:lg:absolute motion-safe:lg:left-[var(--cx)] motion-safe:lg:top-1/2 motion-safe:lg:flex motion-safe:lg:w-[min(35rem,40%)] motion-safe:lg:-translate-x-1/2 motion-safe:lg:-translate-y-1/2 motion-safe:lg:flex-col motion-safe:lg:gap-2.5",
+        // phones: the five blocks stacked over the helix, above the text card; tablets: two columns, the fifth block across both
+        "motion-safe:max-lg:absolute motion-safe:max-lg:inset-x-5 motion-safe:max-lg:top-[4.5rem] motion-safe:max-lg:grid motion-safe:max-lg:grid-cols-1 motion-safe:max-lg:gap-2 [@media(max-height:720px)]:motion-safe:max-lg:gap-1.5 sm:motion-safe:max-lg:inset-x-8 md:motion-safe:max-lg:grid-cols-2 md:motion-safe:max-lg:gap-2.5",
+      )}
       data-stack={on ? "on" : "off"}
     >
       {[...chapter.callouts, ...(chapter.extra ? [chapter.extra] : [])].map((co, k) => {
@@ -248,22 +256,23 @@ export function StageStack({
                 "--glass-shine": `var(--stack-shine-${k + 1})`,
               } as CSSProperties
             }
+            className={k === 4 ? "md:max-lg:col-span-2" : undefined}
           >
             <Item
               {...(co.jumpTo ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) } : {})}
               className={clsx(
-                "liquid-glass flex min-h-[4.5rem] w-full items-center justify-between gap-4 rounded-[1.75rem] px-6 py-3 text-left xl:min-h-[5.25rem] xl:px-7",
+                "liquid-glass flex min-h-[3.5rem] w-full items-center justify-between gap-3 rounded-3xl px-4 py-2 text-left [@media(max-height:720px)]:max-lg:min-h-[2.5rem] [@media(max-height:720px)]:max-lg:py-1 md:max-lg:min-h-[4.25rem] md:max-lg:px-5 lg:min-h-[4.5rem] lg:gap-4 lg:rounded-[1.75rem] lg:px-6 lg:py-3 xl:min-h-[5.25rem] xl:px-7",
                 "transition-[opacity,translate] duration-[450ms] ease-out group-data-[stack=off]/stack:translate-y-6 group-data-[stack=off]/stack:opacity-0",
                 co.jumpTo && "hover:-translate-y-0.5",
               )}
             >
-              <span className="min-w-0 text-balance text-3xl font-semibold leading-[1.05] tracking-tight xl:text-[2.5rem]">
+              <span className="min-w-0 text-balance text-lg font-semibold leading-[1.1] tracking-tight md:max-lg:text-xl lg:text-3xl lg:leading-[1.05] xl:text-[2.5rem]">
                 {co.title}
               </span>
               {co.price && (
                 <Price
                   inr={co.price.inr}
-                  className="shrink-0 rounded-full bg-[rgb(var(--glass-ink)/0.1)] px-3 py-1 font-mono text-sm font-semibold tracking-wide shadow-[inset_0_0_0_1px_rgb(var(--glass-ink)/0.2)]"
+                  className="shrink-0 rounded-full bg-[rgb(var(--glass-ink)/0.1)] px-2.5 py-1 font-mono text-xs font-semibold tracking-wide shadow-[inset_0_0_0_1px_rgb(var(--glass-ink)/0.2)] lg:px-3 lg:text-sm"
                 />
               )}
             </Item>
@@ -332,6 +341,33 @@ export function ExtraCard({ card }: { card: Callout }) {
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * Phones and tablets: the extra card (the ready-made option) as a fifth compact glass card, with its name and tag.
+ * It sits in the flow right under the third card (so the two can never overlap, whatever the screen height); tapping it
+ * opens the details sheet. Large screens and reduced motion show the full `ExtraCard` instead.
+ */
+export function ExtraChip({ card, onOpen }: { card: Callout; onOpen: (opener: HTMLElement) => void }) {
+  return (
+    <button
+      type="button"
+      aria-haspopup="dialog"
+      onClick={(e) => onOpen(e.currentTarget)}
+      style={{ "--c": "var(--slot-6)", ...glassTone(5) } as CSSProperties}
+      className="slot-card liquid-glass mt-2 hidden w-full items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left text-[13px] leading-tight max-lg:motion-safe:flex md:max-lg:motion-safe:px-4 md:max-lg:motion-safe:py-3 md:max-lg:motion-safe:text-[15px]"
+    >
+      <span aria-hidden className="slot-chip grid h-6 w-6 shrink-0 place-items-center rounded-lg">
+        <ChapterIcon name={card.icon} className="h-3.5 w-3.5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium text-fg">{card.title}</span>
+        {card.tag && (
+          <span className="mt-0.5 block font-mono text-[11px] font-medium tracking-wide text-[rgb(var(--t))]">{card.tag}</span>
+        )}
+      </span>
+    </button>
   );
 }
 
@@ -434,7 +470,11 @@ export function AnchorLines({
         slots={slots}
         className={clsx("hidden motion-safe:lg:block transition-opacity duration-500", listShown && "motion-safe:lg:opacity-0")}
       />
-      <AnchorSet anchors={anchors} slots={phoneSlots} className="motion-safe:lg:hidden" />
+      <AnchorSet
+        anchors={anchors}
+        slots={phoneSlots}
+        className={clsx("motion-safe:lg:hidden transition-opacity duration-500", listShown && "opacity-0")}
+      />
     </>
   );
 }
@@ -466,7 +506,7 @@ function AnchorSet({
   }, [w, h]);
 
   return (
-    <div ref={box} aria-hidden className={clsx("pointer-events-none absolute inset-0", className)}>
+    <div ref={box} aria-hidden data-anchors={slots === phoneSlots ? "phone" : "wide"} className={clsx("pointer-events-none absolute inset-0", className)}>
       {anchors.map((a, k) => (
         <AnchorLine key={`line-${k}`} anchor={a} from={slots[k].line} size={size} k={k} />
       ))}

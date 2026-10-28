@@ -15,7 +15,7 @@ import { MatcapBlend, type Role } from "./matcap";
 const baseKeys = ["A", "T", "G", "C"] as const;
 const BEADS_PER_RUNG = HELIX_FULL.beadsPerHalfRung * 2;
 
-/** The desktop themes paint the beads with matcaps (see matcap.ts); phones and tablets keep real lighting. */
+/** The themes paint the beads with matcaps (see matcap.ts) on every screen; only the original blue look (themes off) keeps real lighting. */
 function useMatcaps(theme: SceneTheme) {
   const set = useMemo(() => {
     if (theme === "legacy") return null;
@@ -101,7 +101,7 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
     }
   }, [backboneData, rungData]);
 
-  // Base-pair colours: the original blues on phones and tablets, lightness steps of the finish on desktop.
+  // Base-pair colours: lightness steps of the finish (the original blues only when the themes are off).
   useLayoutEffect(() => {
     const r = rungBeads.current;
     if (!r) return;

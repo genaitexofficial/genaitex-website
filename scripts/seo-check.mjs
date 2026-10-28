@@ -94,7 +94,7 @@ check("web manifest has a name, three icons and the language", !!man && !!man.na
 for (const ic of ["/icons/192", "/icons/512", "/apple-icon", "/icon.svg", "/opengraph-image"]) { const r = await get(ic); check(`${ic} responds with an image`, r.status === 200 && /image\//.test(r.headers.get("content-type") ?? "")); }
 check("llms.txt is served and lists the service pages", (await get("/llms.txt")).status === 200);
 check("unknown URLs return a real 404", (await get("/this-page-does-not-exist")).status === 404);
-check("theme-color meta is set (dark, plus a light variant for large screens)", info["/"].themeColor >= 2);
+check("theme-color meta is set (dark, plus a light variant)", info["/"].themeColor >= 2);
 
 console.log(`\n${passed}/${total} checks passed`);
 process.exit(passed === total ? 0 : 1);

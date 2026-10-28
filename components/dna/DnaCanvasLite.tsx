@@ -53,7 +53,7 @@ interface SpriteSet {
   large: HTMLCanvasElement[];
 }
 
-/** The original blue beads (phones and tablets). */
+/** The original blue beads (only when the themes are switched off). */
 function legacySprites(): SpriteSet {
   const colorList = ["#2b6fe0", ...baseKeys.map((k) => baseColors[k])];
   // Two resolutions: small sprites for ordinary beads, large ones so zoomed-in beads stay sharp.
@@ -63,7 +63,7 @@ function legacySprites(): SpriteSet {
   };
 }
 
-/** One finish of the desktop themes, built the first time it is needed. */
+/** One finish of the themes, built the first time it is needed. */
 function finishSprites(finish: number, night: boolean): SpriteSet {
   const make = (size: number) => [0, 1, 2, 3, 4].map((kind) => drawSprite(FINISHES[finish], night, kind, size));
   return { small: make(64), large: make(192) };
@@ -200,7 +200,7 @@ export default function DnaCanvasLite({
       for (let k = 1; k <= BUCKETS; k++) counts[k] += counts[k - 1];
       for (let i = 0; i < n; i++) order[counts[keys[i]]++] = i;
 
-      // Which looks to paint: the blue set, or on desktop the finishes in proportion to their weights, each
+      // Which looks to paint: the blue set, or the finishes in proportion to their weights, each
       // laid over the last at its share of the total (an exact weighted mix; usually just one or two).
       const look = themeRef.current;
       let layers = 0;

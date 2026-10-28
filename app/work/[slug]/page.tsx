@@ -54,51 +54,53 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
             <ArrowLeft className="h-4 w-4" aria-hidden /> All work
           </Link>
 
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-violet-soft">
-              {categoryLabels[project.category]}
-            </span>
-            {project.isSample && (
-              <span className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-subtle">
-                Concept
+          <div className="dna-node">
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-violet-soft">
+                {categoryLabels[project.category]}
               </span>
-            )}
+              {project.isSample && (
+                <span className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-subtle">
+                  Concept
+                </span>
+              )}
+            </div>
+
+            <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
+              {project.title}
+            </h1>
+            <p className="mt-6 max-w-2xl text-pretty text-xl leading-relaxed text-muted">
+              {project.tagline}
+            </p>
+
+            <dl className="mt-10 grid gap-6 border-t border-line pt-8 sm:grid-cols-3">
+              <div>
+                <dt className="eyebrow !text-subtle">For</dt>
+                <dd className="mt-2 text-fg">{project.client}</dd>
+              </div>
+              <div>
+                <dt className="eyebrow !text-subtle">Type</dt>
+                <dd className="mt-2 text-fg">{categoryLabels[project.category]}</dd>
+              </div>
+              <div>
+                <dt className="eyebrow !text-subtle">Live site</dt>
+                <dd className="mt-2 text-fg">
+                  {project.url ? (
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 underline decoration-wash/25 underline-offset-4 hover:decoration-cyan"
+                    >
+                      {hostFor(project)} <ArrowUpRight className="h-4 w-4" aria-hidden />
+                    </a>
+                  ) : (
+                    <span className="text-muted">Not public</span>
+                  )}
+                </dd>
+              </div>
+            </dl>
           </div>
-
-          <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
-            {project.title}
-          </h1>
-          <p className="mt-6 max-w-2xl text-pretty text-xl leading-relaxed text-muted">
-            {project.tagline}
-          </p>
-
-          <dl className="mt-10 grid gap-6 border-t border-line pt-8 sm:grid-cols-3">
-            <div>
-              <dt className="eyebrow !text-subtle">For</dt>
-              <dd className="mt-2 text-fg">{project.client}</dd>
-            </div>
-            <div>
-              <dt className="eyebrow !text-subtle">Type</dt>
-              <dd className="mt-2 text-fg">{categoryLabels[project.category]}</dd>
-            </div>
-            <div>
-              <dt className="eyebrow !text-subtle">Live site</dt>
-              <dd className="mt-2 text-fg">
-                {project.url ? (
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 underline decoration-wash/25 underline-offset-4 hover:decoration-cyan"
-                  >
-                    {hostFor(project)} <ArrowUpRight className="h-4 w-4" aria-hidden />
-                  </a>
-                ) : (
-                  <span className="text-muted">Not public</span>
-                )}
-              </dd>
-            </div>
-          </dl>
         </div>
       </header>
 

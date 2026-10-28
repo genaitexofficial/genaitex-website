@@ -62,11 +62,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Phones and tablets are always dark; large screens follow the Day / Night theme (which follows the device)
-  themeColor: [
-    { media: "(min-width: 1024px) and (prefers-color-scheme: light)", color: "#f3f1ec" },
-    { color: "#05060a" },
-  ],
+  // The browser bar follows the device's light / dark setting, like the Day / Night theme does on Auto
+  themeColor: site.desktopThemes
+    ? [{ media: "(prefers-color-scheme: light)", color: "#f3f1ec" }, { color: "#0e0f11" }]
+    : "#05060a",
   colorScheme: "dark",
 };
 

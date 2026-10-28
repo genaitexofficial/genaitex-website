@@ -26,8 +26,8 @@ export const site = {
   // Digits only, with country code (91 = India). Set the env var to an empty string to hide WhatsApp.
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "919912377803",
 
-  // The off-white / silver / ash Day and Night themes (with the navbar button) on screens 1024px and wider.
-  // Set NEXT_PUBLIC_DESKTOP_THEMES=off to go back to the original dark-blue look everywhere.
+  // The off-white / silver / ash Day and Night themes (with the navbar button, or the switch in the phone menu), on
+  // every screen. Set NEXT_PUBLIC_DESKTOP_THEMES=off to go back to the original dark-blue look everywhere.
   desktopThemes: process.env.NEXT_PUBLIC_DESKTOP_THEMES !== "off",
 
   // CONFIGURE: short status line shown above the hero headline. Set to "" to hide.

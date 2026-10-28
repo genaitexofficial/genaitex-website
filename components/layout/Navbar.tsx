@@ -9,7 +9,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ThemeSwitch, ThemeToggle } from "@/components/theme/ThemeToggle";
 import { CurrencyToggle } from "@/components/currency/CurrencyToggle";
 import { site } from "@/lib/site";
 
@@ -56,7 +56,7 @@ export function Navbar() {
           <Logo />
         </Link>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 lg:flex">
           {site.nav.map((item) => (
             <li key={item.href}>
               <Link
@@ -73,7 +73,7 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <CurrencyToggle />
           <ThemeToggle />
           <Button href="/contact" size="md">
@@ -81,7 +81,7 @@ export function Navbar() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <CurrencyToggle className="h-9" />
           <button
             type="button"
@@ -104,7 +104,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="h-[calc(100dvh-4rem)] overflow-y-auto bg-ink/95 px-5 pb-10 pt-6 md:hidden"
+            className="h-[calc(100dvh-4rem)] overflow-y-auto bg-ink/95 px-5 pb-10 pt-6 lg:hidden"
           >
             <ul className="flex flex-col">
               {site.nav.map((item, i) => (
@@ -130,6 +130,7 @@ export function Navbar() {
                 </m.li>
               ))}
             </ul>
+            <ThemeSwitch className="mt-8" />
             <div className="mt-8" onClick={() => setOpen(false)}>
               <Button href="/contact" size="lg" magnetic={false} className="w-full">
                 Start a project

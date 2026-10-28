@@ -2,7 +2,7 @@ import type { SceneTheme } from "@/components/theme/store";
 import { clamp01, easeInOutCubic } from "./helix";
 
 /**
- * The three finishes of the DNA beads on desktop: polished silver chrome, frosted pearl, and gunmetal with
+ * The three finishes of the DNA beads: polished silver chrome, frosted pearl, and gunmetal with
  * silver highlights. Each chapter of a stage wears the next finish and the beads morph between them during the
  * swipe; outside a stage they keep cycling with the distance scrolled. Pure, so the camera director and both
  * renderers share it.
@@ -39,7 +39,7 @@ export function finishWeights(t: number, count: number, wrap: boolean, out: Fini
   return out;
 }
 
-/** What the scene looks like around the beads, per theme (`legacy` is the blue look of phones and tablets). */
+/** What the scene looks like around the beads, per theme (`legacy` is the original blue look, used only with the themes switched off). */
 export const SCENE_LOOK: Record<
   SceneTheme,
   { fog: string; halo: string; haloOpacity: number; dust: string; dustOpacity: number; additive: boolean }

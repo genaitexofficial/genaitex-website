@@ -16,6 +16,8 @@ interface ThemeContextValue {
   resolved: ResolvedTheme;
   /** Auto, then Day, then Night, then back to Auto. */
   cycle: () => void;
+  /** Pick a mode directly (the switch in the mobile menu). */
+  set: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -47,6 +49,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [mode, resolved]);
 
   const cycle = useCallback(() => setMode(mode === "auto" ? "day" : mode === "day" ? "night" : "auto"), [mode]);
-  const value = useMemo(() => ({ mode, resolved, cycle }), [mode, resolved, cycle]);
+  const value = useMemo(() => ({ mode, resolved, cycle, set: setMode }), [mode, resolved, cycle]);
   return <ThemeContext value={value}>{children}</ThemeContext>;
 }

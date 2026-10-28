@@ -3,9 +3,9 @@
 /* ───────────────────────── Design tokens ───────────────────────── */
 /*
  * Colour tokens. They are plain custom properties (not inlined) so a theme can change them at runtime: the
- * values here are the original dark-blue look, used on phones and tablets; on screens 1024px and wider the
- * Day and Night themes below override them (see "Desktop themes"). `cyan` and `violet` are the accent roles:
- * the desktop themes map them to silver, ash and platinum, so no component needs to know about the theme.
+ * values here are the original dark-blue look, kept as the fallback; the Day and Night themes below override
+ * them on every screen (see "Themes"). `cyan` and `violet` are the accent roles: the themes map them to
+ * silver, ash and platinum, so no component needs to know about the theme.
  */
 @theme static {
   --color-ink: #05060a;
@@ -76,7 +76,7 @@
 /* ───────────────────────── Base ───────────────────────── */
 :root {
   color-scheme: dark;
-  /* Everything below is themed: these are the original dark-blue values (phones and tablets). */
+  /* Everything below is themed: these are the original dark-blue values (the fallback without a theme). */
   --accent: 34 211 238; /* rgb triplet of the accent, for translucent uses */
   /* The cards tied to the DNA: one colour per card position (the same on every scroll). --slot-N is the bright
      colour (borders, bars, glow, dots); --slot-text-N is the shade for coloured text (deeper in Day). */
@@ -123,6 +123,8 @@
   --stack-onink-4: 21 22 26;
   --stack-onink-5: 21 22 26;
   --glass-under-card: rgb(22 23 27 / 0.96);
+  --text-tint: 0.2; /* the glass text card on phones and tablets: how much tone and gloss it carries (calmer than a block, so the small text keeps its contrast) */
+  --text-shine: 0.35;
   --glass-shadow: 0 0 0;
   --haze-a: rgb(34 150 255 / 0.14);
   --haze-b: rgb(40 80 255 / 0.14);
@@ -168,217 +170,224 @@
 }
 
 /*
- * Desktop themes (screens 1024px and wider). <html data-theme="day|night"> is set before first paint by the
- * inline script in app/layout.tsx and kept in sync by components/theme/ThemeProvider.tsx: Auto follows the
- * device's light/dark setting, and the navbar button cycles Auto, Day, Night. Both themes are monochrome
- * off-white / silver / ash. Below 1024px nothing here applies, so phones and tablets keep the original look.
+ * Themes, on every screen width. <html data-theme="day|night"> is set before first paint by the inline script in
+ * app/layout.tsx and kept in sync by components/theme/ThemeProvider.tsx: Auto follows the device's light/dark
+ * setting, and the navbar button (the three-way switch in the phone menu) picks Auto, Day or Night. Both themes
+ * are monochrome off-white / silver / ash. Without a theme (scripts off, or NEXT_PUBLIC_DESKTOP_THEMES=off) the
+ * original dark-blue values of :root stay.
  */
-@media (min-width: 1024px) {
-  :root[data-theme="night"] {
-    color-scheme: dark;
-    --color-ink: #0e0f11;
-    --color-surface: #15161a;
-    --color-surface-2: #1c1d22;
-    --color-line: rgb(255 255 255 / 0.09);
-    --color-line-strong: rgb(255 255 255 / 0.17);
-    --color-fg: #edeae4;
-    --color-muted: #a9adb4;
-    --color-subtle: #868a92;
-    --color-violet: #9aa0a8;
-    --color-violet-soft: #c7cbd2;
-    --color-cyan: #e6e9ee;
-    --color-panel: #101113;
-    --color-wash: #ffffff;
-    --accent: 230 233 238;
-    --card-solid: rgb(22 23 27 / 0.96);
-    --slot-1: 244 242 238; /* the cards wear the theme's own finishes: pearl and silver on dark */
-    --slot-2: 214 218 225;
-    --slot-3: 184 189 198;
-    --slot-4: 154 160 170;
-    --slot-5: 200 205 213;
-    --slot-6: 228 231 236;
-    --slot-text-1: 244 242 238;
-    --slot-text-2: 214 218 225;
-    --slot-text-3: 184 189 198;
-    --slot-text-4: 154 160 170;
-    --slot-text-5: 200 205 213;
-    --slot-text-6: 228 231 236;
-    --glass-ink: 255 255 255;
-    --glass-tint: 0.36;
-    --glass-under: rgb(8 9 12 / 0.72);
-    --glass-under-flat: rgb(8 9 12 / 0.9);
-    --stack-1: 244 242 238;
-    --stack-tint-1: 0.2;
-    --stack-ink-1: 255 255 255;
-    --stack-shine-1: 0.35;
-    --stack-2: 200 205 213;
-    --stack-tint-2: 0.2;
-    --stack-ink-2: 255 255 255;
-    --stack-shine-2: 0.35;
-    --stack-3: 140 146 156;
-    --stack-tint-3: 0.2;
-    --stack-ink-3: 255 255 255;
-    --stack-shine-3: 0.35;
-    --stack-4: 84 88 96;
-    --stack-tint-4: 0.3;
-    --stack-ink-4: 255 255 255;
-    --stack-shine-4: 0.35;
-    --stack-5: 66 69 77;
-    --stack-tint-5: 0.42;
-    --stack-ink-5: 255 255 255;
-    --stack-shine-5: 0.3;
-    --stack-onink-1: 21 22 26;
-    --stack-onink-2: 21 22 26;
-    --stack-onink-3: 21 22 26;
-    --stack-onink-4: 21 22 26;
-    --stack-onink-5: 21 22 26;
-    --glass-under-card: rgb(22 23 27 / 0.96);
-    --glass-shadow: 0 0 0;
-    --haze-a: rgb(210 214 222 / 0.07);
-    --haze-b: rgb(160 166 176 / 0.06);
-    --orb-a: rgb(222 226 234 / 0.16);
-    --orb-b: rgb(150 156 168 / 0.07);
-    --glass: rgb(18 19 22 / 0.78);
-    --glass-wash: rgb(255 255 255 / 0.03);
-    --card: rgb(18 19 22 / 0.6);
-    --card-wash-a: rgb(255 255 255 / 0.04);
-    --card-wash-b: rgb(255 255 255 / 0.015);
-    --panel-shadow: none;
-    --card-shadow: none;
-    --card-shadow-hover: none;
-    --grid: rgb(255 255 255 / 0.04);
-    --scan: rgb(225 228 235 / 0.035);
-    --streak: rgb(225 228 235 / 0.45);
-    --ruler: rgb(225 228 235 / 0.55);
-    --spot: rgb(255 255 255 / 0.07);
-    --btn: linear-gradient(180deg, #f6f4ef, #c9ccd3);
-    --btn-fg: #16171a;
-    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.65), 0 8px 30px -12px rgb(230 233 238 / 0.35);
-    --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.85), 0 10px 40px -10px rgb(230 233 238 / 0.5);
-    --sel-bg: rgb(200 204 212 / 0.35);
-    --sel-fg: #fff;
-    --text-gradient: linear-gradient(110deg, #ffffff 0%, #c4c8cf 55%, #8e939b 100%);
-    --logo-a: #f4f2ee;
-    --logo-b: #9aa0a8;
-    --scrim: 14 15 17;
-    --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.02));
-    --picker-glow: 0 0 40px -14px rgb(230 233 238 / 0.4);
-    --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
-    --icon-ring: rgb(255 255 255 / 0.12);
-    --progress: linear-gradient(90deg, #8e939b, #f4f2ee);
-    --dot-glow: 0 0 12px 2px rgb(230 233 238 / 0.5);
-    --cursor: radial-gradient(circle, rgb(255 255 255 / 0.07) 0%, rgb(200 205 214 / 0.03) 40%, transparent 70%);
-    --header-glow: rgb(210 214 222 / 0.08);
-    --cta-a: rgb(200 205 214 / 0.12);
-    --cta-b: rgb(255 255 255 / 0.08);
-    --rule-a: rgb(154 160 168 / 0.6);
-    --rule-b: rgb(230 233 238 / 0.6);
-  }
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --color-ink: #0e0f11;
+  --color-surface: #15161a;
+  --color-surface-2: #1c1d22;
+  --color-line: rgb(255 255 255 / 0.09);
+  --color-line-strong: rgb(255 255 255 / 0.17);
+  --color-fg: #edeae4;
+  --color-muted: #a9adb4;
+  --color-subtle: #868a92;
+  --color-violet: #9aa0a8;
+  --color-violet-soft: #c7cbd2;
+  --color-cyan: #e6e9ee;
+  --color-panel: #101113;
+  --color-wash: #ffffff;
+  --accent: 230 233 238;
+  --card-solid: rgb(22 23 27 / 0.96);
+  --slot-1: 244 242 238; /* the cards wear the theme's own finishes: pearl and silver on dark */
+  --slot-2: 214 218 225;
+  --slot-3: 184 189 198;
+  --slot-4: 154 160 170;
+  --slot-5: 200 205 213;
+  --slot-6: 228 231 236;
+  --slot-text-1: 244 242 238;
+  --slot-text-2: 214 218 225;
+  --slot-text-3: 184 189 198;
+  --slot-text-4: 154 160 170;
+  --slot-text-5: 200 205 213;
+  --slot-text-6: 228 231 236;
+  --glass-ink: 255 255 255;
+  --glass-tint: 0.36;
+  --glass-under: rgb(8 9 12 / 0.72);
+  --glass-under-flat: rgb(8 9 12 / 0.9);
+  --stack-1: 244 242 238;
+  --stack-tint-1: 0.2;
+  --stack-ink-1: 255 255 255;
+  --stack-shine-1: 0.35;
+  --stack-2: 200 205 213;
+  --stack-tint-2: 0.2;
+  --stack-ink-2: 255 255 255;
+  --stack-shine-2: 0.35;
+  --stack-3: 140 146 156;
+  --stack-tint-3: 0.2;
+  --stack-ink-3: 255 255 255;
+  --stack-shine-3: 0.35;
+  --stack-4: 84 88 96;
+  --stack-tint-4: 0.3;
+  --stack-ink-4: 255 255 255;
+  --stack-shine-4: 0.35;
+  --stack-5: 66 69 77;
+  --stack-tint-5: 0.42;
+  --stack-ink-5: 255 255 255;
+  --stack-shine-5: 0.3;
+  --stack-onink-1: 21 22 26;
+  --stack-onink-2: 21 22 26;
+  --stack-onink-3: 21 22 26;
+  --stack-onink-4: 21 22 26;
+  --stack-onink-5: 21 22 26;
+  --glass-under-card: rgb(22 23 27 / 0.96);
+  --text-tint: 0.1;
+  --text-shine: 0.14;
+  --glass-shadow: 0 0 0;
+  --haze-a: rgb(210 214 222 / 0.07);
+  --haze-b: rgb(160 166 176 / 0.06);
+  --orb-a: rgb(222 226 234 / 0.16);
+  --orb-b: rgb(150 156 168 / 0.07);
+  --glass: rgb(18 19 22 / 0.78);
+  --glass-phone: rgb(18 19 22 / 0.84);
+  --glass-wash: rgb(255 255 255 / 0.03);
+  --card: rgb(18 19 22 / 0.6);
+  --card-phone: rgb(18 19 22 / 0.74);
+  --card-wash-a: rgb(255 255 255 / 0.04);
+  --card-wash-b: rgb(255 255 255 / 0.015);
+  --panel-shadow: none;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --grid: rgb(255 255 255 / 0.04);
+  --scan: rgb(225 228 235 / 0.035);
+  --streak: rgb(225 228 235 / 0.45);
+  --ruler: rgb(225 228 235 / 0.55);
+  --spot: rgb(255 255 255 / 0.07);
+  --btn: linear-gradient(180deg, #f6f4ef, #c9ccd3);
+  --btn-fg: #16171a;
+  --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.65), 0 8px 30px -12px rgb(230 233 238 / 0.35);
+  --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.85), 0 10px 40px -10px rgb(230 233 238 / 0.5);
+  --sel-bg: rgb(200 204 212 / 0.35);
+  --sel-fg: #fff;
+  --text-gradient: linear-gradient(110deg, #ffffff 0%, #c4c8cf 55%, #8e939b 100%);
+  --logo-a: #f4f2ee;
+  --logo-b: #9aa0a8;
+  --scrim: 14 15 17;
+  --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.02));
+  --picker-glow: 0 0 40px -14px rgb(230 233 238 / 0.4);
+  --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
+  --icon-ring: rgb(255 255 255 / 0.12);
+  --progress: linear-gradient(90deg, #8e939b, #f4f2ee);
+  --dot-glow: 0 0 12px 2px rgb(230 233 238 / 0.5);
+  --cursor: radial-gradient(circle, rgb(255 255 255 / 0.07) 0%, rgb(200 205 214 / 0.03) 40%, transparent 70%);
+  --header-glow: rgb(210 214 222 / 0.08);
+  --cta-a: rgb(200 205 214 / 0.12);
+  --cta-b: rgb(255 255 255 / 0.08);
+  --rule-a: rgb(154 160 168 / 0.6);
+  --rule-b: rgb(230 233 238 / 0.6);
+}
 
-  :root[data-theme="day"] {
-    color-scheme: light;
-    --color-ink: #f3f1ec;
-    --color-surface: #fbfaf7;
-    --color-surface-2: #e9e7e1;
-    --color-line: rgb(27 28 31 / 0.1);
-    --color-line-strong: rgb(27 28 31 / 0.18);
-    --color-fg: #1b1c1f;
-    --color-muted: #4b4f56;
-    --color-subtle: #656971;
-    --color-violet: #7d828b;
-    --color-violet-soft: #5d626a;
-    --color-cyan: #2b2d31;
-    --color-panel: #fbfaf7;
-    --color-wash: #1b1c1f;
-    --accent: 43 45 49;
-    --card-solid: rgb(255 255 255 / 0.97);
-    --glass-ink: 21 22 26;
-    --glass-tint: 0.58;
-    --glass-under: rgb(255 255 255 / 0.22);
-    --glass-under-flat: rgb(243 241 236 / 0.82);
-    --stack-1: 255 255 255;
-    --stack-tint-1: 0.72;
-    --stack-ink-1: 21 22 26;
-    --stack-shine-1: 1;
-    --stack-2: 212 216 223;
-    --stack-tint-2: 0.72;
-    --stack-ink-2: 21 22 26;
-    --stack-shine-2: 1;
-    --stack-3: 156 161 170;
-    --stack-tint-3: 0.72;
-    --stack-ink-3: 21 22 26;
-    --stack-shine-3: 1;
-    --stack-4: 58 61 67;
-    --stack-tint-4: 0.88;
-    --stack-ink-4: 246 244 239;
-    --stack-shine-4: 0.25;
-    --stack-5: 27 28 31;
-    --stack-tint-5: 0.9;
-    --stack-ink-5: 246 244 239;
-    --stack-shine-5: 0.2;
-    --stack-onink-1: 246 244 239;
-    --stack-onink-2: 246 244 239;
-    --stack-onink-3: 246 244 239;
-    --stack-onink-4: 21 22 26;
-    --stack-onink-5: 21 22 26;
-    --glass-under-card: rgb(255 255 255 / 0.94);
-    --glass-shadow: 27 28 31;
-    --slot-1: 38 40 45; /* the cards wear the theme's own finishes: gunmetal to ash on light */
-    --slot-2: 76 80 88;
-    --slot-3: 112 117 126;
-    --slot-4: 150 155 164;
-    --slot-5: 58 61 67;
-    --slot-6: 94 98 107;
-    --slot-text-1: 38 40 45;
-    --slot-text-2: 63 67 75;
-    --slot-text-3: 82 87 96;
-    --slot-text-4: 100 105 114;
-    --slot-text-5: 58 61 67;
-    --slot-text-6: 72 76 85;
-    --haze-a: rgb(255 255 255 / 0.75);
-    --haze-b: rgb(188 192 200 / 0.35);
-    --orb-a: rgb(255 255 255 / 0.9);
-    --orb-b: rgb(204 208 215 / 0.35);
-    --glass: rgb(255 255 255 / 0.8);
-    --glass-wash: rgb(255 255 255 / 0.2);
-    --card: rgb(255 255 255 / 0.62);
-    --card-wash-a: rgb(255 255 255 / 0.5);
-    --card-wash-b: rgb(255 255 255 / 0.2);
-    --panel-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 16px 36px -22px rgb(27 28 31 / 0.3);
-    --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 18px 40px -22px rgb(27 28 31 / 0.28);
-    --card-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 24px 48px -22px rgb(27 28 31 / 0.36);
-    --grid: rgb(27 28 31 / 0.05);
-    --scan: rgb(27 28 31 / 0.035);
-    --streak: rgb(27 28 31 / 0.3);
-    --ruler: rgb(27 28 31 / 0.5);
-    --spot: rgb(27 28 31 / 0.05);
-    --btn: linear-gradient(180deg, #3a3c41, #1f2023);
-    --btn-fg: #f6f4ef;
-    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 12px 24px -12px rgb(27 28 31 / 0.55);
-    --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 16px 30px -12px rgb(27 28 31 / 0.65);
-    --sel-bg: rgb(125 130 139 / 0.35);
-    --sel-fg: #1b1c1f;
-    --text-gradient: linear-gradient(110deg, #1b1c1f 0%, #4b4f56 55%, #6f747c 100%);
-    --logo-a: #3a3c41;
-    --logo-b: #8a8f98;
-    --scrim: 243 241 236;
-    --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.6));
-    --picker-glow: 0 14px 30px -18px rgb(27 28 31 / 0.4);
-    --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(205 209 216 / 0.6));
-    --icon-ring: rgb(27 28 31 / 0.12);
-    --progress: linear-gradient(90deg, #1b1c1f, #8a8f98);
-    --dot-glow: 0 0 0 4px rgb(43 45 49 / 0.12);
-    --cursor: radial-gradient(circle, rgb(255 255 255 / 0.5) 0%, rgb(190 194 201 / 0.12) 40%, transparent 70%);
-    --header-glow: rgb(255 255 255 / 0.6);
-    --cta-a: rgb(188 192 200 / 0.55);
-    --cta-b: rgb(255 255 255 / 0.9);
-    --rule-a: rgb(125 130 139 / 0.6);
-    --rule-b: rgb(27 28 31 / 0.5);
-  }
+:root[data-theme="day"] {
+  color-scheme: light;
+  --color-ink: #f3f1ec;
+  --color-surface: #fbfaf7;
+  --color-surface-2: #e9e7e1;
+  --color-line: rgb(27 28 31 / 0.1);
+  --color-line-strong: rgb(27 28 31 / 0.18);
+  --color-fg: #1b1c1f;
+  --color-muted: #4b4f56;
+  --color-subtle: #656971;
+  --color-violet: #7d828b;
+  --color-violet-soft: #5d626a;
+  --color-cyan: #2b2d31;
+  --color-panel: #fbfaf7;
+  --color-wash: #1b1c1f;
+  --accent: 43 45 49;
+  --card-solid: rgb(255 255 255 / 0.97);
+  --glass-ink: 21 22 26;
+  --glass-tint: 0.58;
+  --glass-under: rgb(255 255 255 / 0.22);
+  --glass-under-flat: rgb(243 241 236 / 0.82);
+  --stack-1: 255 255 255;
+  --stack-tint-1: 0.72;
+  --stack-ink-1: 21 22 26;
+  --stack-shine-1: 1;
+  --stack-2: 212 216 223;
+  --stack-tint-2: 0.72;
+  --stack-ink-2: 21 22 26;
+  --stack-shine-2: 1;
+  --stack-3: 156 161 170;
+  --stack-tint-3: 0.72;
+  --stack-ink-3: 21 22 26;
+  --stack-shine-3: 1;
+  --stack-4: 58 61 67;
+  --stack-tint-4: 0.88;
+  --stack-ink-4: 246 244 239;
+  --stack-shine-4: 0.25;
+  --stack-5: 27 28 31;
+  --stack-tint-5: 0.9;
+  --stack-ink-5: 246 244 239;
+  --stack-shine-5: 0.2;
+  --stack-onink-1: 246 244 239;
+  --stack-onink-2: 246 244 239;
+  --stack-onink-3: 246 244 239;
+  --stack-onink-4: 21 22 26;
+  --stack-onink-5: 21 22 26;
+  --glass-under-card: rgb(255 255 255 / 0.94);
+  --text-tint: 0.72;
+  --text-shine: 1;
+  --glass-shadow: 27 28 31;
+  --slot-1: 38 40 45; /* the cards wear the theme's own finishes: gunmetal to ash on light */
+  --slot-2: 76 80 88;
+  --slot-3: 112 117 126;
+  --slot-4: 150 155 164;
+  --slot-5: 58 61 67;
+  --slot-6: 94 98 107;
+  --slot-text-1: 38 40 45;
+  --slot-text-2: 63 67 75;
+  --slot-text-3: 82 87 96;
+  --slot-text-4: 100 105 114;
+  --slot-text-5: 58 61 67;
+  --slot-text-6: 72 76 85;
+  --haze-a: rgb(255 255 255 / 0.75);
+  --haze-b: rgb(188 192 200 / 0.35);
+  --orb-a: rgb(255 255 255 / 0.9);
+  --orb-b: rgb(204 208 215 / 0.35);
+  --glass: rgb(255 255 255 / 0.8);
+  --glass-phone: rgb(255 255 255 / 0.88);
+  --glass-wash: rgb(255 255 255 / 0.2);
+  --card: rgb(255 255 255 / 0.62);
+  --card-phone: rgb(255 255 255 / 0.78);
+  --card-wash-a: rgb(255 255 255 / 0.5);
+  --card-wash-b: rgb(255 255 255 / 0.2);
+  --panel-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 16px 36px -22px rgb(27 28 31 / 0.3);
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 18px 40px -22px rgb(27 28 31 / 0.28);
+  --card-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 24px 48px -22px rgb(27 28 31 / 0.36);
+  --grid: rgb(27 28 31 / 0.05);
+  --scan: rgb(27 28 31 / 0.035);
+  --streak: rgb(27 28 31 / 0.3);
+  --ruler: rgb(27 28 31 / 0.5);
+  --spot: rgb(27 28 31 / 0.05);
+  --btn: linear-gradient(180deg, #3a3c41, #1f2023);
+  --btn-fg: #f6f4ef;
+  --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 12px 24px -12px rgb(27 28 31 / 0.55);
+  --btn-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 16px 30px -12px rgb(27 28 31 / 0.65);
+  --sel-bg: rgb(125 130 139 / 0.35);
+  --sel-fg: #1b1c1f;
+  --text-gradient: linear-gradient(110deg, #1b1c1f 0%, #4b4f56 55%, #6f747c 100%);
+  --logo-a: #3a3c41;
+  --logo-b: #8a8f98;
+  --scrim: 243 241 236;
+  --picker-active: linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.6));
+  --picker-glow: 0 14px 30px -18px rgb(27 28 31 / 0.4);
+  --icon-bg: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(205 209 216 / 0.6));
+  --icon-ring: rgb(27 28 31 / 0.12);
+  --progress: linear-gradient(90deg, #1b1c1f, #8a8f98);
+  --dot-glow: 0 0 0 4px rgb(43 45 49 / 0.12);
+  --cursor: radial-gradient(circle, rgb(255 255 255 / 0.5) 0%, rgb(190 194 201 / 0.12) 40%, transparent 70%);
+  --header-glow: rgb(255 255 255 / 0.6);
+  --cta-a: rgb(188 192 200 / 0.55);
+  --cta-b: rgb(255 255 255 / 0.9);
+  --rule-a: rgb(125 130 139 / 0.6);
+  --rule-b: rgb(27 28 31 / 0.5);
 }
 
 /* While the visitor flips the theme, colours cross-fade (the class is added briefly by ThemeProvider) */
-@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   html.theme-fade,
   html.theme-fade *,
   html.theme-fade *::before,
@@ -522,7 +531,7 @@ body {
       0 0 14px 3px rgb(var(--c) / 0.6);
   }
 
-  /* Liquid glass (the Home stack and the floating cards on large screens): translucent glass in the site's own
+  /* Liquid glass (the Home stack and the floating cards): translucent glass in the site's own
      finishes (pearl, silver, ash, gunmetal, graphite) that softens the DNA behind it, with a bright specular rim
      and sheen. Set --c or --g (the tone), --glass-tint, --glass-ink and --glass-shine (how much white gloss; less on
      dark blocks so the text keeps its contrast) on the block, from --stack-N. The blur is the one costly effect on
@@ -535,8 +544,8 @@ body {
       linear-gradient(135deg, rgb(255 255 255 / calc(0.3 * var(--glass-shine, 1))), rgb(255 255 255 / calc(0.04 * var(--glass-shine, 1))) 42%, rgb(255 255 255 / calc(0.12 * var(--glass-shine, 1)))),
       linear-gradient(rgb(var(--g, var(--c)) / var(--glass-tint)), rgb(var(--g, var(--c)) / var(--glass-tint))),
       var(--glass-under);
-    -webkit-backdrop-filter: blur(18px) saturate(1.8);
-    backdrop-filter: blur(18px) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(1.8);
+    backdrop-filter: blur(var(--glass-blur, 18px)) saturate(1.8);
     box-shadow:
       inset 0 0 0 1px rgb(255 255 255 / 0.34),
       inset 0 1.5px 1px rgb(255 255 255 / 0.7),
@@ -577,23 +586,6 @@ body {
     }
   }
 
-  /* Phones and tablets: the cards keep their original near-solid look (the glass is for large screens) */
-  @media (max-width: 1023px) {
-    .slot-card.liquid-glass {
-      color: inherit;
-      background: var(--card-solid);
-      box-shadow:
-        inset 4px 0 0 rgb(var(--c)),
-        0 18px 38px -16px rgb(var(--c) / 0.65),
-        0 2px 8px -2px rgb(0 0 0 / 0.2);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-    .slot-card.liquid-glass::before {
-      display: none;
-    }
-  }
-
   /* Sci-fi HUD textures */
   .hud-scanlines {
     background: repeating-linear-gradient(
@@ -615,7 +607,7 @@ body {
     mask-image: radial-gradient(circle at var(--cx) var(--cy), transparent 14%, #000 72%);
   }
 
-  /* Primary button: the original gradient on phones, a brushed-metal pill in the desktop themes */
+  /* Primary button: a brushed-metal pill in the themes (the original gradient without one) */
   .btn-primary {
     background: var(--btn);
     color: var(--btn-fg);
@@ -677,8 +669,8 @@ body {
  * pulled toward the helix (they enter from below, so toward the middle of the screen is up), and settle as
  * they scroll in; leaving at the top they drift back toward it and melt away, in step with the scroll
  * (scroll-driven animations; where unsupported they just fade in as before). A soft dark veil behind each
- * block keeps its text readable over the helix. No full-width rules cut across the DNA. Reduced motion gets
- * the plain layout.
+ * block (in the theme's own colour: dark in Night, light in Day) keeps its text readable over the helix. No
+ * full-width rules cut across the DNA. Reduced motion gets the plain layout.
  */
 @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
   section[aria-label="Technologies we work with"],
@@ -687,21 +679,22 @@ body {
   }
   /* the footer is plain text and links, so give it a soft backing over the helix */
   footer {
-    background: linear-gradient(to bottom, transparent, rgba(5, 6, 10, 0.72) 28%);
+    background: linear-gradient(to bottom, transparent, rgb(var(--scrim) / 0.72) 28%);
   }
   .dna-node {
     position: relative;
     isolation: isolate;
-    text-shadow: 0 1px 14px rgba(5, 6, 10, 0.9);
+    text-shadow: 0 1px 14px rgb(var(--scrim) / 0.9);
   }
   .dna-node::before {
     content: "";
     position: absolute;
-    inset: -0.9rem -0.6rem;
+    inset: -0.3rem -0.5rem;
     z-index: -1;
-    border-radius: 1.75rem;
+    border-radius: 1.25rem;
     pointer-events: none;
-    background: radial-gradient(closest-side, rgba(5, 6, 10, 0.72), rgba(5, 6, 10, 0.5) 72%, transparent);
+    background: rgb(var(--scrim) / 0.74);
+    box-shadow: 0 0 1.25rem 0.75rem rgb(var(--scrim) / 0.74);
   }
   @supports (animation-timeline: view()) {
     .dna-node {
@@ -741,27 +734,68 @@ body {
 }
 
 /*
- * The floating cards on large screens wear the same glass as the Home stack: each card passes --g (its tone) and
+ * The floating cards wear the same glass as the Home stack: each card passes --g (its tone) and
  * --glass-tint / --glass-ink / --glass-shine / --glass-onink from the --stack-N tokens. The text variables follow the
  * ink, so text-fg / text-muted read on dark glass too; the icon chip and the Book button take the ink colour. Unlayered,
- * so these win over the utility-set --t and the .btn-primary colours. Phones and tablets are not touched.
+ * so these win over the utility-set --t and the .btn-primary colours. The same on phones, tablets and desktops.
  */
-@media (min-width: 1024px) {
-  .slot-card.liquid-glass {
-    --t: var(--glass-ink);
-    --glass-under: var(--glass-under-card);
-    --color-fg: rgb(var(--glass-ink));
-    --color-muted: rgb(var(--glass-ink) / 0.78);
-    --color-subtle: rgb(var(--glass-ink) / 0.62);
-    border-color: transparent;
+.slot-card.liquid-glass {
+  --t: var(--glass-ink);
+  --glass-under: var(--glass-under-card);
+  --color-fg: rgb(var(--glass-ink));
+  --color-muted: rgb(var(--glass-ink) / 0.78);
+  --color-subtle: rgb(var(--glass-ink) / 0.62);
+  border-color: transparent;
+}
+.slot-card.liquid-glass .slot-chip {
+  background: rgb(var(--glass-ink) / 0.1);
+  border-color: rgb(var(--glass-ink) / 0.28);
+}
+.slot-card.liquid-glass .btn-primary {
+  background: rgb(var(--glass-ink));
+  color: rgb(var(--glass-onink));
+  box-shadow: none;
+}
+
+/* The details sheet on phones and tablets (components/stage/DetailsSheet.tsx): slides up on a phone, pops in on a tablet */
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
   }
-  .slot-card.liquid-glass .slot-chip {
-    background: rgb(var(--glass-ink) / 0.1);
-    border-color: rgb(var(--glass-ink) / 0.28);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
   }
-  .slot-card.liquid-glass .btn-primary {
-    background: rgb(var(--glass-ink));
-    color: rgb(var(--glass-onink));
-    box-shadow: none;
+}
+@keyframes sheet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Phones and tablets: the cards and the sheet are opaque enough that a backdrop blur would show nothing, so they skip it */
+@media (max-width: 1023px) {
+  .slot-card.liquid-glass,
+  .text-glass.liquid-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+/* The Home stack's blur is the one effect that stays on phones and tablets; a smaller radius is cheaper to redraw */
+@media (max-width: 1023px) {
+  [data-stack] {
+    --glass-blur: 12px;
+  }
+}
+
+/* A phone held sideways is too short for the glass stack or compact cards beside the text card (and their lines), so
+   the stage keeps just the helix and the text card there */
+@media (max-width: 1023px) and (max-height: 500px) and (prefers-reduced-motion: no-preference) {
+  [data-stack],
+  [data-anchors="phone"],
+  section[data-stage] ul[aria-label$="options"] > li {
+    display: none !important;
   }
 }

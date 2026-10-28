@@ -26,7 +26,7 @@ export function StageHud({
   changes: number;
   /** Where the helix is centred on large screens (percent of the width). */
   cx?: number;
-  /** Show the targeting reticle on the base pair at the centre (faded out on large screens where the glass stack sits over it). */
+  /** Show the targeting reticle on the base pair at the centre (faded out where the glass stack sits over it). */
   reticle?: boolean;
 }) {
   const { stage } = useDna();
@@ -63,7 +63,7 @@ export function StageHud({
 
       {/* Targeting reticle on the base pair at the centre of view */}
       <div
-        className={`absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left,opacity] duration-500 ease-out ${reticle ? "" : "lg:opacity-0"}`}
+        className={`absolute left-[var(--cx)] top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left,opacity] duration-500 ease-out ${reticle ? "" : "opacity-0"}`}
       >
         <svg width="132" height="132" viewBox="0 0 132 132" fill="none" className="text-cyan">
           <circle cx="66" cy="66" r="24" stroke="currentColor" strokeOpacity="0.8" strokeWidth="1" />

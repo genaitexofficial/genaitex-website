@@ -42,12 +42,22 @@ export function TetherLayer() {
       if (card?.isConnected && card.closest("li")?.getAttribute("data-state") === "active") return card;
       return (card = document.querySelector<HTMLElement>('li[data-state="active"] [data-dna-reticle]'));
     };
+    // The Home glass stack covers the helix on its scroll, so the line has nothing to tie to there
+    let stack: HTMLElement | null = null;
+    let lookedFor = -1e9;
+    const stackShown = (t: number) => {
+      if (!stack?.isConnected && t - lookedFor > 500) {
+        lookedFor = t;
+        stack = document.querySelector<HTMLElement>("[data-stack]");
+      }
+      return stack?.dataset.stack === "on";
+    };
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
       if (document.hidden || t - last < (director.moving ? 0 : 66)) return;
       last = t;
       const inStage = stage.get();
-      const el = inStage > 0.05 ? activeCard() : null;
+      const el = inStage > 0.05 && !stackShown(t) ? activeCard() : null;
       if (!el) return g.setAttribute("opacity", "0");
       const b = el.getBoundingClientRect();
       const rt = director.reticle;

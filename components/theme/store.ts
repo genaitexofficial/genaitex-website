@@ -3,17 +3,16 @@ import { site } from "@/lib/site";
 /**
  * Theme state shared by React (ThemeProvider, the toggle) and by code outside React (the DNA canvases).
  * The visitor's choice (`auto`, `day` or `night`) lives in localStorage; Auto follows the device's
- * light/dark setting. The desktop themes only apply on screens 1024px and wider (see globals.css).
+ * light/dark setting. The themes apply at every screen width (see globals.css).
  */
 export type ThemeMode = "auto" | "day" | "night";
 export type ResolvedTheme = "day" | "night";
-/** What the scene should look like right now: a desktop theme, or the original blue look (phones, tablets). */
+/** What the scene should look like right now: a theme, or the original blue look (only when themes are switched off). */
 export type SceneTheme = ResolvedTheme | "legacy";
 
 export const STORAGE_KEY = "genaitex-theme";
 const EVENT = "genaitex:theme";
 const DARK = "(prefers-color-scheme: dark)";
-const DESKTOP = "(min-width: 1024px)";
 
 function readMode(): ThemeMode {
   try {
@@ -39,16 +38,13 @@ export function setMode(mode: ThemeMode) {
 
 export function subscribe(onChange: () => void) {
   const dark = window.matchMedia(DARK);
-  const desktop = window.matchMedia(DESKTOP);
   window.addEventListener("storage", onChange);
   window.addEventListener(EVENT, onChange);
   dark.addEventListener("change", onChange);
-  desktop.addEventListener("change", onChange);
   return () => {
     window.removeEventListener("storage", onChange);
     window.removeEventListener(EVENT, onChange);
     dark.removeEventListener("change", onChange);
-    desktop.removeEventListener("change", onChange);
   };
 }
 
@@ -61,8 +57,7 @@ export const getServerSnapshot = () => "auto:day";
 
 /** The theme the DNA scene should use now (for the canvases, which live outside React's render). */
 export function getSceneTheme(): SceneTheme {
-  if (!site.desktopThemes || !window.matchMedia(DESKTOP).matches) return "legacy";
-  return resolve(readMode());
+  return site.desktopThemes ? resolve(readMode()) : "legacy";
 }
 
 /** Source of the inline script in app/layout.tsx that sets data-theme before first paint. */

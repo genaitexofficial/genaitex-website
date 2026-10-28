@@ -6,7 +6,7 @@ import { useMotionValueEvent, useScroll } from "motion/react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/currency/Price";
-import { chapterAliases, type Chapter } from "@/lib/chapters";
+import { chapterAliases, type Callout, type Chapter } from "@/lib/chapters";
 import { StageScrim } from "./StageScrim";
 import {
   calloutSlots,
@@ -19,6 +19,7 @@ import {
   glassTone,
   CardExtras,
   ExtraCard,
+  ExtraChip,
   ChapterIcon,
   AnchorLines,
   InfoCard,
@@ -32,6 +33,7 @@ import { useMediaQuery } from "@/components/dna/useScene";
 import { useMagneticSettle } from "./useMagneticSettle";
 import { useGlassFlat } from "./glassBlur";
 import { StageHud } from "./StageHud";
+import { DetailsSheet, type SheetTarget } from "./DetailsSheet";
 
 /**
  * One chapter of the stage. Memoized, so a chapter change re-renders only the two chapters whose state changed
@@ -44,6 +46,7 @@ const ChapterItem = memo(function ChapterItem({
   heading: Heading,
   layout,
   onJump,
+  onOpen,
 }: {
   c: Chapter;
   state: "before" | "active" | "after";
@@ -51,6 +54,8 @@ const ChapterItem = memo(function ChapterItem({
   heading: "h1" | "h2";
   layout: StageLayout;
   onJump: (target: number | string) => void;
+  /** Phones and tablets: open the details sheet for a compact card (`tone` is its glass tone, 1..5). */
+  onOpen: (card: Callout, tone: number, chapter: Chapter, opener: HTMLElement) => void;
 }) {
   const list = layout === "list";
   return (
@@ -81,17 +86,22 @@ const ChapterItem = memo(function ChapterItem({
               ? "motion-safe:lg:left-12 motion-safe:lg:w-[min(28rem,36%)]"
               : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[min(28rem,36%)]",
             FADE,
-            // phones with motion: the text is a glass card sitting on the helix, tied to the targeted pair
-            "max-lg:motion-safe:rounded-3xl max-lg:motion-safe:border max-lg:motion-safe:border-line-strong max-lg:motion-safe:bg-panel/60 max-lg:motion-safe:p-5",
+            // phones with motion: the text is a Liquid Glass card sitting on the helix, tied to the targeted pair
+            "max-lg:motion-safe:relative max-lg:motion-safe:isolate max-lg:motion-safe:rounded-3xl max-lg:motion-safe:p-5 [@media(max-height:720px)]:max-lg:motion-safe:p-4",
           )}
         >
-          <div className="order-1 max-w-xl">
-            <p className="eyebrow mb-3">
+          <span
+            aria-hidden
+            style={{ ...glassTone(1), "--glass-tint": "var(--text-tint)", "--glass-shine": "var(--text-shine)" } as CSSProperties}
+            className="text-glass liquid-glass absolute inset-0 -z-10 rounded-3xl [--glass-under:var(--glass-under-card)] lg:hidden motion-reduce:hidden"
+          />
+          <div className="order-1 max-w-xl md:max-lg:max-w-2xl">
+            <p className="eyebrow mb-3 max-lg:motion-safe:text-[11px] max-lg:motion-safe:tracking-[0.1em]">
               <span className="text-cyan">{c.number}</span> · {c.eyebrow}
             </p>
             <Heading
               id={`chapter-${c.id}-title`}
-              className="text-balance text-3xl font-semibold leading-[1.08] tracking-tight max-lg:motion-safe:text-[1.75rem] sm:text-4xl max-lg:motion-safe:sm:text-[1.75rem] xl:text-5xl"
+              className="text-balance text-3xl font-semibold leading-[1.08] tracking-tight max-lg:motion-safe:text-[1.75rem] sm:text-4xl max-lg:motion-safe:sm:text-[1.75rem] md:max-lg:motion-safe:text-[2rem] xl:text-5xl [@media(max-height:720px)]:max-lg:motion-safe:text-2xl"
             >
               {c.title}
             </Heading>
@@ -141,7 +151,7 @@ const ChapterItem = memo(function ChapterItem({
         <ul
           className={clsx(
             "order-2 mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            list ? "motion-safe:max-lg:contents motion-safe:lg:hidden" : "motion-safe:contents",
+            list ? "motion-safe:hidden" : "motion-safe:contents",
             "motion-reduce:mt-8 motion-reduce:grid motion-reduce:grid-cols-1 motion-reduce:overflow-visible sm:motion-reduce:grid-cols-2",
           )}
           aria-label={`${c.eyebrow}: options`}
@@ -164,7 +174,7 @@ const ChapterItem = memo(function ChapterItem({
                   } as CSSProperties
                 }
                 className={clsx(
-                  "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem]",
+                  "shrink-0 motion-safe:max-lg:absolute motion-safe:max-lg:left-[var(--px)] motion-safe:max-lg:top-[var(--py)] motion-safe:max-lg:w-[44%] motion-safe:max-lg:max-w-[15rem] md:motion-safe:max-lg:w-[36%] md:motion-safe:max-lg:max-w-[18rem]",
                   "motion-safe:lg:absolute motion-safe:lg:w-60 motion-safe:xl:w-[17rem]",
                   slot.pos,
                 )}
@@ -174,7 +184,7 @@ const ChapterItem = memo(function ChapterItem({
                     ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) }
                     : {})}
                   className={clsx(
-                    "slot-card liquid-glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight",
+                    "slot-card liquid-glass flex w-full items-center gap-2.5 rounded-full px-3.5 py-2 text-left text-sm transition-transform max-lg:motion-safe:rounded-2xl max-lg:motion-safe:text-[13px] max-lg:motion-safe:leading-tight md:max-lg:motion-safe:px-4 md:max-lg:motion-safe:py-3 md:max-lg:motion-safe:text-[15px]",
                     "lg:grid lg:grid-cols-[2rem_minmax(0,1fr)] lg:items-start lg:gap-y-0 lg:rounded-2xl lg:p-4 motion-reduce:grid motion-reduce:grid-cols-[2rem_minmax(0,1fr)] motion-reduce:items-start motion-reduce:gap-y-0 motion-reduce:rounded-2xl motion-reduce:p-4",
                     co.jumpTo && "hover:-translate-y-0.5",
                     FADE,
@@ -208,7 +218,21 @@ const ChapterItem = memo(function ChapterItem({
                     )}
                     <CardExtras includes={co.includes} book={co.book} title={co.title} />
                   </span>
+                  {/* phones and tablets: the whole compact card is one tap target that opens the details sheet */}
+                  {!list && !co.jumpTo && (
+                    <button
+                      type="button"
+                      aria-haspopup="dialog"
+                      aria-label={`${co.title}: details`}
+                      onClick={(e) => onOpen(co, k + 1, c, e.currentTarget)}
+                      className="absolute inset-0 z-10 rounded-[inherit] lg:hidden motion-reduce:hidden"
+                    />
+                  )}
                 </Wrapper>
+                {/* phones and tablets: the fifth (ready-made) card sits right under the third */}
+                {k === 2 && c.extra && !list && (
+                  <ExtraChip card={c.extra} onOpen={(opener) => onOpen(c.extra!, 5, c, opener)} />
+                )}
               </li>
             );
           })}
@@ -250,6 +274,14 @@ export function ChapterStage({
   const { scrollYProgress: presence } = useScroll({ target: wrapperRef, offset: ["start end", "end start"] });
   const [active, setActive] = useState(0);
   const [changes, setChanges] = useState(0);
+  // Phones and tablets: the compact card whose details sheet is open
+  const [sheet, setSheet] = useState<SheetTarget | null>(null);
+  const openSheet = useCallback(
+    (card: Callout, tone: number, chapter: Chapter, opener: HTMLElement) =>
+      setSheet({ card, tone, cta: chapter.cta, chapter: chapter.id, opener }),
+    [],
+  );
+  const closeSheet = useCallback(() => setSheet(null), []);
   const pinned = useMediaQuery("(prefers-reduced-motion: no-preference)");
   const { director, anchors } = useDna();
   useMagneticSettle(wrapperRef, chapters.length);
@@ -322,6 +354,7 @@ export function ChapterStage({
     shown.current = next;
     setActive(next);
     setChanges((n) => n + 1);
+    setSheet(null); // a details sheet belongs to the chapter it was opened on
   });
 
   // Pick up the right chapter when the page loads already scrolled (reload, back button, anchor).
@@ -419,6 +452,7 @@ export function ChapterStage({
                 heading={i === 0 ? firstHeading : "h2"}
                 layout={layoutOf(stackFirst, i)}
                 onJump={scrollToChapter}
+                onOpen={openSheet}
               />
             );
           })}
@@ -426,6 +460,7 @@ export function ChapterStage({
 
         {stackFirst && <StageStack chapter={chapters[0]} on={listShown} onJump={scrollToChapter} />}
       </div>
+      <DetailsSheet target={sheet?.chapter === chapters[active].id ? sheet : null} onClose={closeSheet} />
     </section>
   );
 }
