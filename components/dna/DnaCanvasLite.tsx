@@ -17,7 +17,7 @@ import { createHudWriter, type HudState } from "./hud";
  */
 
 const MOVING_MS = 1000 / 30;
-const IDLE_MS = 1000 / 12;
+const IDLE_MS = 1000 / 15;
 const CAMERA = 6;
 const baseKeys = ["A", "T", "G", "C"] as const;
 
@@ -98,7 +98,7 @@ export default function DnaCanvasLite({
       const wide = w >= 1024; // large screens only: the helix sits right of the text column in a chapter
       const cam = director.sample(w, h);
       moving = cam.moving;
-      const angle = cam.angle + ((now - start) / 1000) * 0.12;
+      const angle = cam.angle;
       const slide = cam.slide;
       const cosA = Math.cos(angle);
       const sinA = Math.sin(angle);

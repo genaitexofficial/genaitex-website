@@ -1,5 +1,5 @@
 import type { MotionValue } from "motion/react";
-import { ambientAt, cameraAt, HELIX_TILT, type CameraKey } from "@/lib/helix";
+import { ambientAt, cameraAt, type CameraKey } from "@/lib/helix";
 
 /** A pinned chapter stage on the current page: it takes over the camera while it is on screen. */
 export interface StageSlot {
@@ -26,7 +26,7 @@ export interface Camera {
   /** Helix-axis offset the camera looks at (world units). */
   slide: number;
   roll: number;
-  /** Helix rotation from scrolling alone (radians); renderers add a slow clock drift. */
+  /** Helix rotation about its axis (radians): turns with the scroll, plus a steady spin over time. */
   angle: number;
   /** Where the helix is centred, in percent of the canvas. */
   cx: number;
@@ -49,7 +49,6 @@ export interface RungPositions {
   h: number;
 }
 
-const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 const smooth01 = (x: number) => x * x * (3 - 2 * x);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -64,18 +63,24 @@ const VIEW_UNITS = 4.47;
 const PHONE_WIDTH_SHARE = 0.42;
 
 /**
- * Phones and tablets have no room beside the content, so outside a chapter stage the DNA is a spine running
- * up the left edge, and the content is offset to its right by this much (`--spine` in globals.css:
- * clamp(5.25rem, 17vw, 10rem)). Cards are tied to the spine by tether lines (see TetherLayer).
+ * Phones and tablets, outside a chapter stage: the helix stays big and central (on the chapters' diagonal)
+ * and slowly zooms out as you scroll, from ZOOM_TOP at the top of a page down to ZOOM_FLOOR after about
+ * ZOOM_OUT_SPAN viewport heights, where it holds. It keeps spinning even when you stop. The content appears
+ * out of it (see `.dna-node` in globals.css).
  */
-export const spinePx = (width: number) => clamp(0.17 * width, 84, 160);
+const ZOOM_TOP = 1.2;
+const ZOOM_FLOOR = 0.62;
+const ZOOM_OUT_SPAN = 12;
+/** Steady spin, radians per second: a little livelier on phones and tablets, where the helix is the star. */
+const SPIN_DESKTOP = 0.12;
+const SPIN_PHONE = 0.22;
 
 /**
  * The camera brain for the page-long DNA scene. Each frame a renderer asks it for the camera: while a
  * chapter stage is on screen the camera follows the chapter keyframes (bright; beside the text on large
- * screens, full-screen on phones); everywhere else it follows the ambient path (dimmed behind the content on
- * large screens; a slim upright spine at the left edge on phones). Between the two it blends smoothly, and
- * the result is eased so jumps (a route change, a restored scroll position) glide.
+ * screens, full-screen on phones); everywhere else it follows the ambient path (dimmed, swaying, behind the
+ * content on large screens; central and slowly zooming out on phones and tablets). Between the two it blends
+ * smoothly, and the result is eased so jumps (a route change, a restored scroll position) glide.
  */
 export function createDirector(out: DirectorOutputs) {
   let stage: StageSlot | null = null;
@@ -83,6 +88,7 @@ export function createDirector(out: DirectorOutputs) {
   let state: Omit<Camera, "fit" | "moving" | "stage"> | null = null;
   let lastTime = 0;
   let lastStage = 0;
+  let drift = 0; // accumulated steady spin (radians)
   let moving = true;
   const rungs: RungPositions = { x: new Float32Array(0), y: new Float32Array(0), w: 0, h: 0 };
   /** Where the targeting reticle (the middle of the helix) is, in px of the canvas. */
@@ -104,20 +110,19 @@ export function createDirector(out: DirectorOutputs) {
     if (wide) {
       ambient = { zoom: amb.zoom, slide: amb.focus, roll: amb.roll, cx: 50 + amb.side * 20, cy: 50, dim: 0.36 };
     } else {
-      // The spine: upright, hugging the left edge, sized so it stays inside the strip the content leaves free, with a little breathing in zoom and sway in roll as you scroll. The slide stays small
-      // so the ends of the helix never come into view.
-      const sp = spinePx(width);
-      const unit = (height / 4.5) * fit; // px per world unit at zoom 1
-      const t = clamp01((amb.zoom - 1.3) / 1.8);
+      // Central and bright, on the chapters' diagonal, zooming out slowly with the distance scrolled (the same
+      // pace on every page). The slide stays small so the ends of the helix never come into view.
+      const out = smooth01(clamp01(g / ZOOM_OUT_SPAN));
       ambient = {
-        zoom: ((0.6 * sp) / (0.85 * unit)) * (0.94 + 0.12 * t),
-        slide: clamp(amb.focus * 0.45, -1.1, 1.1),
-        roll: -HELIX_TILT + amb.roll * 0.3,
-        cx: ((0.24 * sp) / width) * 100,
-        cy: 50,
-        dim: 1,
+        zoom: Math.exp(lerp(Math.log(ZOOM_TOP), Math.log(ZOOM_FLOOR), out)),
+        slide: 0.4 * Math.sin(g * 0.5),
+        roll: amb.roll * 0.3,
+        cx: 50,
+        cy: ((0.44 * small) / height) * 100,
+        dim: 0.8,
       };
     }
+    const ambientSpin = wide ? SPIN_DESKTOP : SPIN_PHONE;
 
     // Stage camera (chapter keyframes), blended in as the stage arrives and out as it leaves
     let target = ambient;
@@ -149,6 +154,7 @@ export function createDirector(out: DirectorOutputs) {
       };
     }
     const goal = { ...target, angle: g * Math.PI };
+    drift += lerp(ambientSpin, SPIN_DESKTOP, weight) * dt;
 
     // Ease toward the goal (exponential smoothing; the first frame snaps)
     if (!state) {
@@ -184,7 +190,7 @@ export function createDirector(out: DirectorOutputs) {
 
     reticle.x = (state.cx / 100) * width;
     reticle.y = (state.cy / 100) * height;
-    return { ...state, stage: lastStage, fit, moving };
+    return { ...state, angle: state.angle + drift, stage: lastStage, fit, moving };
   };
 
   return {

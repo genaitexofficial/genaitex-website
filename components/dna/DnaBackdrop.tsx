@@ -35,9 +35,8 @@ const haze =
  * position (see director.ts):
  *
  * - Large screens: bright and zoomed per chapter inside a chapter stage; dimmed behind the content elsewhere.
- * - Phones and tablets: full-screen inside a chapter stage; everywhere else a slim upright spine at the left
- *   edge with the content beside it, tied to it by tether lines (TetherLayer) and growing out of it as it
- *   scrolls into view (`.dna-node` in globals.css).
+ * - Phones and tablets: full-screen inside a chapter stage; everywhere else it stays big and central, slowly
+ *   zooming out and spinning as you scroll, and the content appears out of it (`.dna-node` in globals.css).
  */
 export function DnaBackdrop() {
   const { director, hud, anchors, dim, cx, cy } = useDna();
@@ -91,8 +90,6 @@ export function DnaBackdrop() {
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden">
         <div className={clsx("absolute inset-0", haze)} />
         <div className="bg-grid absolute inset-0 opacity-50" />
-        {/* No scene (reduced motion, weak phone): a still spine keeps the content's left margin purposeful */}
-        {!show && <div className="dna-spine-still absolute inset-y-0 left-0 lg:hidden" />}
       </div>
 
       <div
@@ -136,7 +133,7 @@ export function DnaBackdrop() {
           </m.div>
         )}
 
-        {/* Lines from the content to the spine (phones and tablets) */}
+        {/* The chapter card's line to the targeted base pair (phones and tablets) */}
         {show && tier && <TetherLayer />}
       </div>
     </>

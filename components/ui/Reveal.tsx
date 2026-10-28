@@ -8,20 +8,16 @@ interface RevealProps {
   className?: string;
   delay?: number;
   y?: number;
-  /** Skip the tether line to the DNA spine on phones (small blocks inside a larger one). */
-  noTether?: boolean;
 }
 
 /**
  * Fades and lifts content into view the first time it scrolls on screen. On phones and tablets it is also a
- * `.dna-node`: it grows out of the DNA spine as it scrolls in and folds back into it as it leaves, and gets
- * a tether line to the helix (see TetherLayer and globals.css).
+ * `.dna-node`: it appears out of the DNA as it scrolls in and melts back into it as it leaves (globals.css).
  */
-export function Reveal({ children, className, delay = 0, y = 24, noTether = false }: RevealProps) {
+export function Reveal({ children, className, delay = 0, y = 24 }: RevealProps) {
   return (
     <m.div
       className={clsx("dna-node", className)}
-      data-no-tether={noTether || undefined}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}

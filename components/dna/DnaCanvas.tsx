@@ -131,7 +131,7 @@ function Dna({
     }
 
     t.rotation.z = HELIX_TILT + cam.roll + state.pointer.x * 0.04;
-    s.rotation.y = cam.angle + state.clock.elapsedTime * 0.12;
+    s.rotation.y = cam.angle;
     s.position.y = cam.slide;
 
     // Project every rung once, then use the results for both the callout lines and the targeted pair.

@@ -91,9 +91,6 @@
 /* ───────────────────────── Base ───────────────────────── */
 :root {
   color-scheme: dark;
-  /* Phones and tablets: the content starts this far from the left edge, leaving the DNA spine beside it
-     (spinePx in components/dna/director.ts uses the same numbers). */
-  --spine: clamp(5.25rem, 17vw, 10rem);
 }
 
 html {
@@ -157,6 +154,12 @@ body {
       -webkit-backdrop-filter: blur(12px);
     }
   }
+  /* On phones the helix is bright behind the content, so panels carry a stronger dark backing */
+  @media (max-width: 1023px) {
+    .glass {
+      background: linear-gradient(rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.03)), rgb(6 9 18 / 0.76);
+    }
+  }
 
   /* Card with a spotlight that follows the pointer (--mx / --my set in GlowCard) */
   .glow-card {
@@ -185,6 +188,11 @@ body {
   }
   .glow-card:hover::before {
     opacity: 1;
+  }
+  @media (max-width: 1023px) {
+    .glow-card {
+      background: linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015)), rgb(6 9 18 / 0.72);
+    }
   }
 
   /* Sci-fi HUD textures */
@@ -219,58 +227,60 @@ body {
 }
 
 /*
- * Phones and tablets have no room beside the content, so the DNA is a spine up the left edge and the content
- * sits to its right (main and the footer are padded by the spine; chapter stages span the full width over it).
- * Content blocks (.dna-node) grow out of the spine as they scroll into view and fold back into it as they
- * leave, in step with the scroll (scroll-driven animations; where unsupported they just appear as before).
- * TetherLayer draws their lines to the helix. Reduced motion gets the plain layout.
+ * Phones and tablets: the DNA stays big and central behind the content, slowly zooming out and spinning
+ * (components/dna/director.ts). Content blocks (.dna-node) appear out of it: they start small and faint,
+ * pulled toward the helix (they enter from below, so toward the middle of the screen is up), and settle as
+ * they scroll in; leaving at the top they drift back toward it and melt away, in step with the scroll
+ * (scroll-driven animations; where unsupported they just fade in as before). A soft dark veil behind each
+ * block keeps its text readable over the helix. No full-width rules cut across the DNA. Reduced motion gets
+ * the plain layout.
  */
 @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
-  main,
-  footer {
-    padding-left: calc(var(--spine) - 1.25rem);
-  }
-  main > [data-stage] {
-    margin-left: calc(1.25rem - var(--spine));
-  }
-  /* the content column is narrower beside the spine: let grid items shrink to it instead of overflowing */
-  main .grid > * {
-    min-width: 0;
-  }
   section[aria-label="Technologies we work with"],
   footer {
     border-width: 0;
   }
-  .dna-spine-still {
-    width: var(--spine);
-    background:
-      repeating-linear-gradient(to bottom, rgba(103, 232, 249, 0.5) 0 2px, transparent 2px 18px)
-        calc(var(--spine) * 0.3) 0 / 2px 100% no-repeat,
-      linear-gradient(to right, rgba(34, 150, 255, 0.06), transparent);
+  /* the footer is plain text and links, so give it a soft backing over the helix */
+  footer {
+    background: linear-gradient(to bottom, transparent, rgba(5, 6, 10, 0.72) 28%);
+  }
+  .dna-node {
+    position: relative;
+    isolation: isolate;
+    text-shadow: 0 1px 14px rgba(5, 6, 10, 0.9);
+  }
+  .dna-node::before {
+    content: "";
+    position: absolute;
+    inset: -0.9rem -0.6rem;
+    z-index: -1;
+    border-radius: 1.75rem;
+    pointer-events: none;
+    background: radial-gradient(closest-side, rgba(5, 6, 10, 0.72), rgba(5, 6, 10, 0.5) 72%, transparent);
   }
   @supports (animation-timeline: view()) {
     .dna-node {
-      transform-origin: 0% 25%;
+      transform-origin: 50% 50%;
       animation:
         dna-bud linear backwards,
         dna-fold linear forwards;
       animation-timeline: view(), view();
       animation-range:
-        entry 0% entry 60%,
-        exit 30% exit 100%;
+        entry 0% entry 65%,
+        exit 25% exit 100%;
     }
   }
 }
 @keyframes dna-bud {
   from {
     opacity: 0;
-    transform: translateX(-1.5rem) scale(0.9);
+    transform: translateY(-3.5rem) scale(0.8);
   }
 }
 @keyframes dna-fold {
   to {
-    opacity: 0.2;
-    transform: translateX(-0.75rem) scale(0.95);
+    opacity: 0.15;
+    transform: translateY(3.5rem) scale(0.86);
   }
 }
 

@@ -25,7 +25,7 @@ export function PageHeader({
           </h1>
         </div>
         {description && (
-          <Reveal delay={0.1} noTether>
+          <Reveal delay={0.1}>
             <p className="mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-muted sm:text-xl">
               {description}
             </p>
