@@ -107,6 +107,18 @@ export default function DnaCanvasLite({
       }
       return set;
     };
+    // Build the other finishes' sprites while the browser is idle, one per slice, so the first chapter change never has to
+    // paint them in the middle of a swipe.
+    const warm = [0, 1, 2];
+    let warmTimer = 0;
+    const warmNext = () => {
+      const f = warm.shift();
+      if (f === undefined) return;
+      const look = themeRef.current;
+      if (look !== "legacy") setFor(look, f);
+      warmTimer = window.setTimeout(() => ("requestIdleCallback" in window ? window.requestIdleCallback(warmNext, { timeout: 800 }) : warmNext()), 120);
+    };
+    warmTimer = window.setTimeout(warmNext, 400);
     const n = beads.length;
     const sx = new Float32Array(n);
     const sy = new Float32Array(n);
@@ -140,10 +152,13 @@ export default function DnaCanvasLite({
       canvas.height = Math.max(1, Math.round(h * dpr));
     };
     // If frames run long the canvas drops a resolution step (and climbs back when there is headroom).
-    const governor = createGovernor((q) => {
-      quality = q;
-      resize();
-    });
+    const governor = createGovernor(
+      (q) => {
+        quality = q;
+        resize();
+      },
+      { climb: window.innerWidth >= 1024 }, // phones and tablets only step down: no change of sharpness every few seconds
+    );
 
     // Per-frame camera numbers and one reused result, so projecting a bead allocates nothing
     let cosA = 1;
@@ -318,6 +333,7 @@ export default function DnaCanvasLite({
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(warmTimer);
       ro.disconnect();
     };
   }, [active, director, anchors, hud]);

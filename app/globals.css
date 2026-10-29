@@ -387,7 +387,7 @@
 }
 
 /* While the visitor flips the theme, colours cross-fade (the class is added briefly by ThemeProvider) */
-@media (prefers-reduced-motion: no-preference) {
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   html.theme-fade,
   html.theme-fade *,
   html.theme-fade *::before,
@@ -544,8 +544,8 @@ body {
       linear-gradient(135deg, rgb(255 255 255 / calc(0.3 * var(--glass-shine, 1))), rgb(255 255 255 / calc(0.04 * var(--glass-shine, 1))) 42%, rgb(255 255 255 / calc(0.12 * var(--glass-shine, 1)))),
       linear-gradient(rgb(var(--g, var(--c)) / var(--glass-tint)), rgb(var(--g, var(--c)) / var(--glass-tint))),
       var(--glass-under);
-    -webkit-backdrop-filter: blur(var(--glass-blur, 18px)) saturate(1.8);
-    backdrop-filter: blur(var(--glass-blur, 18px)) saturate(1.8);
+    -webkit-backdrop-filter: blur(18px) saturate(1.8);
+    backdrop-filter: blur(18px) saturate(1.8);
     box-shadow:
       inset 0 0 0 1px rgb(255 255 255 / 0.34),
       inset 0 1.5px 1px rgb(255 255 255 / 0.7),
@@ -665,12 +665,12 @@ body {
 
 /*
  * Phones and tablets: the DNA stays big and central behind the content, slowly zooming out and spinning
- * (components/dna/director.ts). Content blocks (.dna-node) appear out of it: they start small and faint,
- * pulled toward the helix (they enter from below, so toward the middle of the screen is up), and settle as
- * they scroll in; leaving at the top they drift back toward it and melt away, in step with the scroll
- * (scroll-driven animations; where unsupported they just fade in as before). A soft dark veil behind each
- * block (in the theme's own colour: dark in Night, light in Day) keeps its text readable over the helix. No
- * full-width rules cut across the DNA. Reduced motion gets the plain layout.
+ * (components/dna/director.ts). Content blocks (.dna-node) settle in as they scroll into view: a short fade and a
+ * small rise (opacity and a 14px `translate` only, nothing scales, so it never reads as zooming), driven by the
+ * scroll on the compositor where scroll-driven animations are supported (elsewhere the block just shows). Blocks
+ * that animate themselves (Reveal sets an inline opacity) keep their own motion and only take the veil. A soft
+ * veil behind each block (in the theme's own colour: dark in Night, light in Day) keeps its text readable over
+ * the helix. No full-width rules cut across the DNA. Reduced motion gets the plain layout.
  */
 @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
   section[aria-label="Technologies we work with"],
@@ -684,7 +684,6 @@ body {
   .dna-node {
     position: relative;
     isolation: isolate;
-    text-shadow: 0 1px 14px rgb(var(--scrim) / 0.9);
   }
   .dna-node::before {
     content: "";
@@ -694,31 +693,20 @@ body {
     border-radius: 1.25rem;
     pointer-events: none;
     background: rgb(var(--scrim) / 0.74);
-    box-shadow: 0 0 1.25rem 0.75rem rgb(var(--scrim) / 0.74);
+    box-shadow: 0 0 0.9rem 0.45rem rgb(var(--scrim) / 0.74);
   }
   @supports (animation-timeline: view()) {
-    .dna-node {
-      transform-origin: 50% 50%;
-      animation:
-        dna-bud linear backwards,
-        dna-fold linear forwards;
-      animation-timeline: view(), view();
-      animation-range:
-        entry 0% entry 65%,
-        exit 25% exit 100%;
+    .dna-node:not([style*="opacity"]) {
+      animation: dna-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
     }
   }
 }
-@keyframes dna-bud {
+@keyframes dna-rise {
   from {
     opacity: 0;
-    transform: translateY(-3.5rem) scale(0.8);
-  }
-}
-@keyframes dna-fold {
-  to {
-    opacity: 0.15;
-    transform: translateY(3.5rem) scale(0.86);
+    translate: 0 14px;
   }
 }
 
@@ -783,10 +771,16 @@ body {
     backdrop-filter: none;
   }
 }
-/* The Home stack's blur is the one effect that stays on phones and tablets; a smaller radius is cheaper to redraw */
+/* Live backdrop blur over a canvas that redraws every frame is the costliest thing a phone can be asked to do, so on
+   phones and tablets the Home stack wears the frosted fill (the same one the fallback uses) and never blurs; large
+   screens keep the real blur. */
 @media (max-width: 1023px) {
   [data-stack] {
-    --glass-blur: 12px;
+    --glass-under: var(--glass-under-flat);
+  }
+  [data-stack] .liquid-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
@@ -798,4 +792,23 @@ body {
   section[data-stage] ul[aria-label$="options"] > li {
     display: none !important;
   }
+}
+
+/* Touch screens: each chapter of a stage is a snap point (an invisible marker inside the stage, see ChapterStage), so a
+   swipe settles on a chapter with the browser's own scrolling physics instead of a scripted scroll after it ends, and
+   one swipe moves one chapter (`scroll-snap-stop`). It is only switched on while the page is scrolled inside the stage
+   (ChapterStage sets html[data-stage-snap]), so the rest of the page scrolls freely and nothing can trap you. */
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  html[data-stage-snap="on"] {
+    scroll-snap-type: y mandatory;
+  }
+}
+.stage-snap {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }

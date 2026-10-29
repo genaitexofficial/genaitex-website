@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Component, useEffect, useRef } from "react";
+import { Component, useCallback, useEffect, useRef } from "react";
 import { useTransform } from "motion/react";
 import * as m from "motion/react-m";
 import { TetherLayer } from "./TetherLayer";
@@ -44,7 +44,12 @@ export function DnaBackdrop() {
   const active = useTabVisible();
   // Everything except 3D on tablets and desktops waits for the page to load and the browser to idle.
   const defer = tier === "lite" || (tier === "full" && !wide);
-  const ready = useAfterLoad(defer);
+  // The renderer's code is fetched at the first idle moment after load and the scene mounts 600 ms later (large screens
+  // mount at once, as before)
+  const prepare = useCallback(() => {
+    void (tier === "full" ? import("./DnaCanvas") : import("./DnaCanvasLite"));
+  }, [tier]);
+  const ready = useAfterLoad(defer, prepare, 600);
   const show = tier !== null && (!defer || ready);
 
   // The stage is laid out in `svh`, which stays put as mobile toolbars slide; measure it with a probe.
@@ -134,10 +139,11 @@ export function DnaBackdrop() {
           )}
         </m.div>
 
-        {/* Instrument texture: faint scanlines, and speed streaks while the zoom moves */}
+        {/* Instrument texture: faint scanlines, and speed streaks while the zoom moves (large screens only: on a phone
+            they are paint and compositing work for a texture nobody can see) */}
         {show && tier && (
           <m.div
-            className="absolute inset-0 motion-reduce:hidden"
+            className="absolute inset-0 motion-reduce:hidden max-lg:hidden"
             style={{ "--cx": cxPct, "--cy": cyPct } as React.CSSProperties}
           >
             <div className="hud-scanlines absolute inset-0" />

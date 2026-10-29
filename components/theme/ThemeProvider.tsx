@@ -40,10 +40,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!site.desktopThemes) return;
     const root = document.documentElement;
-    root.dataset.mode = mode;
-    if (root.dataset.theme === resolved) return;
+    // While hydrating, this render can still hold the server's snapshot ("auto:day"), so read the visitor's real choice
+    const now = () => getSnapshot().split(":") as [ThemeMode, ResolvedTheme];
+    const [actualMode, actual] = now();
+    root.dataset.mode = actualMode;
+    if (root.dataset.theme === actual) return;
+    // Phones and tablets: one GPU cross-fade of the whole page (View Transitions) where the browser has it, otherwise an
+    // instant switch. A colour transition on every element at once stutters on a phone.
+    if (!window.matchMedia("(min-width: 1024px)").matches) {
+      const start = (document as Document & { startViewTransition?: (update: () => void) => unknown }).startViewTransition;
+      if (start && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) start.call(document, () => (root.dataset.theme = now()[1]));
+      else root.dataset.theme = actual;
+      return;
+    }
     root.classList.add("theme-fade");
-    root.dataset.theme = resolved;
+    root.dataset.theme = actual;
     const timer = window.setTimeout(() => root.classList.remove("theme-fade"), 450);
     return () => window.clearTimeout(timer);
   }, [mode, resolved]);

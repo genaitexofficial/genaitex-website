@@ -81,9 +81,10 @@ export function useSceneTier(): SceneTier {
 
 /**
  * True once the page has finished loading and the browser is idle, so the scene never competes
- * with the headline, text or hydration.
+ * with the headline, text or hydration. `prepare` runs at that idle moment (the renderer's code is fetched and parsed then),
+ * and the scene itself mounts `delay` ms later, so the two bursts of work are separate tasks and neither lands on a swipe.
  */
-export function useAfterLoad(enabled: boolean) {
+export function useAfterLoad(enabled: boolean, prepare?: () => void, delay = 0) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -91,11 +92,17 @@ export function useAfterLoad(enabled: boolean) {
     let cancelled = false;
     let idle: number | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let later: ReturnType<typeof setTimeout> | undefined;
 
     const mount = () => !cancelled && setReady(true);
+    const go = () => {
+      prepare?.();
+      if (delay) later = setTimeout(mount, delay);
+      else mount();
+    };
     const whenIdle = () => {
-      if ("requestIdleCallback" in window) idle = window.requestIdleCallback(mount, { timeout: 2500 });
-      else timer = setTimeout(mount, 1500);
+      if ("requestIdleCallback" in window) idle = window.requestIdleCallback(go, { timeout: 2500 });
+      else timer = setTimeout(go, 1500);
     };
 
     if (document.readyState === "complete") whenIdle();
@@ -106,7 +113,10 @@ export function useAfterLoad(enabled: boolean) {
       window.removeEventListener("load", whenIdle);
       if (idle !== undefined) window.cancelIdleCallback(idle);
       if (timer) clearTimeout(timer);
+      if (later) clearTimeout(later);
     };
+    // `prepare` and `delay` are fixed for the life of the scene
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
 
   return enabled && ready;

@@ -41,7 +41,7 @@ export function StageHud({
       {changes > 0 && (
         <div
           key={changes}
-          className="absolute inset-0 animate-flash bg-[radial-gradient(circle_at_var(--cx)_50%,rgb(var(--accent)/0.22),transparent_62%)]"
+          className="absolute inset-0 animate-flash bg-[radial-gradient(circle_at_var(--cx)_50%,rgb(var(--accent)/0.22),transparent_62%)] max-lg:hidden"
         />
       )}
 

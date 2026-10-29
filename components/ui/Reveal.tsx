@@ -12,7 +12,8 @@ interface RevealProps {
 
 /**
  * Fades and lifts content into view the first time it scrolls on screen. On phones and tablets it is also a
- * `.dna-node`: it appears out of the DNA as it scrolls in and melts back into it as it leaves (globals.css).
+ * `.dna-node`: it sits on a soft veil over the helix (globals.css). Its own motion is the one that runs: the scroll-driven
+ * rise of other `.dna-node` blocks skips anything with an inline opacity.
  */
 export function Reveal({ children, className, delay = 0, y = 24 }: RevealProps) {
   return (

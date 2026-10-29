@@ -80,12 +80,17 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
   // Keeps the scene smooth on any device: it lowers the resolution (and, at the lowest step, the bead detail)
   // when frames run long, and climbs back when there is headroom.
   const [quality, setQuality] = useState(0);
-  const governor = useMemo(() => createGovernor(setQuality), []);
+  // Phones and tablets: a cheaper sphere mesh, a lower pixel ratio, and a governor that only ever steps down (stepping
+  // back up would make the helix visibly change sharpness every few seconds).
+  const compact = useThree((s) => s.size.width) < 1024;
+  const governor = useMemo(() => createGovernor(setQuality, { climb: window.innerWidth >= 1024 }), []);
   const setDpr = useThree((s) => s.setDpr);
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio || 1, 1.5) * QUALITY_SCALE[quality]);
-  }, [quality, setDpr]);
+    setDpr(Math.min(window.devicePixelRatio || 1, compact ? 1.25 : 1.5) * QUALITY_SCALE[quality]);
+  }, [quality, setDpr, compact]);
   const lowDetail = quality >= QUALITY_STEPS - 1;
+  const backboneSegments = lowDetail ? (compact ? [10, 8] : [14, 10]) : compact ? [14, 10] : [24, 16];
+  const rungSegments = lowDetail ? (compact ? [6, 4] : [8, 6]) : compact ? [8, 6] : [14, 10];
 
   // Beads never move relative to the helix, so their instance data is written once.
   useLayoutEffect(() => {
@@ -241,7 +246,7 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
       <group ref={tilt}>
         <group ref={spin}>
           <instancedMesh ref={backbone} args={[undefined, undefined, backboneData.count]}>
-            <sphereGeometry key={lowDetail ? "low" : "full"} args={lowDetail ? [1, 14, 10] : [1, 24, 16]} />
+            <sphereGeometry key={backboneSegments.join("x")} args={[1, backboneSegments[0], backboneSegments[1]]} />
             {matcaps ? (
               <meshMatcapMaterial key="matcap" matcap={matcaps.body.texture} toneMapped={false} />
             ) : (
@@ -256,7 +261,7 @@ function Dna({ director, anchors, hud }: { director: Director; anchors: Anchor[]
             )}
           </instancedMesh>
           <instancedMesh ref={rungBeads} args={[undefined, undefined, rungData.count]}>
-            <sphereGeometry key={lowDetail ? "low" : "full"} args={lowDetail ? [1, 8, 6] : [1, 14, 10]} />
+            <sphereGeometry key={rungSegments.join("x")} args={[1, rungSegments[0], rungSegments[1]]} />
             {matcaps ? (
               <meshMatcapMaterial key="matcap" matcap={matcaps.bead.texture} toneMapped={false} />
             ) : (

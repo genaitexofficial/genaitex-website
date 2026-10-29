@@ -107,6 +107,16 @@ const SPIN_PHONE = 0.22;
 const FOLLOW_FAST = 0.1;
 const FOLLOW_SLOW = 0.25;
 const FINISH_EASE = 0.2;
+/**
+ * Phones and tablets get a calmer camera: the chapter zooms are compressed (zoom ** PHONE_ZOOM_POWER, so a 6x chapter
+ * reads as about 3x), the helix turns less per screen of scrolling (PHONE_TURN of a half rotation), and every spring is
+ * slower, so a swipe glides instead of lunging at you on a small screen.
+ */
+const PHONE_ZOOM_POWER = 0.62;
+const PHONE_TURN = 0.32;
+const PHONE_FOLLOW_FAST = 0.26;
+const PHONE_FOLLOW_SLOW = 0.42;
+const PHONE_FINISH_EASE = 0.3;
 
 /**
  * The camera brain for the page-long DNA scene. Each frame a renderer asks it for the camera: while a
@@ -158,6 +168,9 @@ export function createDirector(out: DirectorOutputs) {
     spinDt = spinDt ? lerp(spinDt, Math.min(dt, 0.05), 0.15) : dt;
 
     const wide = width >= WIDE;
+    const followFast = wide ? FOLLOW_FAST : PHONE_FOLLOW_FAST;
+    const followSlow = wide ? FOLLOW_SLOW : PHONE_FOLLOW_SLOW;
+    const finishEase = wide ? FINISH_EASE : PHONE_FINISH_EASE;
     const small = svh || window.innerHeight;
     const g = window.scrollY / small;
     const fit = wide ? 1 : Math.min(1, (PHONE_WIDTH_SHARE * width * VIEW_UNITS) / height);
@@ -202,7 +215,7 @@ export function createDirector(out: DirectorOutputs) {
         for (let k = 0; k < 3; k++) finishGoal[k] = lerp(finishGoal[k], finishScratch[k], weight);
       }
       const chapter = {
-        zoom: cam.zoom,
+        zoom: wide ? cam.zoom : Math.pow(cam.zoom, PHONE_ZOOM_POWER),
         slide: cam.focus + (p - 0.5) * 0.8,
         roll: cam.roll,
         cx: wide ? stageCx(stage, p) : 50,
@@ -228,7 +241,7 @@ export function createDirector(out: DirectorOutputs) {
       finishSpring.x = finish[k];
       finishSpring.v = finishVel[k];
       if (!primed) finishSpring.x = finishGoal[k];
-      if (damp(finishSpring, finishGoal[k], FINISH_EASE, dt) > 1e-3 * dt * 60) finishMoving = true;
+      if (damp(finishSpring, finishGoal[k], finishEase, dt) > 1e-3 * dt * 60) finishMoving = true;
       finish[k] = Math.max(0, finishSpring.x);
       finishVel[k] = finishSpring.v;
     }
@@ -238,7 +251,7 @@ export function createDirector(out: DirectorOutputs) {
 
     // The camera follows its goal on springs (the first frame snaps)
     const goalZoom = Math.log(target.zoom);
-    const goalAngle = (window.scrollY / small) * Math.PI;
+    const goalAngle = (window.scrollY / small) * Math.PI * (wide ? 1 : PHONE_TURN);
     if (!primed) {
       zoomS.x = goalZoom;
       slideS.x = target.slide;
@@ -251,13 +264,13 @@ export function createDirector(out: DirectorOutputs) {
       moving = true;
     } else {
       // every spring must advance each frame, so none of these may be skipped by a short-circuit
-      const dz = damp(zoomS, goalZoom, FOLLOW_FAST, dt);
-      const ds = damp(slideS, target.slide, FOLLOW_FAST, dt);
-      const da = damp(angleS, goalAngle, FOLLOW_FAST, dt);
-      const dr = damp(rollS, target.roll, FOLLOW_FAST, dt);
-      const dx = damp(cxS, target.cx, FOLLOW_SLOW, dt);
-      const dy = damp(cyS, target.cy, FOLLOW_SLOW, dt);
-      const dd = damp(dimS, target.dim, FOLLOW_SLOW, dt);
+      const dz = damp(zoomS, goalZoom, followFast, dt);
+      const ds = damp(slideS, target.slide, followFast, dt);
+      const da = damp(angleS, goalAngle, followFast, dt);
+      const dr = damp(rollS, target.roll, followFast, dt);
+      const dx = damp(cxS, target.cx, followSlow, dt);
+      const dy = damp(cyS, target.cy, followSlow, dt);
+      const dd = damp(dimS, target.dim, followSlow, dt);
       moving = dz > 2e-4 || ds > 2e-4 || da > 2e-4 || dr > 2e-4 || dx > 0.01 || dy > 0.01 || dd > 1e-3 || finishMoving;
     }
     lastStage = lerp(lastStage, weight, dt ? 1 - Math.exp(-dt / 0.12) : 1);

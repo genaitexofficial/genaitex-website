@@ -38,8 +38,12 @@ export function TetherLayer() {
     let last = 0;
     // The active chapter's card, remembered between frames (looking it up every frame is needless work)
     let card: HTMLElement | null = null;
+    // Where the card is, measured when the chapter changes and then a few times a second: reading layout every frame while
+    // the page scrolls forces the browser to recalculate it every frame. The card only moves by a few px as it fades in.
+    const spot = { left: 0, right: 0, top: 0, at: -1e9 };
     const activeCard = () => {
       if (card?.isConnected && card.closest("li")?.getAttribute("data-state") === "active") return card;
+      spot.at = -1e9;
       return (card = document.querySelector<HTMLElement>('li[data-state="active"] [data-dna-reticle]'));
     };
     // The Home glass stack covers the helix on its scroll, so the line has nothing to tie to there
@@ -59,12 +63,18 @@ export function TetherLayer() {
       const inStage = stage.get();
       const el = inStage > 0.05 && !stackShown(t) ? activeCard() : null;
       if (!el) return g.setAttribute("opacity", "0");
-      const b = el.getBoundingClientRect();
+      if (t - spot.at > 250) {
+        const b = el.getBoundingClientRect();
+        spot.left = b.left;
+        spot.right = b.right;
+        spot.top = b.top;
+        spot.at = t;
+      }
       const rt = director.reticle;
-      const ax = Math.min(Math.max(rt.x, b.left + 28), b.right - 28);
-      path.setAttribute("d", `M${rt.x.toFixed(1)} ${(rt.y + 26).toFixed(1)}L${ax.toFixed(1)} ${b.top.toFixed(1)}`);
+      const ax = Math.min(Math.max(rt.x, spot.left + 28), spot.right - 28);
+      path.setAttribute("d", `M${rt.x.toFixed(1)} ${(rt.y + 26).toFixed(1)}L${ax.toFixed(1)} ${spot.top.toFixed(1)}`);
       dot.setAttribute("cx", ax.toFixed(1));
-      dot.setAttribute("cy", b.top.toFixed(1));
+      dot.setAttribute("cy", spot.top.toFixed(1));
       g.setAttribute("opacity", Math.min(1, inStage).toFixed(2));
     };
 

@@ -100,6 +100,15 @@ export const FADE =
 export const GLASS_ACTIVE =
   "lg:group-data-[state=before]/ch:[backdrop-filter:none] lg:group-data-[state=after]/ch:[backdrop-filter:none]";
 
+/**
+ * Phones and tablets: a chapter's parts (the text card, each compact card) fade and rise themselves, one after another
+ * (`--d` on the part or its parent is the delay), with one shared easing. Arriving takes 500 ms; leaving is quicker (300 ms,
+ * no delay), so the old chapter is out of the way as the new one comes in. Opacity and `translate` only, so it runs on the
+ * compositor and nothing scales. The chapter itself just turns invisible once it has faded (see `ChapterItem`).
+ */
+export const FADE_SM =
+  "max-lg:motion-safe:transition-[opacity,translate] max-lg:motion-safe:duration-500 max-lg:motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] max-lg:motion-safe:[transition-delay:var(--d,0ms)] max-lg:motion-safe:group-data-[state=before]/ch:opacity-0 max-lg:motion-safe:group-data-[state=before]/ch:-translate-y-3 max-lg:motion-safe:group-data-[state=after]/ch:opacity-0 max-lg:motion-safe:group-data-[state=after]/ch:translate-y-3 max-lg:motion-safe:group-data-[state=before]/ch:duration-300 max-lg:motion-safe:group-data-[state=after]/ch:duration-300 max-lg:motion-safe:group-data-[state=before]/ch:[transition-delay:0ms] max-lg:motion-safe:group-data-[state=after]/ch:[transition-delay:0ms]";
+
 /** The glass a card wears on large screens: stack tone N (pearl, silver, ash, gunmetal, graphite) and its ink. */
 export const glassTone = (n: number) =>
   ({
@@ -254,6 +263,7 @@ export function StageStack({
                 "--glass-tint": `var(--stack-tint-${k + 1})`,
                 "--glass-ink": `var(--stack-ink-${k + 1})`,
                 "--glass-shine": `var(--stack-shine-${k + 1})`,
+                "--d": `${150 + k * 50}ms`,
               } as CSSProperties
             }
             className={k === 4 ? "md:max-lg:col-span-2" : undefined}
@@ -262,7 +272,9 @@ export function StageStack({
               {...(co.jumpTo ? { type: "button" as const, onClick: () => onJump(co.jumpTo!) } : {})}
               className={clsx(
                 "liquid-glass flex min-h-[3.5rem] w-full items-center justify-between gap-3 rounded-3xl px-4 py-2 text-left [@media(max-height:720px)]:max-lg:min-h-[2.5rem] [@media(max-height:720px)]:max-lg:py-1 md:max-lg:min-h-[4.25rem] md:max-lg:px-5 lg:min-h-[4.5rem] lg:gap-4 lg:rounded-[1.75rem] lg:px-6 lg:py-3 xl:min-h-[5.25rem] xl:px-7",
-                "transition-[opacity,translate] duration-[450ms] ease-out group-data-[stack=off]/stack:translate-y-6 group-data-[stack=off]/stack:opacity-0",
+                // arriving: 500 ms, each block a little after the last (phones, tablets); leaving: quick. Large screens: as before
+                "transition-[opacity,translate] max-lg:duration-500 max-lg:ease-[cubic-bezier(0.22,1,0.36,1)] max-lg:[transition-delay:var(--d,0ms)] lg:duration-[450ms] lg:ease-out",
+                "group-data-[stack=off]/stack:opacity-0 group-data-[stack=off]/stack:translate-y-3 lg:group-data-[stack=off]/stack:translate-y-6 max-lg:group-data-[stack=off]/stack:duration-300 max-lg:group-data-[stack=off]/stack:[transition-delay:0ms]",
                 co.jumpTo && "hover:-translate-y-0.5",
               )}
             >
@@ -355,8 +367,8 @@ export function ExtraChip({ card, onOpen }: { card: Callout; onOpen: (opener: HT
       type="button"
       aria-haspopup="dialog"
       onClick={(e) => onOpen(e.currentTarget)}
-      style={{ "--c": "var(--slot-6)", ...glassTone(5) } as CSSProperties}
-      className="slot-card liquid-glass mt-2 hidden w-full items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left text-[13px] leading-tight max-lg:motion-safe:flex md:max-lg:motion-safe:px-4 md:max-lg:motion-safe:py-3 md:max-lg:motion-safe:text-[15px]"
+      style={{ "--c": "var(--slot-6)", "--d": "400ms", ...glassTone(5) } as CSSProperties}
+      className={clsx(FADE_SM, "slot-card liquid-glass mt-2 hidden w-full items-center gap-2.5 rounded-2xl px-3.5 py-2 text-left text-[13px] leading-tight max-lg:motion-safe:flex md:max-lg:motion-safe:px-4 md:max-lg:motion-safe:py-3 md:max-lg:motion-safe:text-[15px]")}
     >
       <span aria-hidden className="slot-chip grid h-6 w-6 shrink-0 place-items-center rounded-lg">
         <ChapterIcon name={card.icon} className="h-3.5 w-3.5" />

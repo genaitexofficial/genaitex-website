@@ -16,9 +16,11 @@ const STALL_MS = 2000;
  * Watches how long frames take and keeps the scene smooth on any device: when it cannot keep up it drops the
  * resolution a step (after a second of slow frames), and when there is plenty of headroom it climbs back
  * (after several seconds). If a step up is followed straight away by a step down, the next climb waits longer,
- * so it never flickers between two levels. Call `tick` once per drawn frame.
+ * so it never flickers between two levels. With `climb: false` (phones) it only ever steps down. Call `tick` once per
+ * drawn frame.
  */
-export function createGovernor(onChange: (quality: number) => void) {
+export function createGovernor(onChange: (quality: number) => void, options: { climb?: boolean } = {}) {
+  const canClimb = options.climb ?? true;
   let quality = 0;
   let avg = 1000 / 60;
   let last = 0;
@@ -68,7 +70,7 @@ export function createGovernor(onChange: (quality: number) => void) {
       } else if (avg < FAST_MS) {
         slowSince = 0;
         fastSince ||= now;
-        if (now - fastSince > UP_AFTER && now > climbBlockUntil && quality > 0) {
+        if (canClimb && now - fastSince > UP_AFTER && now > climbBlockUntil && quality > 0) {
           climbedAt = now;
           move(quality - 1);
         }

@@ -15,6 +15,7 @@ import {
   stageCx,
   textEdge,
   FADE,
+  FADE_SM,
   GLASS_ACTIVE,
   glassTone,
   CardExtras,
@@ -30,7 +31,6 @@ import {
 } from "./StageParts";
 import { useDna } from "@/components/dna/DnaProvider";
 import { useMediaQuery } from "@/components/dna/useScene";
-import { useMagneticSettle } from "./useMagneticSettle";
 import { useGlassFlat } from "./glassBlur";
 import { StageHud } from "./StageHud";
 import { DetailsSheet, type SheetTarget } from "./DetailsSheet";
@@ -69,9 +69,10 @@ const ChapterItem = memo(function ChapterItem({
           "group/ch relative flex flex-col px-5 py-20 sm:px-8",
           // pinned: every chapter fills the stage and fades in/out by state
           "motion-safe:absolute motion-safe:inset-0 motion-safe:justify-end motion-safe:py-0 motion-safe:pb-[4.25rem] motion-safe:pt-24",
-          "max-lg:motion-safe:transition-[opacity,transform] max-lg:motion-safe:duration-[450ms] max-lg:motion-safe:ease-out",
-          "motion-safe:data-[state=before]:pointer-events-none max-lg:motion-safe:data-[state=before]:-translate-y-6 max-lg:motion-safe:data-[state=before]:opacity-0",
-          "motion-safe:data-[state=after]:pointer-events-none max-lg:motion-safe:data-[state=after]:translate-y-6 max-lg:motion-safe:data-[state=after]:opacity-0",
+          // phones and tablets: the parts fade themselves (FADE_SM); once faded, the chapter turns invisible so it holds no layer
+          "max-lg:motion-safe:transition-[visibility] max-lg:motion-safe:duration-500 max-lg:motion-safe:[contain:layout_paint]",
+          "motion-safe:data-[state=before]:pointer-events-none max-lg:motion-safe:data-[state=before]:invisible",
+          "motion-safe:data-[state=after]:pointer-events-none max-lg:motion-safe:data-[state=after]:invisible",
           "lg:motion-safe:justify-center lg:motion-safe:pb-0 lg:motion-safe:pt-16",
         )}
       >
@@ -79,6 +80,7 @@ const ChapterItem = memo(function ChapterItem({
             `contents`) so the option chips, a sibling below, can sit between the intro and the buttons. */}
         <div
           data-dna-reticle
+          style={{ "--d": "170ms" } as CSSProperties}
           className={clsx(
             "max-lg:motion-reduce:contents motion-safe:lg:absolute motion-safe:lg:top-1/2 motion-safe:lg:-translate-y-1/2",
             // the Home list puts the text hard left (3rem from the edge); other stages line it up with the logo
@@ -86,6 +88,7 @@ const ChapterItem = memo(function ChapterItem({
               ? "motion-safe:lg:left-12 motion-safe:lg:w-[min(28rem,36%)]"
               : "motion-safe:lg:left-[max(2rem,calc((100vw-80rem)/2+2rem))] motion-safe:lg:w-[min(28rem,36%)]",
             FADE,
+            FADE_SM,
             // phones with motion: the text is a Liquid Glass card sitting on the helix, tied to the targeted pair
             "max-lg:motion-safe:relative max-lg:motion-safe:isolate max-lg:motion-safe:rounded-3xl max-lg:motion-safe:p-5 [@media(max-height:720px)]:max-lg:motion-safe:p-4",
           )}
@@ -171,6 +174,7 @@ const ChapterItem = memo(function ChapterItem({
                     "--py": phone.y,
                     "--c": `var(--slot-${k + 1})`,
                     "--t": `var(--slot-text-${k + 1})`,
+                    "--d": `${210 + k * 45}ms`,
                   } as CSSProperties
                 }
                 className={clsx(
@@ -188,6 +192,7 @@ const ChapterItem = memo(function ChapterItem({
                     "lg:grid lg:grid-cols-[2rem_minmax(0,1fr)] lg:items-start lg:gap-y-0 lg:rounded-2xl lg:p-4 motion-reduce:grid motion-reduce:grid-cols-[2rem_minmax(0,1fr)] motion-reduce:items-start motion-reduce:gap-y-0 motion-reduce:rounded-2xl motion-reduce:p-4",
                     co.jumpTo && "hover:-translate-y-0.5",
                     FADE,
+                    FADE_SM,
                     GLASS_ACTIVE,
                   )}
                 >
@@ -284,7 +289,6 @@ export function ChapterStage({
   const closeSheet = useCallback(() => setSheet(null), []);
   const pinned = useMediaQuery("(prefers-reduced-motion: no-preference)");
   const { director, anchors } = useDna();
-  useMagneticSettle(wrapperRef, chapters.length);
   const keys = useMemo(() => chapters.map((c) => c.camera), [chapters]);
   const cxs = useMemo(() => chapters.map((_, i) => stageCx[layoutOf(stackFirst, i)]), [chapters, stackFirst]);
 
@@ -356,6 +360,38 @@ export function ChapterStage({
     setChanges((n) => n + 1);
     setSheet(null); // a details sheet belongs to the chapter it was opened on
   });
+
+  // Touch screens: while the page is scrolled inside this stage, the chapter markers are mandatory snap points (see
+  // .stage-snap and html[data-stage-snap] in globals.css), so a swipe settles on one chapter with the browser's own scroll
+  // physics. Outside the stage (before it, after it, or resting at either end) snapping is off, so it can never trap the page.
+  useEffect(() => {
+    if (!pinned || !window.matchMedia("(pointer: coarse)").matches) return;
+    const root = document.documentElement;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const wrapper = wrapperRef.current;
+      const stage = stageRef.current;
+      if (!wrapper || !stage) return;
+      const top = wrapper.getBoundingClientRect().top + window.scrollY;
+      const range = wrapper.offsetHeight - stage.clientHeight;
+      const y = window.scrollY;
+      if (y > top + 2 && y < top + range - 2) root.dataset.stageSnap = "on";
+      else delete root.dataset.stageSnap;
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      delete root.dataset.stageSnap;
+    };
+  }, [pinned]);
 
   // Pick up the right chapter when the page loads already scrolled (reload, back button, anchor).
   useEffect(() => {
@@ -460,6 +496,17 @@ export function ChapterStage({
 
         {stackFirst && <StageStack chapter={chapters[0]} on={listShown} onJump={scrollToChapter} />}
       </div>
+      {/* snap points, one per chapter, for touch screens (see .stage-snap in globals.css): the page's own scroll physics
+          settle a swipe on a chapter; 5.5rem is the page's scroll-padding-top */}
+      {pinned &&
+        chapters.map((c, i) => (
+          <span
+            key={c.id}
+            aria-hidden
+            className="stage-snap"
+            style={{ top: `calc((100% - 100svh) * ${last ? i / last : 0} + 5.5rem)` }}
+          />
+        ))}
       <DetailsSheet target={sheet?.chapter === chapters[active].id ? sheet : null} onClose={closeSheet} />
     </section>
   );
