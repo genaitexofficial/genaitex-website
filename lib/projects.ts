@@ -33,9 +33,46 @@ export interface Project {
   mock: MockVariant;
   accent: Accent;
   featured?: boolean;
+  /** What the project cost, in rupees (shown in the visitor's currency). Only for projects with a real price. */
+  price?: { inr: number };
+  /** How long delivery took or takes, e.g. "24-48 hours". */
+  delivery?: string;
+  /**
+   * A real screenshot of the live site (a path under /public, ideally 16:10 and under about 150 KB). Shown in the browser
+   * frame in place of the drawn wireframe.
+   */
+  screenshot?: string;
 }
 
 export const projects: Project[] = [
+  {
+    slug: "en3rgy-website",
+    title: "EN3RGY",
+    client: "Rooftop solar company",
+    category: "static",
+    tagline: "A scroll-driven film that follows one ray of sunlight from the sun to your roof.",
+    summary:
+      "Single-page rooftop solar site: a six-chapter scroll film, a bill estimator and a free roof-check enquiry form.",
+    challenge:
+      "Rooftop solar is hard to picture. The goal was a site that explains, in a way people remember, how sunlight becomes power in a home, and makes it easy to ask for a free roof check.",
+    solution:
+      "A single page that scrubs real footage as you scroll, in six chapters from the sun to a powered home, followed by what the company builds, a three-step process, a bill estimator and an enquiry form. It stays calmer and lighter on phones and falls back to plain stills if the film cannot load.",
+    stack: ["HTML", "CSS", "JavaScript", "Canvas", "GitHub Pages"],
+    highlights: [
+      "Scroll-driven film in six chapters, from the sun to a home running on its own power",
+      "Bill estimator for homes and businesses: suggested system size, cost after subsidy, monthly saving and payback",
+      "Free roof-check enquiry form that opens an email with the visitor's details filled in",
+      "Calmer motion on phones, one swipe per chapter on touch screens, and a still-image version if the film cannot load",
+    ],
+    url: "https://en3rgy.live",
+    isSample: false,
+    mock: "landing",
+    accent: "amber",
+    featured: true,
+    price: { inr: 4000 },
+    delivery: "24-48 hours",
+    screenshot: "/work/en3rgy.webp",
+  },
   {
     slug: "lumen-skincare-storefront",
     title: "Lumen Skincare",

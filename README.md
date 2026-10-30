@@ -45,12 +45,13 @@ With no `RESEND_API_KEY` the contact form works in development by logging the me
 
 ### Replace the sample projects
 
-Every project in `lib/projects.ts` ships as a **concept** (`isSample: true`), which shows a "Concept" label in the UI. For each real project:
+Most projects in `lib/projects.ts` are **concepts** (`isSample: true`), which shows a "Concept" label in the UI. The first one, **EN3RGY** (`en3rgy-website`, https://en3rgy.live), is a real project: `isSample: false`, with a real screenshot, a price and a delivery time. For each real project:
 
-1. Edit the entry: title, client, summary, challenge, solution, stack, highlights.
+1. Edit the entry: title, client, summary, challenge, solution, stack, highlights, written from what the live site actually shows (no invented results).
 2. Add `url: "https://..."` (shows a live-site link), and set `isSample: false`.
-3. Choose a `mock` (`storefront | landing | dashboard | app`) and `accent` colour for its preview, or swap `BrowserMockup` for real screenshots in `ProjectCard` and the case-study page.
-4. Set `featured: true` on up to three projects to show them on the home page.
+3. Choose a `mock` (`storefront | landing | dashboard | app`) and `accent` colour for its drawn preview, or add a real screenshot: save a 16:10 image (about 1280x800, WebP, under about 150 KB) in `public/work/` and set `screenshot: "/work/name.webp"`; it replaces the drawn preview on the card and the case-study page.
+4. Optionally add `price: { inr: 4000 }` (shown in the visitor's currency, with the ₹ / $ switch) and `delivery: "24-48 hours"`; both show as chips on the card and as Price and Delivery on the case-study page, with a "Get a site like this" button. Leave them out when a project has no price to state.
+5. Set `featured: true` on up to four projects to show them on the home page (four across on large screens).
 
 New slugs appear automatically on `/work`, in the sitemap and as case-study pages.
 

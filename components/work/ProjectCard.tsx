@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { Price } from "@/components/currency/Price";
 import { BrowserMockup } from "./BrowserMockup";
 import { categoryLabels, type Project } from "@/lib/projects";
 
@@ -29,6 +30,7 @@ export function ProjectCard({
             variant={project.mock}
             accent={project.accent}
             host={hostFor(project)}
+            screenshot={project.screenshot}
             className="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
           />
         </div>
@@ -60,6 +62,22 @@ export function ProjectCard({
             />
           </div>
           <p className="mt-2 text-pretty leading-relaxed text-muted">{project.summary}</p>
+
+          {(project.price || project.delivery) && (
+            <p className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+              {project.price && (
+                <span className="rounded-full border border-line-strong px-3 py-1 font-mono font-medium text-fg">
+                  <span className="sr-only">Price: </span>
+                  <Price inr={project.price.inr} prefix="" />
+                </span>
+              )}
+              {project.delivery && (
+                <span className="rounded-full border border-line px-3 py-1 font-mono text-muted">
+                  Delivered in {project.delivery}
+                </span>
+              )}
+            </p>
+          )}
 
           <ul className="mt-auto flex flex-wrap gap-2 pt-5">
             {project.stack.slice(0, 4).map((s) => (

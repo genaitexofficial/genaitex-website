@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { clsx } from "clsx";
 import type { Accent, MockVariant } from "@/lib/projects";
 
@@ -13,16 +14,21 @@ const accents: Record<Accent, [string, string]> = {
 const grad = "bg-[linear-gradient(135deg,var(--a),var(--b))]";
 const line = "rounded-full bg-white/[0.14]";
 
-/** Decorative device frame with a wireframe "screenshot". Pure CSS, so there are no image files to maintain. */
+/**
+ * Decorative device frame with a wireframe "screenshot" (pure CSS, so there are no image files to maintain), or, when a
+ * project has a real `screenshot`, that picture instead.
+ */
 export function BrowserMockup({
   variant,
   accent,
   host,
+  screenshot,
   className,
 }: {
   variant: MockVariant;
   accent: Accent;
   host: string;
+  screenshot?: string;
   className?: string;
 }) {
   const [a, b] = accents[accent];
@@ -53,11 +59,23 @@ export function BrowserMockup({
       </div>
 
       {/* screen */}
-      <div className="relative aspect-[16/10] p-[4%]">
-        {variant === "storefront" && <Storefront />}
-        {variant === "landing" && <Landing />}
-        {variant === "dashboard" && <Dashboard />}
-        {variant === "app" && <ChatApp />}
+      <div className={clsx("relative aspect-[16/10]", !screenshot && "p-[4%]")}>
+        {screenshot ? (
+          <Image
+            src={screenshot}
+            alt=""
+            fill
+            sizes="(min-width: 1280px) 22rem, (min-width: 768px) 45vw, 92vw"
+            className="object-cover object-top"
+          />
+        ) : (
+          <>
+            {variant === "storefront" && <Storefront />}
+            {variant === "landing" && <Landing />}
+            {variant === "dashboard" && <Dashboard />}
+            {variant === "app" && <ChatApp />}
+          </>
+        )}
       </div>
     </div>
   );

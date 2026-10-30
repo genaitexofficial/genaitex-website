@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Website, Shopify & Web App Projects",
   description:
-    "Concept projects showing the static websites, Shopify storefronts and custom web apps genaitex builds, and the quality we hold them to.",
+    "Live and concept projects showing the static websites, Shopify storefronts and custom web apps genaitex builds, and the quality we hold them to.",
   path: "/work",
 });
 

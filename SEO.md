@@ -31,7 +31,7 @@ SEO is slow and honest work. Nothing here guarantees a position in search result
 
 ## 3. Build trust (the biggest ranking factor you control)
 
-- **Replace the concept projects with real ones.** Each project in `lib/projects.ts` is a labelled concept. Real work, with a live link, what you did, and a short quote from the client (with their permission), is the strongest trust signal for both visitors and search engines. Set `isSample: false`, add `url`, and rewrite the copy with real details and results.
+- **Replace the concept projects with real ones.** Most projects in `lib/projects.ts` are labelled concepts (EN3RGY is the first real one). Real work, with a live link, what you did, and a short quote from the client (with their permission), is the strongest trust signal for both visitors and search engines. Set `isSample: false`, add `url`, and rewrite the copy with real details and results.
 - **Google Business Profile.** Create one as a *service-area business* (you can hide your street address). Use your real name, website, email or phone and service areas; verify it; add photos and the services you offer. Keep the name, contact details and city identical everywhere.
 - **Profiles.** LinkedIn company page first, then Instagram or X if you will actually post. Link them from the footer (`socials` in `lib/site.ts`), which also puts them in the structured data.
 - **Directories where you can show real work**: for example Clutch, GoodFirms, DesignRush, Sulekha. Only list what you can back up; ask happy clients for honest reviews there.

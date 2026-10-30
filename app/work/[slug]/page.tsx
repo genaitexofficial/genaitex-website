@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { Button } from "@/components/ui/Button";
+import { Price } from "@/components/currency/Price";
 import { BrowserMockup } from "@/components/work/BrowserMockup";
 import { hostFor } from "@/components/work/ProjectCard";
 import { CTA } from "@/components/home/CTA";
@@ -73,7 +75,13 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               {project.tagline}
             </p>
 
-            <dl className="mt-10 grid gap-6 border-t border-line pt-8 sm:grid-cols-3">
+            <dl
+              className={
+                project.price || project.delivery
+                  ? "mt-10 grid grid-cols-2 gap-6 border-t border-line pt-8 sm:grid-cols-3 lg:grid-cols-5"
+                  : "mt-10 grid gap-6 border-t border-line pt-8 sm:grid-cols-3"
+              }
+            >
               <div>
                 <dt className="eyebrow !text-subtle">For</dt>
                 <dd className="mt-2 text-fg">{project.client}</dd>
@@ -99,7 +107,28 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
                   )}
                 </dd>
               </div>
+              {project.price && (
+                <div>
+                  <dt className="eyebrow !text-subtle">Price</dt>
+                  <dd className="mt-2 text-fg">
+                    <Price inr={project.price.inr} prefix="" />
+                  </dd>
+                </div>
+              )}
+              {project.delivery && (
+                <div>
+                  <dt className="eyebrow !text-subtle">Delivery</dt>
+                  <dd className="mt-2 text-fg">{project.delivery}</dd>
+                </div>
+              )}
             </dl>
+            {(project.price || project.delivery) && (
+              <div className="mt-8">
+                <Button href="/contact?type=web" size="md">
+                  Get a site like this <ArrowRight className="h-4 w-4" aria-hidden />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -111,6 +140,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               variant={project.mock}
               accent={project.accent}
               host={hostFor(project)}
+              screenshot={project.screenshot}
               className="mx-auto max-w-5xl"
             />
           </Reveal>
